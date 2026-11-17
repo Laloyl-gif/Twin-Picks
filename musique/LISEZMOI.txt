@@ -1,0 +1,11 @@
+Musique d'ambiance en morceaux complets (Réglages › Général › « Musique du menu / de la partie : source »).
+
+  menu/      musique du menu et du podium      ex. menu/Angelo Badalamenti - Laura Palmer's Theme.mp3
+  partie/    musique pendant la partie
+  films/     une BO par film, dans un dossier « Titre (année) » (ou « Titre (année) [tmdb-123] ») :
+             films/Inception (2010)/01 - Hans Zimmer - Time.mp3
+             Elle n'est jouée que si le film est dans les listes de la partie, jamais pendant sa manche,
+             et le nom du film s'affiche en bas de l'écran.
+
+Formats : mp3, ogg, opus, m4a, aac, flac, wav, webm. Nom conseillé : « Artiste - Titre.mp3 »
+(un numéro de piste au début est ignoré). Les fichiers ajoutés sont pris en compte en moins de 30 s.

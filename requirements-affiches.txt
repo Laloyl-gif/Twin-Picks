@@ -1,0 +1,13 @@
+# Outils de Pete's Percolator (affiches sans titre ni personnages), tous gratuits, libres et locaux.
+#   pip install -r requirements-affiches.txt
+# Sans eux, Pete fonctionne quand même en mode simplifié (OpenCV seul : textes moins bien trouvés,
+# personnages non effacés). Les modèles se téléchargent une seule fois au premier usage.
+opencv-python-headless
+onnxruntime
+# détection des textes (PaddleOCR en ONNX)
+rapidocr_onnxruntime; python_version < "3.13"
+rapidocr; python_version >= "3.13"
+# détection des personnages (U²-Net / IS-Net)
+rembg
+# Facultatif, encore meilleur pour la reconstruction (installe PyTorch, ~2 Go) :
+#   pip install simple-lama-inpainting

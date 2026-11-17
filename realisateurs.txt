@@ -1,0 +1,87 @@
+# Réalisateurs pour les conditions de Lucy's Hotline (chrono) et One-Eyed Donna's (bingo) : un nom par ligne.
+# Pour l'utiliser : Réglages › Général › « Chrono et Bingo : fichier de réalisateurs », mettre realisateurs.txt
+# (ou le chemin d'un autre fichier). Les lignes vides et celles qui commencent par # sont ignorées.
+David Lynch
+Steven Spielberg
+Christopher Nolan
+Quentin Tarantino
+Martin Scorsese
+James Gunn
+Stanley Kubrick
+Alfred Hitchcock
+Ridley Scott
+David Fincher
+Denis Villeneuve
+Wes Anderson
+Tim Burton
+James Cameron
+Peter Jackson
+Clint Eastwood
+Francis Ford Coppola
+Joel Coen
+Paul Thomas Anderson
+Guillermo del Toro
+Robert Zemeckis
+Sofia Coppola
+Greta Gerwig
+Jordan Peele
+Bong Joon-ho
+Park Chan-wook
+Hayao Miyazaki
+Akira Kurosawa
+Wong Kar-wai
+Pedro Almodóvar
+Luc Besson
+Jean-Pierre Jeunet
+Jacques Audiard
+Jean-Luc Godard
+François Truffaut
+Damien Chazelle
+Darren Aronofsky
+Danny Boyle
+Edgar Wright
+Yorgos Lanthimos
+Ari Aster
+Robert Eggers
+Sam Raimi
+John Carpenter
+Brian De Palma
+Spike Lee
+Sergio Leone
+Terrence Malick
+Steven Soderbergh
+Michael Mann
+Ang Lee
+Alfonso Cuarón
+Alejandro González Iñárritu
+Gus Van Sant
+Fritz Lang
+Orson Welles
+Charlie Chaplin
+Andrei Tarkovsky
+Ingmar Bergman
+Federico Fellini
+Wim Wenders
+Lars von Trier
+Thomas Vinterberg
+Gaspar Noé
+Milos Forman
+Roman Polanski
+Jacques Demy
+Jacques Tati
+David Cronenberg
+George Lucas
+Sidney Lumet
+Sean Baker
+Kathryn Bigelow
+Paul Verhoeven
+Wes Craven
+M. Night Shyamalan
+Ryūsuke Hamaguchi
+Makoto Shinkai
+Satoshi Kon
+Takeshi Kitano
+Mathieu Kassovitz
+Bryan Singer
+Zack Snyder
+Paul W. S. Anderson

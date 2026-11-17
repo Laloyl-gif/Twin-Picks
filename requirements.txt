@@ -1,0 +1,6 @@
+requests
+pillow
+qrcode
+numpy
+imageio-ffmpeg
+opencv-python-headless

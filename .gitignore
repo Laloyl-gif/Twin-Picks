@@ -1,0 +1,15 @@
+# données de chaque installation (réglages, profils, caches, images téléchargées) : jamais dans le dépôt
+donnees/
+affiches_pete/
+modeles/
+__pycache__/
+*.pyc
+# les plans vivent sur la branche « plans » (outils/preparer_plans.py, outils/publier_plans.py) ;
+# un dossier plans/ local reste possible (prioritaire) mais n'est pas envoyé
+plans/
+# application Android : fichiers de construction
+android/.gradle/
+android/build/
+android/app/build/
+android/local.properties
+*.apk

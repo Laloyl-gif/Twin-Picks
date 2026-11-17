@@ -1,0 +1,6 @@
+{
+  "_aide": "Adresse du dépôt GitHub du jeu (compte/depot). Laissez « COMPTE/twin-picks » si le jeu est un clone git : l'adresse est alors trouvée toute seule.",
+  "github": "COMPTE/twin-picks",
+  "branche": "main",
+  "branche_plans": "plans"
+}

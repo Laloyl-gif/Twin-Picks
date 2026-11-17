@@ -1,0 +1,413 @@
+{
+  "reveal_secs": 6,
+  "max_essais": 3,
+  "qcm_choix": 6,
+  "blocage": 3,
+  "bonus_vitesse": 300,
+  "serie_bonus": 50,
+  "rattrapage": true,
+  "musique": true,
+  "musique_volume": 40,
+  "musique_films": true,
+  "profils_auto": true,
+  "profils_fichier": false,
+  "dur_affiche": 25,
+  "aff_puissance": 8,
+  "aff_effets": 4,
+  "aff_etapes": 6,
+  "aff_simplif": 20,
+  "aff_final": 0,
+  "dur_plans": 25,
+  "plans_intervalle": 6.0,
+  "plans_source": "auto",
+  "plans_dossier": "",
+  "dur_casting": 25,
+  "casting_debut": 2,
+  "casting_max": 6,
+  "casting_intervalle": 2.5,
+  "casting_ordre": "stars",
+  "casting_indices": true,
+  "dur_filmo": 25,
+  "filmo_debut": 1,
+  "filmo_max": 6,
+  "filmo_intervalle": 2.5,
+  "dur_anagramme": 35,
+  "ana_lettres": 40,
+  "ana_debut": 40,
+  "dur_synopsis": 35,
+  "syn_debut": 35,
+  "dur_blind": 25,
+  "blind_indices": true,
+  "blind_affiche": true,
+  "blind_titre": true,
+  "blind_top": 5,
+  "dur_persos": 25,
+  "persos_max": 5,
+  "persos_debut": 1,
+  "persos_intervalle": 3.5,
+  "comp_mode": "tous",
+  "comp_meneur": "",
+  "comp_confirmer": true,
+  "comp_films": 6,
+  "comp_dur_choix": 25,
+  "comp_dur_devine": 20,
+  "comp_pts_devin": 500,
+  "comp_bonus_rang": 300,
+  "comp_bonus_vitesse": 200,
+  "comp_pts_meneur": 250,
+  "comp_pts_tous": 250,
+  "comp_remontada": 20,
+  "comp_rev_pas": 3.5,
+  "dur_norma": 20,
+  "norma_pts": 1000,
+  "norma_vitesse": 200,
+  "norma_cible": 150,
+  "dur_shelly": 35,
+  "shelly_titre": true,
+  "dur_leland": 30,
+  "leland_nb": 4,
+  "leland_realisateur": true,
+  "leland_compositeur": true,
+  "leland_acteur": true,
+  "leland_duo": true,
+  "leland_casting": true,
+  "leland_genre": true,
+  "leland_decennie": true,
+  "leland_langue": true,
+  "leland_note": true,
+  "leland_joueurs": true,
+  "dur_lucy": 60,
+  "lucy_pts": 150,
+  "lucy_seul": 75,
+  "lucy_genre": true,
+  "lucy_decennie": true,
+  "lucy_realisateur": true,
+  "lucy_acteur": true,
+  "lucy_note": true,
+  "lucy_langue": true,
+  "lucy_joueurs": true,
+  "dur_donna": 90,
+  "donna_pts": 250,
+  "donna_bingo": 300,
+  "donna_malus": 40,
+  "donna_genre": true,
+  "donna_decennie": true,
+  "donna_realisateur": true,
+  "donna_acteur": true,
+  "donna_note": true,
+  "donna_langue": true,
+  "donna_joueurs": true,
+  "dur_bobby": 20,
+  "bobby_nb": 4,
+  "bobby_sens": "mieux",
+  "bobby_indice": true,
+  "version": 3,
+  "api_key": "86ed8f1a7ba89d86b9736b6f0b765375",
+  "session_id": "055a76c26391ac2c2133c8efce15cfae921c0c95",
+  "account_id": 23954276,
+  "account_name": "poubellelaloy1346",
+  "reponse": "buzzer",
+  "jeux": {
+    "affiche": {
+      "on": true,
+      "n": 3
+    },
+    "plans": {
+      "on": true,
+      "n": 5
+    },
+    "casting": {
+      "on": true,
+      "n": 5
+    },
+    "anagramme": {
+      "on": true,
+      "n": 3
+    },
+    "blindtest": {
+      "on": false,
+      "n": 5
+    },
+    "complice": {
+      "on": true,
+      "n": 10
+    },
+    "synopsis": {
+      "on": true,
+      "n": 5
+    },
+    "filmo": {
+      "on": true,
+      "n": 3
+    },
+    "persos": {
+      "on": true,
+      "n": 3
+    },
+    "norma": {
+      "on": true,
+      "n": 10
+    },
+    "shelly": {
+      "on": true,
+      "n": 10
+    },
+    "leland": {
+      "on": true,
+      "n": 7
+    },
+    "lucy": {
+      "on": true,
+      "n": 7
+    },
+    "donna": {
+      "on": true,
+      "n": 7
+    },
+    "bobby": {
+      "on": true,
+      "n": 7
+    }
+  },
+  "listes": {
+    "affiche": {
+      "inc": [
+        -5
+      ],
+      "exc": []
+    },
+    "plans": {
+      "inc": [
+        8707294
+      ],
+      "exc": []
+    },
+    "casting": {
+      "inc": [
+        8707294
+      ],
+      "exc": []
+    },
+    "anagramme": {
+      "inc": [
+        8707294
+      ],
+      "exc": []
+    },
+    "blindtest": {
+      "inc": [
+        8707294
+      ],
+      "exc": []
+    },
+    "complice": {
+      "inc": [
+        8707294
+      ],
+      "exc": []
+    },
+    "synopsis": {
+      "inc": [
+        8707294
+      ],
+      "exc": []
+    },
+    "persos": {
+      "inc": [
+        8707294
+      ],
+      "exc": []
+    },
+    "leland": {
+      "inc": [
+        8707294
+      ],
+      "exc": []
+    },
+    "lucy": {
+      "inc": [
+        8707294
+      ],
+      "exc": []
+    },
+    "donna": {
+      "inc": [
+        8707294
+      ],
+      "exc": []
+    },
+    "bobby": {
+      "inc": [
+        8707294
+      ],
+      "exc": []
+    }
+  },
+  "listes_connues": [
+    {
+      "id": 8707294,
+      "nom": "List pour jeu",
+      "nb": 701
+    },
+    {
+      "id": -1,
+      "nom": "Mes favoris (films)",
+      "nb": 0
+    },
+    {
+      "id": -2,
+      "nom": "Mes favoris (séries)",
+      "nb": 0
+    },
+    {
+      "id": -3,
+      "nom": "À voir (films)",
+      "nb": 0
+    },
+    {
+      "id": -4,
+      "nom": "À voir (séries)",
+      "nb": 0
+    },
+    {
+      "id": -5,
+      "nom": "Films notés",
+      "nb": 969
+    },
+    {
+      "id": -6,
+      "nom": "Séries notées",
+      "nb": 0
+    },
+    {
+      "id": 8707733,
+      "nom": "Vu en 2026",
+      "nb": 436
+    },
+    {
+      "id": 8714703,
+      "nom": "Test blind test",
+      "nb": 1
+    },
+    {
+      "id": 8708790,
+      "nom": "Commun Etienne",
+      "nb": 152
+    },
+    {
+      "id": 8707709,
+      "nom": "Jeu - Vu avec Lily",
+      "nb": 272
+    },
+    {
+      "id": 8707731,
+      "nom": "Vu avec Etienne",
+      "nb": 128
+    },
+    {
+      "id": 8708791,
+      "nom": "Commun Lily",
+      "nb": 90
+    },
+    {
+      "id": 8707289,
+      "nom": "Test",
+      "nb": 9
+    },
+    {
+      "id": 8707769,
+      "nom": "Jeu - Culte",
+      "nb": 159
+    },
+    {
+      "id": 8707644,
+      "nom": "Jeu – Oscars",
+      "nb": 220
+    },
+    {
+      "id": 8707641,
+      "nom": "Jeu – Western",
+      "nb": 14
+    },
+    {
+      "id": 8707638,
+      "nom": "Jeu – Thriller",
+      "nb": 132
+    },
+    {
+      "id": 8707637,
+      "nom": "Jeu – Science-Fiction",
+      "nb": 117
+    },
+    {
+      "id": 8707636,
+      "nom": "Jeu – Romance",
+      "nb": 114
+    },
+    {
+      "id": 8707635,
+      "nom": "Jeu – Mystère",
+      "nb": 52
+    },
+    {
+      "id": 8707634,
+      "nom": "Jeu – Musique",
+      "nb": 25
+    },
+    {
+      "id": 8707633,
+      "nom": "Jeu – Horreur",
+      "nb": 59
+    },
+    {
+      "id": 8707632,
+      "nom": "Jeu – Histoire",
+      "nb": 48
+    },
+    {
+      "id": 8707631,
+      "nom": "Jeu – Guerre",
+      "nb": 28
+    },
+    {
+      "id": 8707630,
+      "nom": "Jeu – Fantastique",
+      "nb": 106
+    },
+    {
+      "id": 8707629,
+      "nom": "Jeu – Familial",
+      "nb": 98
+    },
+    {
+      "id": 8707628,
+      "nom": "Jeu – Drame",
+      "nb": 381
+    },
+    {
+      "id": 8707627,
+      "nom": "Jeu – Crime",
+      "nb": 102
+    },
+    {
+      "id": 8707626,
+      "nom": "Jeu – Comédie",
+      "nb": 184
+    },
+    {
+      "id": 8707625,
+      "nom": "Jeu – Aventure",
+      "nb": 158
+    },
+    {
+      "id": 8707624,
+      "nom": "Jeu – Animation",
+      "nb": 113
+    },
+    {
+      "id": 8707623,
+      "nom": "Jeu – Action",
+      "nb": 128
+    }
+  ]
+}

@@ -1,0 +1,402 @@
+TWIN PICKS
+
+Installation, raccourci du bureau toujours à jour, application Android, plans en ligne : voir INSTALLATION.md.
+
+Avant le premier lancement (sans le raccourci du bureau)
+  1. Copier votre effets.py dans ce dossier, à côté de main.py.
+  2. pip install -r requirements.txt
+  3. Pour « Affiche vidée » (Pete) : pip install -r requirements-affiches.txt
+     (rapidocr pour les textes, rembg pour les personnages et le sujet principal, onnxruntime pour LaMa).
+     Facultatif, encore plus propre : pip install simple-lama-inpainting (installe PyTorch, ~2 Go).
+
+Menu
+  Toujours 3 cartes par ligne ; quand elles ne tiennent pas toutes, elles sont réparties en pages (flèches et points en
+  haut, molette, ←/→ ou glisser du doigt). Chaque carte montre en grand le nom Twin Peaks du jeu (« Pete's
+  Percolator ») et en petit son nom technique (« Affiche vidée ») ; survolez-la pour lire la règle. Touchez une carte
+  pour la choisir ; sur une carte choisie : − / + pour le nombre de manches, et d'où viennent les films
+  (« 2 listes », « Profils »… en rouge s'il manque quelque chose). « Tout » / « Aucun » en haut à droite.
+  En bas : le mode de réponse (Écrit, QCM, Buzzer) et « Lancer » avec le total de manches.
+  Réglages et Listes : la liste des jeux à gauche (noms techniques), leurs réglages à droite ; les catégories
+  (conditions, intrus, liens) se cochent comme des étiquettes.
+  Les noms Twin Peaks et les 3 cartes par ligne sont figés : voir CONSIGNES.md.
+
+Les jeux
+  Nom (menu)                                  Jeu (réglages)     Règle
+  Cooper's Investigation                      Affiche déformée   l'affiche se précise peu à peu
+  Truman's Files                              Trois plans        trois images du film, de la plus difficile à la plus facile
+  Audrey's Dance                              Casting            les acteurs arrivent un par un
+  Cole's Hearing Aid                          Anagramme          les lettres du titre sont mélangées
+  Diane's Tape                                Blind test         un extrait de la bande originale
+  BOB's Fire Walk With Me                     Complicité         retrouvez le film préféré d'un autre joueur
+  Dr. Jacoby's Couch                          Synopsis           le résumé se dévoile peu à peu
+  Laura's Secret Diary                        Filmographie       ses films arrivent un par un : trouvez l'acteur
+  Janey-E's Owls                              Personnages        les personnages du film, un par un
+  Norma's Double R                            Devine la note     quelle note un autre joueur a-t-il donnée ?
+  Shelly's Cherry Pie                         La moyenne         la moyenne de vos notes, puis des indices
+  Leland's Smile                              L'intrus           un seul n'a rien à faire là
+  Lucy's Hotline                              Chrono             le plus de films possible pour une condition
+  One-Eyed Donna's                            Bingo              un film par case, à la croisée de deux conditions
+  Bobby in the Ghostwood                      Le mieux noté      lequel a la meilleure note TMDB ?
+  The Man From Another Place's egdoL kcalB    Couleurs           l'affiche réduite à ses couleurs, de plus en plus fine
+  Pete's Percolator                           Affiche vidée      plus de titre ni de personnages : il ne reste que le décor
+  Major Briggs' Deep Space Monitor Printouts  Mots-clés          le relevé s'imprime : les éléments clés de l'histoire
+  Albert's Blue Rose Conversation             Le lien            qu'ont ces deux films en commun ?
+  Nadine's Silent Drape Runners               La frise           remettez les films dans l'ordre de sortie
+  Hawk's Missing Pages                        L'accroche         le slogan de l'affiche, puis des indices
+  Andy's Police Sketch                        Le croquis         le portrait-robot de l'affiche, trait après trait
+  Ben's Ghostwood Deal                        Le box-office      son budget et ce qu'il a rapporté : il faut les deux
+  Josie's Double Ledger                       Le mensonge        six affirmations, une seule est fausse
+  Maddy's Impersonation                       Qui l'a dit ?      une réplique du film : quel personnage l'a dite ?
+  James' Just You                             La bande originale les morceaux de la BO, un par un, sur une cassette
+  Big Ed's Gas Farm                           La durée           combien de temps dure le film ? (au pavé : 140 = 1 h 40)
+  The Log Lady's Knothole                     Ce que la bûche a vu  une image vue par le trou d'un nœud de la bûche
+  Leo's New Shoes                             Plus ou moins      quatre duels : le plus récent, le plus long…
+  The Giant's Three Clues                     Les trois répliques  trois répliques du film, l'une après l'autre
+  Catherine's Disguise                        Le titre déguisé   le titre dans d'autres langues, du plus lointain au plus proche
+  Denise's Undercover                         Qui suis-je ?      la carte d'identité d'un acteur se remplit, sans son nom
+  Carl's Fat Trout Trailers                   Les deux films     derrière le store, deux films mêlés : trouvez les deux
+  Phillip's Associates                        Les complices      qui est-ce ? ceux avec qui il a le plus tourné
+  Jerry's Trip                                Le rébus           le titre du film en rébus phonétique
+  Hank's Dominoes                             Le domino manquant le film qui fait le pont entre deux films
+  Lil's Coded Dress                           L'absent           neuf objets sur la robe de Lil : quel film manque ?
+  Dougie's Jackpots                           Le jackpot         les rouleaux s'arrêtent sur les morceaux d'une affiche
+  Mr. C's Coordinates                         Les coordonnées    le film donné par ses seuls nombres
+  Mike's Missing Arm                          La pièce manquante quelle pièce complète l'affiche ?
+
+Décors
+  Jamais de fond qui dénote : des objets (web/objets.js, web/decor.js). Les objets ne sont jamais cachés derrière
+  l'interface : ils sont posés par-dessus, à cheval sur ses bords (sans masquer de texte ; s'il n'y a pas la place,
+  ils se posent au-dessus, sinon ils ne s'affichent pas). Plus aucune étiquette n'explique la référence.
+  Répliques de la série : en VO, plusieurs par jeu, tirées au hasard à chaque manche, et souvent intégrées à
+  l'interface plutôt que sur un post-it (sous-titre jaune de la Red Room, enseigne de Carl, fiche de Truman,
+  griffonnage, bulle de Jerry, journal de Laura, néon du Bang Bang Bar…). Cooper : toujours « Black as midnight on a
+  moonless night. »
+    Cooper : l'affiche dans un sachet de pièce à conviction ; la tasse, le dictaphone, parfois des taches de café.
+    Truman : photos punaisées, fil rouge, chapeau, écusson.   Hawk : l'écusson Twin Peaks, la plume, une réplique.
+    Audrey : le Bang Bang Bar (l'enseigne au néon : « The », le revolver, BANG / BANG qui s'allument tour à tour, BAR ;
+      des néons rouges qui grésillent) ; la cerise et la clé de la chambre 315 au milieu, entre les photos.
+    Cole : les lettres, le vumètre, les écouteurs branchés sur leur boîtier.   Andy : un post-it avec sa réplique.
+    Leland : le portrait de Laura reine du lycée (la vraie photo), sa carte d'avocat, les films à côté.
+    Bobby : la capsule du major Briggs (saison 3 : le cylindre de métal, son message roulé qui dépasse), en grand.
+    Maddy : ses grosses lunettes au milieu des personnages.   Leo : la paire de chaussures entre les deux affiches
+      (sans titres écrits : l'écart est toujours le même).
+    Catherine : les cartes de « Mr. Tojamura », pince-nez, moustache, lame de scie, tampon rouge du pays.
+    Denise : porte-carte de la DEA, le nom en cases.   Carl : la caravane, son store, l'enseigne du Fat Trout.
+    James : la jaquette de la cassette, la moto devant (à gauche, les roues tournent ; la pochette reste visible).
+    Albert : un point bleu lumineux.   Phillip : le réseau relié par l'électricité, le téléphone.
+    Jerry : les cartes du rébus, la baguette.   Hank : la chaîne de dominos.   Lil : sa robe rouge, la rose bleue.
+    Dougie : la machine à sous.   Mr. C : la fiche des coordonnées.   Mike : l'affiche trouée et les pièces.
+    Et toujours : Norma (Double R), Shelly (cherry pie), Lucy (téléphone), Donna (One-Eyed Jack's), Pete (post-it),
+      Ben et Josie (registres), Big Ed (pompe), le Géant (cartons, bague de la grotte du hibou, nœud papillon),
+      la Dame à la bûche (le trou du nœud), la Red Room (sans lumière de lampe).
+  Indices et titre à trous : leur place est réservée dès le début ; rien ne bouge quand ils arrivent.
+  Big Ed : la durée tapée s'affiche en direct sur le téléphone (au pavé numérique, « 140 » = 1 h 40).
+  Blind test (ordinateur) : à la réponse, « Ouvrir dans YouTube Music » ouvre le morceau dans YouTube Music, pour
+    l'ajouter à une playlist en un clic. (L'ajout automatique demanderait de connecter un compte Google au jeu :
+    trop lourd pour ce que ça apporte.)
+  Registres (Ben, Josie) : le texte tombe toujours entre deux lignes.   Téléphone : interfaces simplifiées, lisibles.
+  Pas de barre de défilement ; la musique (en bas) ne passe jamais sur un texte.
+  Réussi : Cooper lève le pouce ; raté : Cooper laisse tomber son café (web/cooper_ok.png, web/cooper_rate.png).
+
+Jamais deux fois la même manche
+  Dans une partie, une manche n'est jamais reconstruite à l'identique (même jeu, mêmes films, mêmes conditions), et
+  un film déjà joué dans un jeu ne revient pas dans un autre (tant qu'il reste des films à jouer).
+
+Points
+  Rattrapage (tous les jeux) : quand un joueur en retard marque des points, il gagne en plus une part de son retard
+  sur le premier (15 % par défaut, 500 points au plus par manche ; Réglages › Général › Partie). Le retard est
+  compté au début de la manche. Complicité garde son propre réglage (« Remontada »).
+
+Lancer
+  python main.py   (l'écran hôte s'ouvre dans le navigateur)
+
+Images des personnages
+  Cartes du menu : web/persos/ (cooper, truman, audrey, cole, diane, bob, jacoby, laura, janey, norma, shelly,
+  leland, lucy, donna, bobby, manfrom, pete, briggs, albert, nadine, hawk, andy, ben, josie, maddy, james, ed,
+  catherine, denise, carl, logo), au format 900 × 474. Sans image, la carte
+  montre un emblème.
+  Photos de profil des joueurs : web/persos/avatars/ (images carrées .jpg ; ajoutez-en autant que vous voulez).
+  Pour changer une image, remplacez le fichier du même nom. Sans image, la carte affiche un emblème dessiné.
+
+Profils des joueurs (bouton « Profils » de l'écran hôte, enregistrés dans profils.json)
+  Sur le téléphone, « Je suis… » choisit le profil, à part du pseudo : on peut être relié au profil Lily en jouant
+  sous le pseudo « Lulu ». Retoucher le profil choisi l'annule ; « Aucun » : pas de profil. Sans choix, le joueur
+  est relié au profil qui porte son pseudo. Modifiable en cours de partie (bouton du joueur, en haut).
+  - Listes : chaque profil a ses listes TMDB (Louison : Evaluations ; Lily : Jeu - Vu avec Lily, Commun Lily ;
+    Etienne : Commun Etienne, Vu avec Etienne). Elles sont retrouvées par leur nom parmi vos listes TMDB
+    (connectez votre compte dans « Listes » si un nom apparaît en rouge), ou choisies avec « + liste… ».
+  - Quand des joueurs ont un profil, les jeux prennent automatiquement les films vus par TOUS ces joueurs
+    (intersection de leurs listes). Les listes exclues d'un jeu restent exclues. Désactivable :
+    Réglages › Général › « Profils : listes choisies selon les joueurs présents ».
+  - Notes : importez un fichier par profil (on peut en importer plusieurs, ils se complètent) :
+      IMDb       : Your Ratings › Export (ratings.csv)
+      TMDB       : Paramètres › Importer / Exporter (CSV de vos notes)
+      Letterboxd : Settings › Import & Export › Export your data (le .zip entier, ou ratings.csv / watched.csv)
+      Refract    : la sauvegarde .zip (ou ses fichiers readable/ratings.csv, library.csv)
+      autre CSV  : une colonne titre, une colonne année et une colonne note suffisent
+    Les notes sont ramenées sur 10 (Letterboxd : 4,5 étoiles = 9). Les films sans identifiant TMDB (IMDb,
+    Letterboxd) sont retrouvés sur TMDB pendant l'import.
+  - Nouveau profil : un nom (= le pseudo du joueur) et, si vous voulez, un fichier de notes.
+  - Réalisateurs connus : « Choisir… » sur la carte du profil, puis cochez les réalisateurs de realisateurs.txt que
+    le joueur connaît (« Tous » / « Aucun »). Chrono et Bingo ne posent de conditions « réalisateur » que sur eux :
+    Chrono sur ceux que TOUS les joueurs présents connaissent, Bingo (une grille par joueur) sur ceux du joueur.
+
+Sagas
+  Dans les jeux où l'on devine un film, le nom de la saga suffit : « Harry Potter » pour tous les Harry Potter,
+  et c'est ce nom qui s'affiche (le titre exact passe en petit). Désactivable : Réglages › Général › « Sagas ».
+  Pas pour l'Anagramme (les lettres sont celles du titre). Pas deux films d'une même saga dans une partie tant
+  qu'il en reste d'autres. Les sagas sont lues sur TMDB et gardées dans sagas_cache.json (la 1re partie avec
+  une grosse liste les découvre en arrière-plan ; ensuite tout est déjà connu).
+
+Trois plans (Truman)
+  Dossier plans/ : 78 films (dont Alien, The Shining, Get Out, Avatar, The Exorcist, Project Hail Mary…).
+  1. Dossier plans/ du jeu : un sous-dossier par film, nommé « Titre (année) [tmdb-123] » (l'identifiant
+     TMDB est facultatif mais plus sûr ; pour une série : [tmdb-tv-123]). Les images y sont numérotées de la
+     plus difficile (01.jpg) à la plus facile. Un plan est tiré dans chaque tiers : difficile, moyen, facile.
+     Si les images ne sont pas numérotées, leur difficulté est estimée automatiquement.
+  2. Sinon, vos fichiers vidéo : Réglages › Trois plans › « Dossier de vos films ». Les plans sont extraits
+     avec ffmpeg, hors génériques, puis triés. Fichiers reconnus par leur nom (« Interstellar (2014).mkv »).
+  3. Sinon TMDB : séries -> images d'épisodes ; films -> fonds sans texte, sans les plus votés.
+
+Casting (Audrey)
+  Uniquement les acteurs, un par un (on commence avec un seul), têtes d'affiche d'abord (réglable). Aucun autre indice.
+
+Personnages (Janey-E)
+  On commence avec un seul personnage. Indices (réglables) : année et genre, le réalisateur, puis le nom de
+  l'acteur sous chaque personnage, et enfin le titre à trous.
+
+Filmographie (Laura)
+  Les acteurs viennent de acteurs.txt (un nom par ligne, modifiable). Leurs films sont tirés parmi
+  leurs plus connus, en ne gardant que les vrais rôles (pas les apparitions ni les films pas encore sortis).
+  Si vous modifiez la liste, la recherche TMDB se fait au lancement suivant (résultat gardé dans acteurs_cache.json).
+
+Blind test (Diane)
+  La musique vient de Deezer (extraits officiels de 30 s) et ne sort que de l'écran hôte.
+  La bande originale est vérifiée avant d'être jouée (titre de l'album, compositeur, genre, année ;
+  reprises écartées). Sans BO fiable, un autre film est tiré.
+  Indices discrets : genre et année dès le début, puis l'affiche très floue qui se précise un peu (jamais nette),
+  le compositeur, un acteur, et à la fin les premières lettres. Chaque indice se désactive.
+  Si le navigateur bloque le son, cliquez sur « Activer le son » en bas de l'écran.
+
+Complicité (BOB)
+  En devinettes croisées, la réponse se dévoile joueur par joueur en suivant la chaîne :
+  « Choix de Louison ✓ trouvé par Lily », puis « Choix de Lily ✗ Etienne a répondu… », etc.
+  Réglages › Complicité › « Révélation : secondes par joueur ».
+
+Jeux fondés sur les profils
+  Devine la note (Norma) : au moins 2 joueurs avec un profil noté. Le film est toujours un film vu (noté) par TOUS les
+    joueurs présents qui ont des notes (intersection de leurs notes). Chacun devine la note (1 à 10) que sa cible lui
+    a donnée. Points seulement pour la note exacte.
+  La moyenne (Shelly) : un film noté par TOUS les joueurs présents qui ont des notes ; la moyenne de leurs notes sur
+    une règle de 1 à 10, avec l'étendue des notes (sans dire qui a mis quoi), puis des indices de plus en plus
+    parlants (décennie, pays, durée, année, réalisateur, acteurs) : trouvez le film.
+
+Affiche déformée (Cooper)
+  Les effets diminuent en ligne droite pendant TOUTE la manche : il en reste 10 % à la toute fin (réglable :
+  « Effets restants à la toute fin »). L'affiche n'est donc presque lisible qu'à la fin.
+
+Autres jeux
+  Casting (Audrey) : toujours les X acteurs principaux du film, mais dans un ordre aléatoire (réglable).
+  Filmographie (Laura) : 8 films par défaut, tirés au hasard parmi les 16 plus connus de l'acteur.
+  La frise (Nadine) : les films sont tirés au hasard parmi tous ceux des listes choisies.
+  L'intrus (Leland) : 6 films (ou acteurs), affichés sans leur année ; l'intrus peut être lié au réalisateur, au
+    compositeur, au scénariste, au directeur de la photo, à un acteur, à un duo d'acteurs, au casting d'un film, au
+    genre, à la décennie, à l'année, à la langue, au pays de production, à un thème (mot-clé TMDB), à la
+    durée, à la note TMDB ou aux notes des joueurs. Au bout de 5 s : la nature de la différence (« Décennie
+    différente »…), puis un indice plus précis ; le sujet à la fin. Jamais deux films d'une même saga ou d'un même
+    univers. Chaque catégorie se désactive dans les réglages.
+    Acteurs et réalisateurs : toujours des personnes des listes de référence (acteurs.txt, realisateurs.txt ; et si
+    les joueurs présents ont coché les réalisateurs qu'ils connaissent dans leur profil, seulement ceux-là).
+  Chrono (Lucy) et Bingo (Donna) : conditions possibles (chacune se désactive) : genre, décennie, année ou période,
+    acteur (acteurs.txt), réalisateur (realisateurs.txt), compositeur, note TMDB, langue, pays de production, durée,
+    box-office, thème (zombies, voyage dans le temps, requin…), titre (1re lettre,
+    un seul mot, trois mots au choix, un nombre), notes d'un autre joueur ; « film d'une saga » au Bingo seulement.
+    Réalisateurs, acteurs, compositeurs et mots du titre : trois au choix (« Avec A, B ou C »).
+    « Un nombre dans le titre » : en chiffres ou en lettres (« Wild Horse Nine », « Les Sept Samouraïs »), jamais un
+    film de saga (« Toy Story 2 » ne compte pas).
+    N'importe quel film de TMDB compte. La saisie propose TOUS les films de TMDB, avec une recherche intelligente :
+    « pulp » propose Pulp Fiction, une faute de frappe est rattrapée, les films connus passent devant les homonymes ;
+    une saisie partielle validée (« pulp ») est comprise comme le film le plus probable.
+    Un film déjà donné lors d'une manche précédente ne compte plus (Réglages › Général).
+  Chrono (Lucy) : tapez le plus de films possible. Points fixes par film ; à la fin, bonus pour le 1er (le plus de
+    films), la moitié pour le 2e, le quart pour le 3e. En bas des téléphones, « Changer de condition » : quand tous
+    les joueurs l'ont touché, une nouvelle condition arrive, le chrono repart au début et les films déjà donnés sont
+    retirés (avec leurs points).
+  Bingo (Donna) : grille 2×2 ou 3×3 (la durée est doublée en 3×3), un film différent par case. Grilles : une par
+    joueur (par défaut) ou la même pour tous. « Lignes × colonnes » : une condition par ligne et une par colonne ;
+    la grille est toujours vérifiée : chaque case a au moins deux films CONNUS qui y répondent (films de vos listes,
+    ou films très connus), toute la grille peut être remplie avec des films tous différents, et deux conditions qui
+    ne vont pas ensemble ne se croisent jamais (deux époques, langue et pays, deux notes…). « Une par case » : chaque case a sa condition. Condition impossible ? Touchez-la (en-tête, ou
+    « Changer cette condition » sous la case choisie), confirmez : elle est remplacée par une autre qui garde la
+    grille faisable, et ses cases rapportent moins. Bonus grille complète, et bonus du 1er à finir (la moitié pour
+    le 2e, le quart pour le 3e).
+  Le mieux noté (Bobby) : 6 films ; lequel est le mieux noté sur TMDB ? (ou le moins bien : réglages)
+  Couleurs (L'Homme d'ailleurs) : chaque colonne de l'affiche prend sa couleur moyenne (un code-barres) ; puis
+    l'affiche se coupe en bandes de plus en plus fines et les formes apparaissent.
+    Indices : genre et année, réalisateur, titre à trous.
+  La frise (Nadine) : 5 films accrochés à une tringle, dans le désordre ; sur le téléphone, touchez-les du plus ancien
+    au plus récent puis « Accrocher ». À la réponse, les affiches glissent sans bruit à leur place. Points par film
+    bien placé, bonus frise parfaite. Jamais deux films de la même année ni d'une même saga. Indice à mi-temps :
+    l'année d'un des films.
+  L'accroche (Hawk) : comme les pages du journal de Laura retrouvées par Hawk, le slogan de l'affiche (TMDB, en
+    français sinon en anglais) s'affiche en entier dès le début sur une page déchirée (les mots du titre sont
+    masqués) ; puis des indices petit à petit : genre et année, réalisateur, acteur, personnage, titre à trous,
+    quelques lettres de plus.
+  Le croquis (Andy) : comme Andy qui dessine le portrait-robot de BOB, une affiche SANS TEXTE du film (TMDB) est
+    redessinée au crayon : les grands contours, puis les détails, puis les ombres. Indices : genre et année, titre à
+    trous. À la réponse : l'affiche. Une part des manches (30 % par défaut, réglable) dessine le portrait d'un
+    acteur de acteurs.txt : il faut trouver l'acteur.
+  Le box-office (Ben) : le registre de Ben est ouvert sur deux pages, le film sur la reliure : à gauche le budget, à
+    droite le box-office mondial. Quatre montants par page, un seul juste ; on coche une ligne par page. Les deux
+    justes : tous les points (+ rapidité) ; un seul : la moitié. Indice : deux montants faux s'effacent sur chaque
+    page. Seuls les films dont TMDB connaît le budget et les recettes sont tirés.
+  Le mensonge (Josie) : six affirmations (trois par page du registre) sur le film (réalisateur, année, acteur, musique, durée, pays…) ; une
+    seule est fausse, et elle reprend une vraie valeur d'un autre film pour être crédible. Indice : une affirmation
+    vraie est barrée à mi-temps.
+  Qui l'a dit ? (Maddy) : Maddy se fait passer pour sa cousine Laura. Une réplique du film (Wikiquote) : quel
+    personnage l'a dite ? Quatre personnages (photo de l'acteur, nom du personnage), un seul est le bon. Indice à
+    mi-temps : un mauvais personnage s'efface. Il faut Internet.
+  La bande originale (James) : la jaquette de la cassette se remplit, un morceau après l'autre (pistes de la BO,
+    album Deezer vérifié ; mots du titre cachés). Le compositeur est écrit dès le début. Indices : genre et année,
+    puis la pochette de l'album, très floue puis un peu moins, titre à trous.
+  La durée (Big Ed) : combien de minutes dure le film ? Chacun tape sa réponse ; la jauge d'essence (vide = 1 h,
+    plein = 4 h) monte jusqu'à la vraie durée. Le plus proche gagne toujours (bonus) ; bonus à 5 minutes près ; pour
+    tous, des points qui baissent avec l'écart (60 min par défaut). Indice : une fourchette de 40 minutes.
+  Ce que la bûche a vu (La Dame à la bûche) : une image du film (TMDB) vue par le trou d'un nœud de la bûche ; le
+    trou se promène au hasard sur l'image et s'agrandit, sans jamais repasser par un endroit déjà vu. Indices : genre et année, titre à trous. À la réponse :
+    l'image entière et le titre du film.
+  Plus ou moins (Leo) : « New shoes. » (« Des chaussures neuves. »), la manie de Leo. Quatre duels de deux films, la paire
+    de chaussures neuves entre les deux ; les deux films sont choisis proches (peu d'écart). Les duels : le plus récent, le plus long,
+    le mieux noté sur TMDB, celui qui a le plus rapporté. Un pari par duel ; points par duel gagné, bonus si tout est
+    juste. Chaque type de duel se désactive.
+  Les trois répliques (Le Géant) : comme les trois indices énigmatiques que le Géant donne à Cooper, trois répliques
+    du film (Wikiquote) arrivent l'une après l'autre sur trois cartons ; les mots du titre y sont cachés. Titre à
+    trous à la fin. Il faut Internet (répliques gardées dans repliques_cache.json : une page n'est lue qu'une fois).
+  Répliques (Le Géant, Qui l'a dit ?) : toujours en français ; celles trouvées seulement en anglais sont traduites
+    (Google Traduction, sinon MyMemory ; gratuits, sans compte ; traductions gardées dans traductions_cache.json).
+  Le titre déguisé (Catherine) : Catherine Martell revient déguisée en « Mr. Tojamura ». Le titre du film est
+    traduit en chaîne par Google Traduction dans plusieurs langues, puis retraduit en français : trois cartes, de la
+    plus déformée (12 langues) à 6, puis 3 langues ; les trois titres sont toujours différents entre eux et du vrai
+    titre. Chaque carte indique la dernière langue traversée avant le français, avec un tampon rouge aux initiales de
+    son pays (JP, RU, DE…). Ces traductions prennent du temps : elles sont préparées à l'avance, pendant les autres
+    jeux (donnees/catherine_cache2.json), pour ne jamais faire
+    attendre ; on garde toujours quelques films d'avance, et jamais deux fois le même film dans une partie. Un titre
+    que toutes les langues gardent tel quel (un nom propre) est noté et laissé de côté. Il faut Internet. Titre à
+    trous à la fin.
+  Qui suis-je ? (Denise) : Denise Bryson, agent de la DEA. La carte d'identité d'un acteur de acteurs.txt — ou, parfois,
+    d'un réalisateur (réglage, 25 % par défaut) — se remplit : les indices difficiles d'emblée (métier, date et lieu
+    de naissance), puis de plus en plus simples : débuts, signe particulier, portrait (homme ou femme, âge, pays),
+    genre de prédilection, complice habituel, rôle le plus connu, autres films, et enfin l'affaire la plus célèbre.
+    Le nom est en cases : quelques lettres apparaissent au fil de la manche. À la réponse : sa photo.
+  Les deux films (Carl) : au camping « Fat Trout » de Carl Rodd, derrière le store vénitien de la caravane, une lame
+    sur deux montre une image d'un film, l'autre lame une image d'un autre film ; les lames s'ouvrent une à une. Il
+    faut trouver les DEUX films : chacun rapporte des points (réglables), les deux ensemble un bonus. Indices : les
+    genres, les années, puis les deux titres à trous. À la réponse : les deux affiches.
+  Les complices (Phillip Jeffries) : une personne mystère (acteur de acteurs.txt, ou réalisateur, 25 % par défaut),
+    au centre ; autour, un par un, les acteurs et réalisateurs avec qui elle a le plus tourné (« 5 films ensemble »).
+    Dans 60 % des manches (réglable), un ou deux d'entre eux disent aussi un film fait ensemble. Le nom à trous à la
+    fin (jamais caché ; sur téléphone, une grille simple et lisible).
+  Le rébus (Jerry Horne) : un vrai rébus phonétique. Le titre est découpé en sons, et chaque morceau est dessiné par
+    un mot qui se prononce pareil ou presque, articles et noms propres compris (« Le Roi lion » : lait-roi-lion,
+    « Les Dents de la mer » : lait-dent-deux-las-mère). Un même son a souvent plusieurs images (« de » : un dé ou un
+    2…), tirées au sort. Un son qui ne se dessine pas est écrit. Indices : genre et année, puis les mots sous les
+    images, puis le titre à trous. Les titres qui se dessinent entièrement passent en priorité.
+  Le domino manquant (Hank Jennings) : une chaîne de dominos relie deux films par leurs acteurs, mais le domino du
+    milieu manque : c'est le film mystère. Il partage un acteur avec le film de gauche et un autre avec celui de
+    droite. Les deux acteurs charnières se dévoilent sur les dominos, puis genre et année, puis le titre à trous.
+  L'absent (Lil) : neuf objets épinglés sur la robe de Lil évoquent neuf films (mots-clés TMDB, titre) ; dix affiches
+    sont proposées : laquelle n'est pas sur la robe ? Indice : deux affiches représentées barrées à mi-temps.
+  Le jackpot (Dougie Jones) : la machine à sous du Silver Mustang ; ses trois rouleaux tournent sur des morceaux
+    d'affiches puis s'arrêtent un à un sur un tiers de l'affiche du film mystère. Jackpot : « Hellooo! »
+  Les coordonnées (Mr. C) : le film donné par ses seuls nombres, tapés un à un sur la fiche de Mr. C : année, durée,
+    note TMDB, budget, recettes, mots et lettres du titre… Puis le genre et le titre à trous.
+  La pièce manquante (Mike) : il manque un morceau à l'affiche ; quatre pièces, découpées au même endroit dans quatre
+    affiches : laquelle la complète ? À la réponse : l'affiche entière.
+  Images du menu : chaque carte du menu a un petit bouton « image » (en haut à gauche, au survol). On choisit une
+    image, on la cadre (glisser, zoom) et l'aperçu montre aussitôt la carte choisie et non choisie, l'en-tête de la
+    partie et la photo de profil. Les images ajoutées sont gardées dans donnees/images_menu/ ; « Remettre l'image
+    d'origine » les retire. Pratique pour Lil, Dougie, Mr. C et Mike, qui n'ont pas encore d'image.
+  Préparation à l'avance : chaque manche est préparée deux manches avant d'être jouée, pendant que l'on joue.
+
+Affiche vidée (Pete)
+  Nouveau traitement (version 3) : au premier lancement, le cache des affiches vidées est vidé (les anciennes
+  affiches vidées, masques et originales sont supprimés) et tout est refait avec le nouveau traitement :
+    - plusieurs affiches candidates essayées : on garde celle qu'il faut le moins effacer ;
+    - textes : plusieurs échelles + une passe contrastée (textes pâles), boîtes élargies (premières et dernières
+      lettres) ; personnages et sujet : contours flous compris (cheveux, ombres : plus de silhouette fantôme) ;
+    - masque nettoyé : le décor prisonnier entre les bras d'un personnage ou dans les lettres d'un titre part avec
+      eux, fentes refermées, poussières retirées ;
+    - reconstruction LaMa affinée zone par zone (plus nette), grain de l'affiche ajouté aux grandes zones ;
+      sans LaMa, repli OpenCV FSR (bien meilleur que l'ancien) ;
+    - vérification (textes, personnages, visages) puis nettoyage des contours restés au bord des zones effacées.
+  Pour tout refaire à la main : python -m affiches vider.
+  L'affiche d'un film, sans titre, textes, logos, personnages (humains ou animés) ni sujet principal (voiture,
+  requin, vaisseau…) : les zones effacées sont reconstruites, il ne reste que le décor. Il n'y a pas de limite à ce
+  qui est effacé. Indices : genre et année, réalisateur, titre à trous. À la réponse : l'affiche d'origine.
+  « There was a fish in the percolator! »
+  - Préparation automatique : dès qu'une liste est incluse pour ce jeu ou qu'un joueur se connecte avec un profil,
+    TOUTES les affiches des films concernés sont préparées en arrière-plan (les affiches déjà prêtes sont
+    simplement réutilisées : rien n'est refait). L'avancement s'affiche sur la carte (« Affiches 12/40 ») et dans
+    Réglages › Affiche vidée (bouton « Préparer maintenant » / « Arrêter »). Désactivable dans ces réglages.
+    Une partie lancée sans affiche prête attend la première.
+  - Vérification : une fois l'affiche reconstruite, textes, personnages et visages sont cherchés à nouveau sur le
+    résultat ; s'il en reste (ou si la reconstruction en a inventé), ces zones sont effacées à leur tour (jusqu'à
+    3 passes, réglable dans affiches/config.json : « verifications »).
+  - Détection : textes à deux échelles (petits textes du générique compris) + le bas de l'affiche repassé au
+    détecteur OpenCV (générique en lettres serrées) ; personnages (rembg, sinon mediapipe) + visages OpenCV ;
+    sujet principal (rembg « isnet-general-use », ignoré s'il couvre presque toute l'affiche : c'est alors le décor).
+  - Dossier affiches_pete/ : originales/, videes/ (ce que voient les joueurs), masques/ (zones effacées, en blanc),
+    catalogue.json (film TMDB -> fichiers). Les fichiers portent le nom du film : « Alien (1979).png ».
+    Une affiche prête n'est jamais refaite ni écrasée ; pour en refaire une : python -m affiches refaire "Alien (1979)"
+    (l'ancienne est gardée dans _anciennes/). Supprimer un fichier de videes/ le fait refaire au besoin.
+    Un arrêt en plein travail ne casse rien : l'affiche en cours est reprise au lancement suivant.
+  - Réglages techniques (outils, modèles, marges, passes, dossier) : affiches/config.json.
+  - Sans le jeu : python -m affiches outils | etat | preparer [N]   (pratique pour tout préparer la nuit).
+
+Mots-clés (Major Briggs' Deep Space Monitor Printouts)
+  Le relevé s'imprime sur du papier listing, ligne à ligne, entre deux lignes de code binaire (comme le relevé de la
+  série) : chaque ligne est un élément de l'histoire, du plus vague au plus précis, avec sa catégorie
+  (« OBJET ▸ HACHE », « LIEU ▸ OVERLOOK », « DÉTAIL ▸ CHAMBRE 237 », « PERSONNAGE ▸ DANNY »).
+  Sources : les mots-clés TMDB et le résumé (traduits par le lexique jeux/briggs_lexique.py), et surtout Wikidata et
+  Wikipédia (gratuits, sans clé) : personnages, lieux de l'action, noms propres et lieux inventés de l'intrigue,
+  détails chiffrés, époque, sujet. Ordre : thèmes, événements, objets / lieux, lieux réels, noms propres et détails,
+  puis un personnage. Jamais un mot du titre ou de la saga. Ce qui est lu sur le web est gardé dans
+  briggs_cache.json (une seule lecture par film) ; sans Internet, le jeu se contente de TMDB.
+  Indices : année et genre, puis titre à trous.
+
+Le lien (Albert)
+  Deux films (sans leur année) ; il faut trouver ce qui les relie parmi 6 propositions (une seule vraie) : acteur,
+  réalisateur, compositeur, scénariste, directeur de la photo, thème (mot-clé TMDB), genre, décennie, année,
+  langue ou ordre de budget (« Budget de 15 à 40 M$ ») ; chaque lien se désactive. Le pays de production n'est
+  plus un lien.
+  Jamais deux films d'une même saga ou d'un même univers (ni le troisième film de l'indice), et la saga n'est
+  jamais le lien. Les fausses pistes viennent des deux films (un acteur d'un seul des deux…). Indices : un
+  troisième film qui partage le même lien, puis la moitié des fausses pistes s'efface. À la réponse : pourquoi
+  chaque piste était fausse, et les autres points communs.
+
+Animations
+  Les écrans ne sont plus reconstruits à chaque mise à jour : ce qui est déjà affiché reste en place (pas de
+  saccade dans les révélations, pas d'image rechargée). Le premier indice arrive avec une petite animation ;
+  les suivants s'ajoutent à côté avec un léger éclat, sans que les autres bougent.
+
+Durées
+  25 s par défaut pour la plupart des jeux (anagramme, synopsis, frise : 35 s ; Lucy : 60 s ; Donna : 90 s).
+  Les anciens réglages restés aux valeurs par défaut sont mis à jour ; ceux que vous aviez changés sont gardés.
+
+Musique d'ambiance
+  Menu et podium : la musique du menu (Twin Peaks). Pendant la partie (hors blind test) : les bandes originales des
+  films des listes, avec le nom du film en bas de l'écran (sauf s'il est déjà dans le titre). Jamais la BO de la
+  manche en cours ou de la suivante, et un film entendu n'est plus tiré ensuite.
+  Sources (Réglages › Général, séparément pour le menu et la partie) :
+    - Dossier musique/ (morceaux complets) : musique/menu/, musique/partie/, musique/films/<Titre (année)>/
+      (voir musique/LISEZMOI.txt).
+    - Playlist YouTube (morceaux complets) : collez le lien d'une playlist publique ou non répertoriée ; elle est lue
+      au hasard par le lecteur YouTube intégré (caché) de l'écran hôte. Il faut Internet ; des pubs sont possibles.
+    - Deezer : extraits de 30 s seulement (l'API de Deezer ne fournit jamais les morceaux complets, même avec un
+      compte : inutile d'en créer un).
+    - Automatique : le dossier s'il contient des fichiers, sinon la playlist, sinon Deezer.
+  Par défaut : playlist YouTube pour les deux (si elle ne se charge pas : extraits Deezer).
+    Menu  : https://music.youtube.com/playlist?list=PLA7jHGp_FUM4
+    Partie : https://music.youtube.com/playlist?list=OLAK5uy_mlZa8Lsr_mNkYfrYynkfQE1ZyamvGWY3A
+  Les liens music.youtube.com marchent comme les liens youtube.com (seul l'identifiant « list= » compte).
+  Volume et activation : Réglages › Général. Un clic sur l'égaliseur coupe le son.

@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+<meta name="theme-color" content="#0e0c11">
+<title>Twin Picks</title>
+<link rel="stylesheet" href="/web/style.css">
+</head>
+<body class="joueur">
+
+<section id="v-rejoindre" hidden>
+  <div id="logo-tel"></div>
+  <div id="apercu" class="avatar-grand"><i>?</i></div>
+  <input id="pseudo" maxlength="16" placeholder="Votre pseudo" autocomplete="off">
+  <div class="groupe-tel"><span class="etiquette">Je suis</span><div id="profils-tel" class="profils-tel"></div></div>
+  <div class="groupe-tel"><span class="etiquette">Couleur</span><div id="palette" class="palette"></div></div>
+  <div class="groupe-tel"><span class="etiquette">Photo</span><div id="photos" class="photos"></div></div>
+  <button id="b-rejoindre" class="primaire large">Rejoindre</button>
+</section>
+
+<section id="v-jeu" hidden>
+  <header class="barre">
+    <button id="b-profil" class="profil" title="Pseudo et couleur"></button>
+    <div id="score" class="score"></div>
+    <div id="manche" class="doux"></div>
+  </header>
+  <div id="chrono" class="chrono" hidden><div></div></div>
+  <div id="titre-jeu" class="titre-jeu"></div>
+  <div id="visuel" class="visuel-tel" hidden></div>
+  <div id="zone-texte" hidden>
+    <div class="saisie">
+      <input id="saisie" autocomplete="off" autocapitalize="off" spellcheck="false" enterkeyhint="send">
+      <button id="b-valider" class="primaire">OK</button>
+    </div>
+    <div id="sugg" class="suggestions"></div>
+    <div id="aide-saisie" class="aide centre"></div>
+  </div>
+  <div id="zone"></div>
+  <div id="retour" class="retour"></div>
+</section>
+
+<dialog id="d-profil" class="dialogue">
+  <input id="p-nom" maxlength="16" placeholder="Pseudo">
+  <div class="groupe-tel"><span class="etiquette">Je suis</span><div id="p-profils" class="profils-tel"></div></div>
+  <div class="groupe-tel"><span class="etiquette">Couleur</span><div id="p-palette" class="palette"></div></div>
+  <div class="groupe-tel"><span class="etiquette">Photo</span><div id="p-photos" class="photos"></div></div>
+  <div class="boutons"><button id="p-ok" class="primaire">Enregistrer</button><button id="p-annuler" class="discret">Annuler</button></div>
+  <button id="p-quitter" class="lien danger">Quitter la partie</button>
+</dialog>
+
+<dialog id="d-confirmer" class="dialogue confirmer">
+  <b id="c-titre"></b>
+  <p id="c-texte" class="doux"></p>
+  <div class="boutons"><button id="c-oui" class="primaire">Changer</button><button id="c-non" class="discret">Annuler</button></div>
+</dialog>
+
+<script src="/web/commun.js"></script>
+<script src="/web/objets.js"></script>
+<script src="/web/decor.js"></script>
+<script src="/web/joueur.js"></script>
+<script src="/web/admin_tel.js"></script>
+</body>
+</html>

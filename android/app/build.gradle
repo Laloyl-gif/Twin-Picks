@@ -1,0 +1,67 @@
+plugins {
+    id 'com.android.application'
+    id 'com.chaquo.python'
+}
+
+// Le dépôt GitHub d'où l'application télécharge le jeu à chaque lancement : donné par GitHub Actions
+// (GITHUB_REPOSITORY = « compte/depot »), sinon par -Pdepot=compte/depot.
+def depot = System.getenv('GITHUB_REPOSITORY') ?: (project.findProperty('depot') ?: '')
+def numero = (System.getenv('GITHUB_RUN_NUMBER') ?: '1') as int
+
+android {
+    namespace 'fr.twinpicks.app'
+    compileSdk 34
+
+    defaultConfig {
+        applicationId 'fr.twinpicks.app'
+        minSdk 24
+        targetSdk 34
+        versionCode numero
+        versionName "1.${numero}"
+        buildConfigField 'String', 'DEPOT', "\"${depot}\""
+        ndk {
+            abiFilters 'arm64-v8a', 'armeabi-v7a', 'x86_64'
+        }
+    }
+    buildFeatures {
+        buildConfig true
+    }
+    signingConfigs {
+        // clé fixe (dans le dépôt) : une nouvelle version de l'application s'installe par-dessus l'ancienne
+        stable {
+            storeFile file('twinpicks.keystore')
+            storePassword 'twinpicks'
+            keyAlias 'twinpicks'
+            keyPassword 'twinpicks'
+        }
+    }
+    buildTypes {
+        debug {
+            signingConfig signingConfigs.stable
+        }
+        release {
+            minifyEnabled false
+            signingConfig signingConfigs.stable
+        }
+    }
+    lint {
+        checkReleaseBuilds false
+        abortOnError false
+    }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+}
+
+chaquopy {
+    defaultConfig {
+        version = '3.11'
+        pip {
+            install 'requests'
+            install 'pillow'
+            install 'numpy'
+            install 'qrcode'
+        }
+    }
+}

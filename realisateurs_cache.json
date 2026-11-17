@@ -1,0 +1,425 @@
+{
+ "v": 2,
+ "acteurs": {
+  "david lynch": {
+   "id": 5000,
+   "name": "David Lynch",
+   "profile_path": "/x.jpg"
+  },
+  "steven spielberg": {
+   "id": 5001,
+   "name": "Steven Spielberg",
+   "profile_path": "/x.jpg"
+  },
+  "christopher nolan": {
+   "id": 5002,
+   "name": "Christopher Nolan",
+   "profile_path": "/x.jpg"
+  },
+  "quentin tarantino": {
+   "id": 5003,
+   "name": "Quentin Tarantino",
+   "profile_path": "/x.jpg"
+  },
+  "martin scorsese": {
+   "id": 5004,
+   "name": "Martin Scorsese",
+   "profile_path": "/x.jpg"
+  },
+  "james gunn": {
+   "id": 5005,
+   "name": "James Gunn",
+   "profile_path": "/x.jpg"
+  },
+  "stanley kubrick": {
+   "id": 5006,
+   "name": "Stanley Kubrick",
+   "profile_path": "/x.jpg"
+  },
+  "alfred hitchcock": {
+   "id": 5007,
+   "name": "Alfred Hitchcock",
+   "profile_path": "/x.jpg"
+  },
+  "ridley scott": {
+   "id": 5008,
+   "name": "Ridley Scott",
+   "profile_path": "/x.jpg"
+  },
+  "david fincher": {
+   "id": 5009,
+   "name": "David Fincher",
+   "profile_path": "/x.jpg"
+  },
+  "denis villeneuve": {
+   "id": 5010,
+   "name": "Denis Villeneuve",
+   "profile_path": "/x.jpg"
+  },
+  "wes anderson": {
+   "id": 5011,
+   "name": "Wes Anderson",
+   "profile_path": "/x.jpg"
+  },
+  "tim burton": {
+   "id": 5012,
+   "name": "Tim Burton",
+   "profile_path": "/x.jpg"
+  },
+  "james cameron": {
+   "id": 5013,
+   "name": "James Cameron",
+   "profile_path": "/x.jpg"
+  },
+  "peter jackson": {
+   "id": 5014,
+   "name": "Peter Jackson",
+   "profile_path": "/x.jpg"
+  },
+  "clint eastwood": {
+   "id": 5015,
+   "name": "Clint Eastwood",
+   "profile_path": "/x.jpg"
+  },
+  "francis ford coppola": {
+   "id": 5016,
+   "name": "Francis Ford Coppola",
+   "profile_path": "/x.jpg"
+  },
+  "joel coen": {
+   "id": 5017,
+   "name": "Joel Coen",
+   "profile_path": "/x.jpg"
+  },
+  "paul thomas anderson": {
+   "id": 5018,
+   "name": "Paul Thomas Anderson",
+   "profile_path": "/x.jpg"
+  },
+  "guillermo del toro": {
+   "id": 5019,
+   "name": "Guillermo del Toro",
+   "profile_path": "/x.jpg"
+  },
+  "robert zemeckis": {
+   "id": 5020,
+   "name": "Robert Zemeckis",
+   "profile_path": "/x.jpg"
+  },
+  "sofia coppola": {
+   "id": 5021,
+   "name": "Sofia Coppola",
+   "profile_path": "/x.jpg"
+  },
+  "greta gerwig": {
+   "id": 5022,
+   "name": "Greta Gerwig",
+   "profile_path": "/x.jpg"
+  },
+  "jordan peele": {
+   "id": 5023,
+   "name": "Jordan Peele",
+   "profile_path": "/x.jpg"
+  },
+  "bong joon ho": {
+   "id": 5024,
+   "name": "Bong Joon-ho",
+   "profile_path": "/x.jpg"
+  },
+  "park chan wook": {
+   "id": 5025,
+   "name": "Park Chan-wook",
+   "profile_path": "/x.jpg"
+  },
+  "hayao miyazaki": {
+   "id": 5026,
+   "name": "Hayao Miyazaki",
+   "profile_path": "/x.jpg"
+  },
+  "akira kurosawa": {
+   "id": 5027,
+   "name": "Akira Kurosawa",
+   "profile_path": "/x.jpg"
+  },
+  "wong kar wai": {
+   "id": 5028,
+   "name": "Wong Kar-wai",
+   "profile_path": "/x.jpg"
+  },
+  "pedro almodovar": {
+   "id": 5029,
+   "name": "Pedro Almodóvar",
+   "profile_path": "/x.jpg"
+  },
+  "luc besson": {
+   "id": 5030,
+   "name": "Luc Besson",
+   "profile_path": "/x.jpg"
+  },
+  "jean pierre jeunet": {
+   "id": 5031,
+   "name": "Jean-Pierre Jeunet",
+   "profile_path": "/x.jpg"
+  },
+  "jacques audiard": {
+   "id": 5032,
+   "name": "Jacques Audiard",
+   "profile_path": "/x.jpg"
+  },
+  "jean luc godard": {
+   "id": 5033,
+   "name": "Jean-Luc Godard",
+   "profile_path": "/x.jpg"
+  },
+  "francois truffaut": {
+   "id": 5034,
+   "name": "François Truffaut",
+   "profile_path": "/x.jpg"
+  },
+  "damien chazelle": {
+   "id": 5035,
+   "name": "Damien Chazelle",
+   "profile_path": "/x.jpg"
+  },
+  "darren aronofsky": {
+   "id": 5036,
+   "name": "Darren Aronofsky",
+   "profile_path": "/x.jpg"
+  },
+  "danny boyle": {
+   "id": 5037,
+   "name": "Danny Boyle",
+   "profile_path": "/x.jpg"
+  },
+  "edgar wright": {
+   "id": 5038,
+   "name": "Edgar Wright",
+   "profile_path": "/x.jpg"
+  },
+  "yorgos lanthimos": {
+   "id": 5039,
+   "name": "Yorgos Lanthimos",
+   "profile_path": "/x.jpg"
+  },
+  "ari aster": {
+   "id": 5040,
+   "name": "Ari Aster",
+   "profile_path": "/x.jpg"
+  },
+  "robert eggers": {
+   "id": 5041,
+   "name": "Robert Eggers",
+   "profile_path": "/x.jpg"
+  },
+  "sam raimi": {
+   "id": 5042,
+   "name": "Sam Raimi",
+   "profile_path": "/x.jpg"
+  },
+  "john carpenter": {
+   "id": 5043,
+   "name": "John Carpenter",
+   "profile_path": "/x.jpg"
+  },
+  "brian de palma": {
+   "id": 5044,
+   "name": "Brian De Palma",
+   "profile_path": "/x.jpg"
+  },
+  "spike lee": {
+   "id": 5045,
+   "name": "Spike Lee",
+   "profile_path": "/x.jpg"
+  },
+  "sergio leone": {
+   "id": 5046,
+   "name": "Sergio Leone",
+   "profile_path": "/x.jpg"
+  },
+  "terrence malick": {
+   "id": 5047,
+   "name": "Terrence Malick",
+   "profile_path": "/x.jpg"
+  },
+  "steven soderbergh": {
+   "id": 5048,
+   "name": "Steven Soderbergh",
+   "profile_path": "/x.jpg"
+  },
+  "michael mann": {
+   "id": 5049,
+   "name": "Michael Mann",
+   "profile_path": "/x.jpg"
+  },
+  "ang lee": {
+   "id": 5050,
+   "name": "Ang Lee",
+   "profile_path": "/x.jpg"
+  },
+  "alfonso cuaron": {
+   "id": 5051,
+   "name": "Alfonso Cuarón",
+   "profile_path": "/x.jpg"
+  },
+  "alejandro gonzalez inarritu": {
+   "id": 5052,
+   "name": "Alejandro González Iñárritu",
+   "profile_path": "/x.jpg"
+  },
+  "gus van sant": {
+   "id": 5053,
+   "name": "Gus Van Sant",
+   "profile_path": "/x.jpg"
+  },
+  "fritz lang": {
+   "id": 5054,
+   "name": "Fritz Lang",
+   "profile_path": "/x.jpg"
+  },
+  "orson welles": {
+   "id": 5055,
+   "name": "Orson Welles",
+   "profile_path": "/x.jpg"
+  },
+  "charlie chaplin": {
+   "id": 5056,
+   "name": "Charlie Chaplin",
+   "profile_path": "/x.jpg"
+  },
+  "andrei tarkovsky": {
+   "id": 5057,
+   "name": "Andrei Tarkovsky",
+   "profile_path": "/x.jpg"
+  },
+  "ingmar bergman": {
+   "id": 5058,
+   "name": "Ingmar Bergman",
+   "profile_path": "/x.jpg"
+  },
+  "federico fellini": {
+   "id": 5059,
+   "name": "Federico Fellini",
+   "profile_path": "/x.jpg"
+  },
+  "wim wenders": {
+   "id": 5060,
+   "name": "Wim Wenders",
+   "profile_path": "/x.jpg"
+  },
+  "lars von trier": {
+   "id": 5061,
+   "name": "Lars von Trier",
+   "profile_path": "/x.jpg"
+  },
+  "thomas vinterberg": {
+   "id": 5062,
+   "name": "Thomas Vinterberg",
+   "profile_path": "/x.jpg"
+  },
+  "gaspar noe": {
+   "id": 5063,
+   "name": "Gaspar Noé",
+   "profile_path": "/x.jpg"
+  },
+  "milos forman": {
+   "id": 5064,
+   "name": "Milos Forman",
+   "profile_path": "/x.jpg"
+  },
+  "roman polanski": {
+   "id": 5065,
+   "name": "Roman Polanski",
+   "profile_path": "/x.jpg"
+  },
+  "jacques demy": {
+   "id": 5066,
+   "name": "Jacques Demy",
+   "profile_path": "/x.jpg"
+  },
+  "jacques tati": {
+   "id": 5067,
+   "name": "Jacques Tati",
+   "profile_path": "/x.jpg"
+  },
+  "david cronenberg": {
+   "id": 5068,
+   "name": "David Cronenberg",
+   "profile_path": "/x.jpg"
+  },
+  "george lucas": {
+   "id": 5069,
+   "name": "George Lucas",
+   "profile_path": "/x.jpg"
+  },
+  "sidney lumet": {
+   "id": 5070,
+   "name": "Sidney Lumet",
+   "profile_path": "/x.jpg"
+  },
+  "sean baker": {
+   "id": 5071,
+   "name": "Sean Baker",
+   "profile_path": "/x.jpg"
+  },
+  "kathryn bigelow": {
+   "id": 5072,
+   "name": "Kathryn Bigelow",
+   "profile_path": "/x.jpg"
+  },
+  "paul verhoeven": {
+   "id": 5073,
+   "name": "Paul Verhoeven",
+   "profile_path": "/x.jpg"
+  },
+  "wes craven": {
+   "id": 5074,
+   "name": "Wes Craven",
+   "profile_path": "/x.jpg"
+  },
+  "m night shyamalan": {
+   "id": 5075,
+   "name": "M. Night Shyamalan",
+   "profile_path": "/x.jpg"
+  },
+  "ryusuke hamaguchi": {
+   "id": 5076,
+   "name": "Ryūsuke Hamaguchi",
+   "profile_path": "/x.jpg"
+  },
+  "makoto shinkai": {
+   "id": 5077,
+   "name": "Makoto Shinkai",
+   "profile_path": "/x.jpg"
+  },
+  "satoshi kon": {
+   "id": 5078,
+   "name": "Satoshi Kon",
+   "profile_path": "/x.jpg"
+  },
+  "takeshi kitano": {
+   "id": 5079,
+   "name": "Takeshi Kitano",
+   "profile_path": "/x.jpg"
+  },
+  "mathieu kassovitz": {
+   "id": 5080,
+   "name": "Mathieu Kassovitz",
+   "profile_path": "/x.jpg"
+  },
+  "bryan singer": {
+   "id": 5081,
+   "name": "Bryan Singer",
+   "profile_path": "/x.jpg"
+  },
+  "zack snyder": {
+   "id": 5082,
+   "name": "Zack Snyder",
+   "profile_path": "/x.jpg"
+  },
+  "paul w s anderson": {
+   "id": 5083,
+   "name": "Paul W. S. Anderson",
+   "profile_path": "/x.jpg"
+  }
+ }
+}
