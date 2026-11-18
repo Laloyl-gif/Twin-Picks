@@ -1908,37 +1908,6 @@ body.tel .controles{opacity:1}
   background:radial-gradient(circle at 35% 35%,#ff6a6a,#a80d18)}
 .visuel-tel .jackpot{width:min(100%,300px)}
 
-/* Mr. C : la fiche des coordonnées */
-.coordonnees{display:flex;justify-content:center;width:100%}
-.co-fiche{width:min(640px,100%);padding:22px 30px 26px;background:linear-gradient(#f3ead2,#e2d4ae);color:#1d1b1a;border-radius:3px;
-  box-shadow:0 1px 0 #fff8 inset,0 24px 50px #000c;rotate:-.8deg;font-family:ui-monospace,"Courier New",monospace}
-.co-tete{font:700 .8em ui-monospace,"Courier New",monospace;letter-spacing:.4em;color:#7a1d1d;border-bottom:2px solid #7a1d1d;padding-bottom:8px;
-  margin-bottom:10px}
-.co-fiche ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px}
-.co-fiche li{display:flex;align-items:baseline;gap:18px;min-height:2.1em;border-bottom:1px dashed #b8a780}
-.co-fiche li b{min-width:5.2em;font:700 1.9em/1.1 ui-monospace,"Courier New",monospace;color:#141414;text-align:right}
-.co-fiche li small{font-size:.95em;color:#5a4a2a}
-.visuel-tel .co-fiche{padding:12px 14px;font-size:.8em}
-
-/* Lil : la robe et les dix affiches */
-.lil-jeu{display:grid;grid-template-columns:auto 1fr;gap:clamp(16px,3vw,40px);align-items:center;width:min(1250px,100%)}
-.robe-lil{position:relative;width:clamp(220px,24vw,340px);aspect-ratio:3/4}
-.rl-robe{position:absolute;inset:0;width:100%;height:100%;filter:drop-shadow(0 20px 30px #000c)}
-.rb-objet{position:absolute;translate:-50% -50%;rotate:var(--r);display:grid;place-content:center;width:22%;aspect-ratio:1;border-radius:50%;
-  background:radial-gradient(circle at 40% 35%,#fffaf0,#e9dcc0);box-shadow:0 0 0 3px #d9b24a,0 8px 14px #000a;
-  font-size:clamp(1.6em,2.6vw,2.6em);animation:colle-pose .5s cubic-bezier(.3,1.4,.5,1) both;animation-delay:calc(var(--i) * .15s)}
-.rl-rose{position:absolute;left:62%;top:2%;width:16%}
-.lil-jeu .cgrille{gap:10px}
-.visuel-tel .lil-jeu,body.joueur .lil-jeu{grid-template-columns:1fr;justify-items:center;gap:10px}
-body.joueur .robe-lil{width:min(62vw,240px)}
-body.joueur .lil-jeu .cgrille{--cols:5!important}
-body.joueur .lil-jeu .cfilm span{font-size:.55em}
-
-/* Mike : l'affiche trouée et les pièces */
-:is(#jeu,body.joueur)[data-jeu="mike"] .cfilm img{aspect-ratio:auto;object-fit:contain;max-height:min(26vh,240px);background:#0e0c11}
-:is(#jeu,body.joueur)[data-jeu="mike"] .cfilm span{font:700 1.3em Georgia,serif}
-:is(#jeu,body.joueur)[data-jeu="mike"] .film-seul img{max-height:min(56vh,520px)}
-
 /* image d'une carte du menu : bouton sur la carte, fenêtre de cadrage avec aperçu */
 .jeu-image{position:absolute;top:6px;left:6px;z-index:3;width:28px;height:28px;padding:5px;border-radius:7px;border:0;
   background:color-mix(in srgb,var(--bg) 70%,transparent);color:var(--txt);opacity:0;transition:opacity .15s}
@@ -2081,3 +2050,234 @@ body.joueur .pa-cadre{padding:3px}
 body.joueur .pa-carte{display:none}
 body.joueur .pa-droite .cbanniere{font-size:1.1em}
 body.tel .nav-laterale>*{width:auto!important;padding:6px 10px}
+
+/* =====================================================================================================
+   v9 — code de la partie
+   ===================================================================================================== */
+.code-partie{width:100%;text-align:center;padding:4px 0 10px;border-bottom:1px solid var(--bord);margin-bottom:6px}
+.code-partie small{display:block;font-size:.66em;letter-spacing:.2em;text-transform:uppercase;color:var(--doux)}
+.code-partie b{display:block;font:700 2.3em/1.1 ui-monospace,Consolas,monospace;letter-spacing:.18em;color:var(--txt)}
+.code-partie span{font-size:.72em;color:var(--doux)}
+.code-partie span.ok{color:var(--ok)}
+.code-jeu{margin-left:auto;font-size:.8em;color:var(--doux);letter-spacing:.06em}
+.code-jeu b{font-family:ui-monospace,Consolas,monospace;color:var(--txt);letter-spacing:.14em}
+.salle-tel{display:flex;align-items:baseline;gap:8px;justify-content:center}
+.salle-tel small{font-size:.7em;letter-spacing:.2em;text-transform:uppercase;color:var(--doux)}
+.salle-tel b{font:700 1.4em ui-monospace,Consolas,monospace;letter-spacing:.16em}
+.code-autre{margin-top:6px;font-size:.88em}
+.code-dialogue{display:none}
+.code-dialogue[open]{display:flex;flex-direction:column;gap:10px;align-items:stretch;width:min(360px,92vw)}
+#code-saisie{font:700 1.8em ui-monospace,Consolas,monospace;letter-spacing:.3em;text-align:center;text-transform:uppercase}
+
+/* =====================================================================================================
+   v9 — panneau administrateur du téléphone : plus clair, plus léger
+   ===================================================================================================== */
+body.tel .entete .actions{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+body.tel .entete .actions button{padding:11px 6px;border-radius:10px;border:1px solid var(--bord);background:var(--panel);color:var(--txt);
+  font:600 .92em var(--sans);letter-spacing:.02em}
+body.tel .entete .actions button:active{background:var(--violet-sombre)}
+body.tel .config-tete{gap:8px;align-items:center}
+body.tel .config-tete .etiquette{font-size:.75em}
+body.tel #jeux-compte{font-size:.8em}
+body.tel .raccourcis{gap:6px}
+body.tel .raccourcis .lien{padding:6px 12px;border:1px solid var(--bord);border-radius:16px;font-size:.8em;color:var(--txt)}
+body.tel .jeu{border-radius:12px;grid-auto-rows:auto}
+body.tel .jeux{grid-auto-rows:126px;gap:10px}
+body.tel .jeu-image{display:none}
+body.tel .jeu-txt{left:10px;right:10px;bottom:9px}
+body.tel .jeu-txt small{font-size:.56em;opacity:.8}
+body.tel .jeu-txt b{font-size:1.02em;line-height:1.12}
+body.tel .jeu.on .jeu-txt{bottom:44px}
+body.tel .jeu::before{width:22px;height:22px;top:8px;right:8px}
+body.tel .jeu-bas{left:8px;right:8px;bottom:7px}
+body.tel .jeu-source.discrete{display:none}
+body.tel .pas{margin-left:auto;border-radius:18px;background:color-mix(in srgb,var(--bg) 85%,transparent)}
+body.tel .pas button{padding:4px 12px;font-size:1.1em;color:var(--txt)}
+body.tel .pas span{font-weight:700}
+body.tel .rejoindre{background:none;border:0;padding:4px 0;gap:6px}
+body.tel .rejoindre .etiquette{display:none}
+body.tel .code-partie{border:1px solid var(--bord);border-radius:12px;padding:8px;margin:0}
+body.tel .code-partie b{font-size:1.9em}
+body.tel .joueur-ligne .puce{font-size:.85em}
+body.tel .tag-profil{display:none}
+body.tel .attente-joueurs{margin:0;font-size:.8em}
+body.tel .depart{padding:10px 12px calc(12px + env(safe-area-inset-bottom));gap:10px}
+body.tel .mode-rep .etiquette{display:none}
+body.tel .segments{border-radius:10px}
+body.tel .segments button{padding:10px 12px;font-weight:600}
+body.tel .segments button.actif{background:var(--violet);color:#fff}
+body.tel .lancer{border-radius:12px;font-size:1.15em;padding:12px 10px}
+body.tel .erreur:empty{display:none}
+body.tel .lobby-corps{flex-direction:column;padding-bottom:110px}
+
+/* Annie : Miss Twin Peaks, les écharpes */
+.miss{display:flex;flex-direction:column;align-items:center;gap:10px;width:min(1200px,100%);margin-bottom:14px}
+.miss-tete{display:flex;align-items:center;gap:12px}
+.miss-couronne{width:64px}.miss-couronne svg{display:block;width:100%;height:auto;filter:drop-shadow(0 6px 10px #000a)}
+.miss-tete b{font:italic 1.5em Georgia,serif;color:#f1e3c4}
+.echarpes{display:flex;flex-wrap:wrap;justify-content:center;gap:12px 14px}
+.echarpe{position:relative;display:flex;align-items:center;gap:8px;padding:9px 18px 9px 10px;rotate:var(--r);color:#fff;
+  font:600 1.02em/1.2 Georgia,serif;background:linear-gradient(100deg,color-mix(in srgb,var(--c) 80%,#000),var(--c) 40%,color-mix(in srgb,var(--c) 70%,#fff) 60%,var(--c));
+  clip-path:polygon(0 0,100% 0,96% 50%,100% 100%,0 100%,4% 50%);box-shadow:0 8px 16px #000a;animation:colle-pose .5s both;animation-delay:calc(var(--i) * .12s)}
+.echarpe i{display:grid;place-content:center;width:1.6em;height:1.6em;border-radius:50%;background:#fff3;font:700 .8em var(--sans);font-style:normal}
+.annie-grille .cfilm img{max-height:min(20vh,190px)}
+body.joueur .miss-tete b{font-size:1.1em}
+body.joueur .miss-couronne{width:40px}
+body.joueur .echarpe{font-size:.72em;padding:5px 12px 5px 6px}
+body.joueur .echarpes{gap:6px}
+
+/* Phillip : la petite affiche du film fait ensemble, épinglée à côté du complice */
+.ph-carte img.ph-affiche{position:absolute;right:-46%;top:18%;width:52%;aspect-ratio:2/3;rotate:7deg;border:.35cqw solid #fff;
+  box-shadow:0 .6cqw 1.4cqw #000a;z-index:-1;animation:colle-pose .5s .3s both}
+.ph-carte.ph-g img.ph-affiche{right:auto;left:-46%;rotate:-7deg}
+
+/* Jerry : un mot composé de plusieurs images, dans un cadre (« zoo » = girafe, lion, tigre) */
+.rb-carte .rb-emoji.rb-cadre{font-size:clamp(2em,4.2vw,3.8em);letter-spacing:.06em;padding:.12em .22em;border:4px double #7a5530;
+  border-radius:6px;background:#fffaf0}
+.visuel-tel .rb-carte .rb-emoji.rb-cadre{font-size:1.35em;border-width:3px}
+
+/* ===================================================================== v9 : les nouveaux jeux */
+/* Dougie : la machine à cinq rouleaux qui tourne */
+.jackpot.cinq{width:min(1040px,100%,calc(62vh * 1.55))}
+.jackpot.cinq .jp-titre{font-size:4.4cqw}
+.jackpot.cinq .jp-fronton{padding:1.8cqw 3cqw 1.4cqw;margin:0 6cqw}
+.jackpot.cinq .jp-ampoules i{width:1.3cqw;height:1.3cqw}
+.jackpot.cinq .jp-vitre{grid-template-columns:repeat(5,1fr);gap:1.4cqw;padding:2cqw}
+.jp-col{display:flex;flex-direction:column;gap:.6cqw;min-width:0}
+.jackpot.cinq .jp-rouleau{aspect-ratio:2/3}
+.jackpot.cinq .jp-bande{animation:jp-tourne var(--t) linear infinite;filter:blur(var(--f)) brightness(.92)}
+.jackpot.cinq .jp-bande img{aspect-ratio:2/3}
+.jackpot.cinq.arrete .jp-bande{animation:none;filter:none}
+.jp-rouleau.trouve{outline:.5cqw solid var(--ok);outline-offset:-.5cqw}
+.jp-ok{position:absolute;right:.6cqw;top:.6cqw;z-index:2;display:grid;place-content:center;width:3.6cqw;height:3.6cqw;border-radius:50%;
+  background:var(--ok);color:#fff;font:800 2.2cqw var(--sans)}
+.jp-leg{min-height:2.6cqw;text-align:center;font:700 1.55cqw/1.2 var(--sans);color:#fff3c0;letter-spacing:.04em;overflow-wrap:anywhere}
+.jackpot.cinq.arrete .jp-leg{color:#fff}
+.jackpot.cinq .jp-bas{height:5cqw;margin:0 1.4cqw}
+.jackpot.cinq .jp-levier{right:-3.4cqw;height:16cqw;width:1.6cqw}
+.jackpot.cinq .jp-levier i{width:4.4cqw;height:4.4cqw;top:-2.6cqw}
+.jp-voix small{display:block;margin-top:2px;font-size:.62em;color:#e8d9b8;text-shadow:none;letter-spacing:.02em;font-weight:500}
+.visuel-tel .jackpot.cinq{width:100%}
+.visuel-tel .jackpot.cinq .jp-leg{font-size:2.4cqw}
+
+/* Hank : l'alignement des dominos (la frise sans tringle : des dominos debout) */
+.frise.dominos-rang .tringle,.frise.dominos-rang .anneau,.frise.dominos-rang .crochet{display:none}
+.frise.dominos-rang{padding-top:6px}
+.frise.dominos-rang .toile{border:7px solid #f3eee2;border-bottom-width:30px;border-radius:12px;background:#f3eee2;animation:none;
+  box-shadow:0 3px 0 #c9c1ad,0 14px 26px #000b}
+.frise.dominos-rang .toile::after{content:"";position:absolute;left:12%;right:12%;bottom:-19px;height:8px;border-radius:4px;
+  background:radial-gradient(circle,#111 2.4px,transparent 3px) 0 0/16px 8px repeat-x}
+.frise.dominos-rang .drape:nth-child(odd) .toile{rotate:-1.5deg}.frise.dominos-rang .drape:nth-child(even) .toile{rotate:1.2deg}
+.frise.dominos-rang.revelee .drape .toile{rotate:0deg}
+.frise.dominos-rang .annee{font-size:1.05em}
+
+/* Mike : l'affiche, et le compteur d'années */
+.mike{display:flex;align-items:center;justify-content:center;gap:clamp(18px,4vw,60px);width:min(1100px,100%);flex-wrap:wrap}
+.mk-affiche{margin:0;width:clamp(170px,22vw,300px);rotate:-2deg}
+.mk-affiche img{display:block;width:100%;border-radius:4px;box-shadow:0 18px 40px #000c}
+.mk-affiche figcaption{margin-top:10px;text-align:center;font:700 clamp(1em,1.8vw,1.5em)/1.2 Georgia,serif;color:#f1e3c4}
+.mk-droite{display:flex;flex-direction:column;align-items:center;gap:14px}
+.mk-q{display:flex;align-items:center;gap:12px;margin:0;font:italic clamp(1em,1.9vw,1.6em) Georgia,serif;color:#e8d9b8}
+.mk-q svg{width:clamp(34px,3.6vw,52px);height:auto;flex:none}
+.mk-compteur{display:flex;gap:clamp(6px,.8vw,12px)}
+.mk-compteur b{display:grid;place-content:center;width:clamp(54px,7vw,110px);aspect-ratio:3/4.2;border-radius:10px;
+  font:800 clamp(2.4em,5.6vw,5em)/1 var(--sans);color:#f7f1e3;background:linear-gradient(#2a2a32 49%,#121216 51%);
+  box-shadow:0 10px 24px #000b,inset 0 0 0 2px #ffffff14;position:relative}
+.mk-compteur b::after{content:"";position:absolute;left:0;right:0;top:50%;height:2px;background:#000a}
+.mk-compteur b.inconnu{color:#c8102e;animation:mk-tourne 1.6s steps(1) infinite;animation-delay:calc(var(--i) * -.4s)}
+@keyframes mk-tourne{50%{color:#7a6a5a}}
+.mk-compteur b.connu{animation:mk-fige .6s cubic-bezier(.3,1.5,.5,1) both}
+@keyframes mk-fige{from{transform:rotateX(90deg)}}
+.mk-aide{margin:0;color:var(--doux);letter-spacing:.12em;text-transform:uppercase;font-size:.78em}
+body.joueur .mk-affiche{width:110px}
+body.joueur .mk-compteur b{width:44px}
+body.joueur .mk-compteur b{font-size:1.9em}
+body.joueur .mike{gap:12px}
+body.joueur .mk-q{font-size:.85em}
+
+/* Windom Earle : l'échiquier et la feuille de partie */
+.echiquier{display:flex;align-items:flex-start;justify-content:center;gap:clamp(16px,3vw,44px);width:min(1180px,100%);flex-wrap:wrap}
+.ec-plateau{position:relative;width:clamp(240px,min(34vw,52vh),460px);aspect-ratio:1;rotate:-1.5deg;
+  border:clamp(8px,1vw,14px) solid #5a3a1e;border-radius:6px;box-shadow:0 18px 40px #000c;container-type:inline-size}
+.ec-cases{display:grid;grid-template-columns:repeat(8,1fr);width:100%;height:100%}
+.ec-cases i.b{background:#e9dcc0}.ec-cases i.n{background:#7b5a3a}
+.ec-piece{position:absolute;left:calc(var(--c) * 12.5%);top:calc(var(--l) * 12.5%);width:12.5%;height:12.5%;display:grid;place-content:center;
+  font-size:9cqw;line-height:1;color:#151515;text-shadow:0 0 2px #fff,0 3px 4px #0008;animation:ec-pose .7s cubic-bezier(.3,1.4,.5,1) both}
+.ec-piece small{position:absolute;right:2%;bottom:2%;font:800 2.2cqw var(--sans);color:#b3121f;text-shadow:none}
+.ec-piece.derniere{animation:ec-pose .7s cubic-bezier(.3,1.4,.5,1) both,ec-luit 1.6s .7s ease-in-out 2}
+@keyframes ec-pose{from{transform:translateY(-160%) scale(1.4);opacity:0}}
+@keyframes ec-luit{50%{text-shadow:0 0 2px #fff,0 0 16px #ffd24a}}
+.ec-feuille{list-style:none;margin:0;padding:clamp(12px,1.4vw,20px) clamp(14px,1.8vw,24px);width:clamp(260px,34vw,440px);
+  background:#f4efe2;color:#222;rotate:1.5deg;box-shadow:0 14px 30px #000b;
+  background-image:repeating-linear-gradient(#f4efe2 0 calc(2.1em - 1px),#c9d6e8 calc(2.1em - 1px) 2.1em)}
+.ec-tete{display:flex;align-items:baseline;justify-content:space-between;gap:8px;padding-bottom:6px;margin-bottom:4px;border-bottom:2px solid #b3121f}
+.ec-tete b{font:italic 700 1.05em Georgia,serif;color:#8a1d1d}.ec-tete small{color:#555;font-size:.8em}
+.ec-feuille li:not(.ec-tete){display:flex;align-items:center;gap:10px;min-height:2.1em;padding:2px 0}
+.ec-sym{flex:none;width:1.3em;text-align:center;font-size:1.5em;line-height:1}
+.ec-qui{display:flex;flex-direction:column;min-width:0;line-height:1.15}
+.ec-qui small{font:600 .7em var(--sans);color:#8a1d1d;text-transform:uppercase;letter-spacing:.06em}
+.ec-qui b{font:700 1em "Segoe Print","Bradley Hand","Comic Sans MS",cursive;color:#1b2a6b}
+.ec-qui em{font-size:.78em;color:#555}
+.ec-feuille li.vide{opacity:.35}
+body.joueur .ec-plateau{width:min(52vw,190px)}
+body.joueur .ec-feuille{width:100%;font-size:.78em;rotate:0deg}
+body.joueur .echiquier{gap:10px}
+
+/* Harold Smith : l'orchidée et ses pétales-loupes */
+.orchidee{position:relative;width:clamp(300px,min(52vw,62vh),620px);aspect-ratio:1;margin:0 auto;container-type:inline-size}
+.or-tige{position:absolute;left:30%;top:46%;width:40%;height:auto;z-index:0}
+.or-petale{position:absolute;left:50%;top:50%;width:29cqw;height:29cqw;margin:-14.5cqw;z-index:1;
+  transform:rotate(var(--a)) translateX(31cqw) rotate(calc(-1 * var(--a)));
+  border-radius:50% 50% 50% 50% / 58% 58% 42% 42%;overflow:hidden;background:#f5e7f0;
+  box-shadow:0 0 0 1.2cqw #f5e7f0,0 0 0 1.6cqw #c98fb5,0 2cqw 4cqw #000b;animation:or-ouvre .8s cubic-bezier(.3,1.4,.5,1) both}
+.or-petale.ferme{background:radial-gradient(circle at 50% 40%,#f8eef4,#d9a9c8);box-shadow:0 0 0 1.2cqw #f0dbe7,0 2cqw 4cqw #0008;
+  transform:rotate(var(--a)) translateX(31cqw) rotate(calc(-1 * var(--a))) scale(.55);animation:none;opacity:.8}
+.or-petale img{display:block;width:100%;height:100%;object-fit:cover;animation:or-recule .9s ease both}
+@keyframes or-ouvre{from{transform:rotate(var(--a)) translateX(4cqw) rotate(calc(-1 * var(--a))) scale(.2);opacity:0}}
+@keyframes or-recule{from{transform:scale(1.5);filter:blur(4px)}}
+.or-coeur{position:absolute;left:50%;top:50%;width:24cqw;translate:-50% -50%;z-index:2;filter:drop-shadow(0 1cqw 1.4cqw #000a)}
+.or-coeur svg{display:block;width:100%;height:auto}
+.or-note{position:absolute;right:-4cqw;bottom:2cqw;z-index:3;margin:0;padding:1.4cqw 2.4cqw;rotate:-6deg;background:#f1e6cf;color:#3a2a18;
+  font:italic 700 2.8cqw Georgia,serif;box-shadow:0 1cqw 2cqw #0009;border-left:1cqw solid #6b3d22}
+.or-note small{font-weight:400;font-size:.75em}
+body.joueur .orchidee{width:min(86vw,300px)}
+
+/* Jacques Renault : les cinq cartes du brelan */
+.brelan{position:relative;display:flex;flex-direction:column;align-items:center;gap:12px;width:min(1180px,100%)}
+.bj-table{display:flex;justify-content:center;gap:clamp(8px,1.6vw,22px);width:100%}
+.bj-carte{margin:0;width:clamp(110px,15vw,210px);display:flex;flex-direction:column;align-items:center;gap:6px;
+  rotate:calc((var(--i) - 2) * 3deg);translate:0 var(--y,0);animation:bj-donne .55s cubic-bezier(.3,1.3,.5,1) both}
+@keyframes bj-donne{from{transform:translate(40vw,-30vh) rotate(160deg);opacity:0}}
+.bj-face{position:relative;width:100%;aspect-ratio:2/3;padding:6%;border-radius:9px;background:#fbfaf6;box-shadow:0 12px 26px #000b}
+.bj-face img{display:block;width:100%;height:100%;object-fit:cover;border-radius:3px}
+.bj-coin{position:absolute;left:4%;top:2%;font:800 clamp(.7em,1.1vw,1em)/1 Georgia,serif;color:#b3121f}
+.bj-coin.bas{left:auto;top:auto;right:4%;bottom:2%;rotate:180deg}
+.bj-carte:nth-child(odd) .bj-coin{color:#151515}
+.bj-carte.dos .bj-face{background:repeating-linear-gradient(45deg,#7a0d16 0 8px,#b3121f 8px 16px);border:5px solid #fbfaf6}
+.bj-carte figcaption{text-align:center;font:600 clamp(.75em,1.05vw,.95em)/1.2 var(--sans);color:#e8d9b8}
+.bj-carte.actif{cursor:pointer}
+.bj-carte.choisi .bj-face{outline:4px solid var(--moi);outline-offset:2px;translate:0 -10px}
+.bj-carte.bon .bj-face{outline:4px solid var(--ok);outline-offset:2px;translate:0 -12px}
+.bj-carte.terne{opacity:.45;filter:grayscale(.6)}
+.bj-carte.juste .bj-face{outline-color:var(--ok)}.bj-carte.faux .bj-face{outline:4px solid var(--err);outline-offset:2px}
+.bj-jetons{position:absolute;right:3%;bottom:-58px;width:clamp(70px,8vw,120px);rotate:-6deg;pointer-events:none}
+.bj-jetons svg{display:block;width:100%;height:auto;filter:drop-shadow(0 8px 10px #000a)}
+.bj-commun{display:flex;flex-direction:column;align-items:center;margin:4px 0 0;animation:colle-pose .6s both}
+.bj-commun small{color:var(--doux);text-transform:uppercase;letter-spacing:.12em;font-size:.75em}
+.bj-commun b{font:700 clamp(1.3em,2.6vw,2.2em) Georgia,serif;color:#ffd24a}
+body.joueur .bj-table{flex-wrap:wrap;gap:8px}
+body.joueur .bj-carte{width:calc(33% - 8px);rotate:0deg;translate:0}
+body.joueur .bj-carte figcaption{font-size:.7em}
+body.joueur .bj-jetons{display:none}
+
+/* Listes : la source « films vus en commun » des profils présents (interrupteur) */
+.commun{margin:4px 0 10px;padding:10px 12px;border-radius:12px;background:#ffffff08;box-shadow:inset 0 0 0 1px #ffffff14}
+.commun .aide{margin:6px 0 0;font-size:.85em;color:var(--doux)}
+.commun-bascule{display:flex;align-items:center;gap:10px;cursor:pointer}
+.commun-bascule input{position:absolute;opacity:0;pointer-events:none}
+.cb-rond{position:relative;flex:none;width:42px;height:24px;border-radius:12px;background:#ffffff22;transition:background .2s}
+.cb-rond::after{content:"";position:absolute;left:3px;top:3px;width:18px;height:18px;border-radius:50%;background:#fff;transition:translate .2s}
+.commun-bascule.on .cb-rond{background:var(--violet)}.commun-bascule.on .cb-rond::after{translate:18px 0}
+.commun-bascule small{color:var(--violet-clair);font-weight:600}
+.ph-carte img.ph-affiche{right:-56%;width:50%}.ph-carte.ph-g img.ph-affiche{left:-56%}
+body.joueur .ph-carte img.ph-affiche,.visuel-tel .ph-carte img.ph-affiche{left:auto;right:-3%;top:-3%;width:40%;z-index:2;rotate:6deg;border-width:2px}

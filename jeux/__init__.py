@@ -15,7 +15,7 @@ Format d'une manche :
 Les jeux « note », « chrono », « bingo », « ordre », « double » et « duree » ont un moteur (classe Moteur) : action(), fini(), clore(), vue()…
 """
 from . import (affiche, albert, anagramme, andy, ben, blindtest, bobby, briggs, carl, casting, catherine, complicite,
-               couleurs, denise, donna, dougie, hank, jerry, lil, mike, mrc, phillip,
+               annie, couleurs, denise, donna, dougie, hank, harold, jacques, jerry, mike, phillip, plusieurs, windom,
                ed, filmo, geant, hawk, james, josie, leland, leo, loglady, lucy, maddy, nadine, norma, persos, pete, plans,
                shelly, synopsis)
 
@@ -30,8 +30,9 @@ CONSTRUCTEURS = {
     "james": james.construire, "ed": ed.construire, "loglady": loglady.construire, "leo": leo.construire,
     "geant": geant.construire, "catherine": catherine.construire, "denise": denise.construire, "carl": carl.construire,
     "phillip": phillip.construire, "jerry": jerry.construire, "hank": hank.construire,
-    "lil": lil.construire, "dougie": dougie.construire, "mrc": mrc.construire, "mike": mike.construire,
+    "annie": annie.construire, "dougie": dougie.construire, "mike": mike.construire, "windom": windom.construire,
+    "harold": harold.construire, "jacques": jacques.construire,
 }
 MOTEURS = {"note": norma.Moteur, "chrono": lucy.Moteur, "bingo": donna.Moteur, "ordre": nadine.Moteur,
            "double": ben.Moteur, "duree": ed.Moteur, "duels": leo.Moteur,
-           "paire": carl.Moteur}
+           "plusieurs": plusieurs.Moteur, "brelan": jacques.Moteur, "paire": plusieurs.Moteur}

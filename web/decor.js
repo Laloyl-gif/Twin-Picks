@@ -58,7 +58,9 @@ const REPLIQUES = {
          ['Diane, never drink coffee that has been anywhere near a fish.', 'Agent Dale Cooper']],
   andy: [['We laid everything out, Hawk, and we can\'t find anything that\'s missing.', 'Deputy Andy Brennan']],
   dougie: [['Hellooo!', 'Dougie Jones'], ['Call for help.', 'Dougie Jones']],
-  mike: [['Is it future, or is it past?', 'Mike, the one-armed man'], ['Fire walk with me.', 'Mike, the one-armed man']],
+  mike: [['Is it future, or is it past?', 'Mike, the one-armed man'],
+         ['Through the darkness of future past, the magician longs to see.', 'Mike, the one-armed man']],
+  annie: [['The good Dale is in the Lodge, and he can\'t leave.', 'Annie Blackburn']],
 };
 let GRAINE_DECOR = 0;                                   // le numéro de manche : le même tirage sur tous les écrans
 const hasard = (n, sel = 0) => n ? ((GRAINE_DECOR * 2654435761 + sel * 40503) >>> 0) % n : 0;
@@ -89,7 +91,7 @@ const COLLES = {
   jerry: () => replique('jerry', 'bd', 'bulle'),
   leo: () => replique('leo', 'sous', 'griffe'),
   andy: () => replique('andy', 'bd', 'postit'),
-  mike: () => replique('mike', 'sous', 'griffe'),
+  annie: () => replique('annie', 'sous', 'fiche'),
   maddy: () => '',
 };
 function colles(jeu) { return (COLLES[jeu] || (() => ''))(); }
@@ -362,10 +364,11 @@ function complicesHTML(e, src) {
     const [x, y] = PLACES_PH[i % PLACES_PH.length], c = cs[i];
     if (c) fils += `<path data-k="f${i}" pathLength="1" d="M50 50L${(50 + x) / 2 + (i % 2 ? 2 : -2)} ${(50 + y) / 2}L${x} ${y}"/>`;
     cartes += c
-      ? `<figure class="ph-carte apparait" data-k="c${i}" style="left:${x}%;top:${y}%">` +
+      ? `<figure class="ph-carte apparait${x > 55 ? ' ph-g' : ''}" data-k="c${i}" style="left:${x}%;top:${y}%">` +
         (c.img !== null && c.img !== undefined ? `<img src="${src(c.img)}" alt="">` : `<span class="ph-init">${initiale(c.nom)}</span>`) +
         `<figcaption><b>${esc(c.nom)}</b><small>${c.n} films ensemble · ${esc(c.metier)}</small>` +
-        `${c.film ? `<em>dont « ${esc(c.film)} »</em>` : ''}</figcaption></figure>`
+        `${c.film && c.img_f === undefined ? `<em>dont « ${esc(c.film)} »</em>` : ''}</figcaption>` +
+        `${c.img_f !== undefined ? `<img class="ph-affiche" src="${src(c.img_f)}" alt="" title="${esc(c.film || '')}">` : ''}</figure>`
       : `<figure class="ph-carte vide" data-k="c${i}" style="left:${x}%;top:${y}%"><span class="ph-init">·</span></figure>`;
   }
   return `<div class="complices" data-k="complices"><svg class="ph-fils" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">` +
@@ -378,7 +381,8 @@ function rebusHTML(e) {
   return `<div class="rebus${e.mots ? ' avec-mots' : ''}" data-k="rebus">` + (e.rebus || []).map((x, i) => {
     const rot = [-3, 2, -1.5, 3, -2.5, 1.5, -1, 2.5][i % 8];
     if (x.t === 'emoji' || x.t === undefined && x.v) {
-      return `<figure class="rb-carte" data-k="r${i}" style="--i:${i};--rot:${rot}deg"><span class="rb-emoji">${x.v}</span>` +
+      return `<figure class="rb-carte${x.cadre ? ' cadre' : ''}" data-k="r${i}" style="--i:${i};--rot:${rot}deg">` +
+        `<span class="rb-emoji${x.cadre ? ' rb-cadre' : ''}">${x.v}</span>` +
         `<figcaption>${e.mots && x.mot ? esc(x.mot) : '&nbsp;'}</figcaption></figure>`;
     }
     if (x.t === 'case') {                                                  // (ancien format)
@@ -387,21 +391,6 @@ function rebusHTML(e) {
     return `<figure class="rb-carte son" data-k="r${i}" style="--i:${i};--rot:${rot}deg"><span class="rb-son">${esc(x.v)}</span>` +
       '<figcaption>&nbsp;</figcaption></figure>';
   }).join('') + '</div>';
-}
-
-/* Hank's Dominoes : la chaîne de dominos. À gauche [film A | acteur], à droite [acteur | film C], au centre le domino
-   manquant (le film mystère). Les acteurs charnières se dévoilent sur les dominos. */
-function dominosHTML(e, src) {
-  const ch = e.chaine || [];
-  const acteur = d => d.img_a !== null && d.img_a !== undefined
-    ? `<figure class="dm-acteur apparait"><img src="${src(d.img_a)}" alt=""><figcaption>${esc(d.acteur)}</figcaption></figure>`
-    : '<figure class="dm-acteur cache"><span>?</span><figcaption>&nbsp;</figcaption></figure>';
-  const film = d => `<figure class="dm-film"><img src="${src(d.img_f)}" alt=""><figcaption>${esc(d.film)}</figcaption></figure>`;
-  const g = ch[0], dr = ch[1];
-  return `<div class="dominos chaine" data-k="dominos">` +
-    (g ? `<div class="domino" data-k="dg">${film(g)}<i></i>${acteur(g)}</div>` : '') +
-    '<span class="dm-joint"></span><div class="dm-centre"><span>?</span><i></i><span>?</span></div><span class="dm-joint"></span>' +
-    (dr ? `<div class="domino" data-k="dd">${acteur(dr)}<i></i>${film(dr)}</div>` : '') + '</div>';
 }
 
 /* Audrey's Dance : le Roadhouse, sous l'enseigne au néon du Bang Bang Bar (« The », le revolver, BANG / BANG qui
@@ -427,41 +416,97 @@ function audreyHTML(cellules, cols) {
     `<div class="grille rh-casting" style="--cols:${cols}">${cellules.slice(moitie).join('')}</div></div>`;
 }
 
-/* Dougie's Jackpots : la machine à sous. Chaque rouleau tourne sur des morceaux d'affiches (flous), puis s'arrête sur
-   un tiers de l'affiche du film. Quand les trois sont arrêtés : jackpot ! */
-function jackpotHTML(e, src) {
-  const r = e.rouleaux || [], leurres = e.leurres || [], tous = r.length && r.every(Boolean);
-  const bande = k => [...leurres, ...leurres].map((l, i) => `<img src="${src(leurres[(i + k * 2) % Math.max(1, leurres.length)])}" alt="">`).join('');
-  const rouleau = k => r[k]
-    ? `<div class="jp-rouleau arrete" data-k="r${k}a"><img class="jp-tiers" src="${src(k)}" alt=""></div>`
-    : `<div class="jp-rouleau" data-k="r${k}t"><div class="jp-bande" style="--k:${k}">${bande(k)}</div></div>`;
-  return `<div class="jackpot${tous ? ' gagne' : ''}" data-k="jackpot"><div class="jp-fronton">` +
-    `<span class="jp-titre">${tous ? 'JACKPOT' : 'SILVER MUSTANG'}</span><span class="jp-ampoules">${'<i></i>'.repeat(14)}</span></div>` +
-    `<div class="jp-vitre">${[0, 1, 2].map(rouleau).join('')}</div>` +
-    `<div class="jp-bas"><span class="jp-fente"></span><span class="jp-plateau"></span></div>` +
-    `<span class="jp-levier"><i></i></span><p class="jp-voix">${tous ? '“Hellooo!”' : `“${esc(citation('dougie')[0])}”`} — Dougie Jones</p></div>`;
+/* Dougie's Jackpots : la machine à sous du Silver Mustang tourne ; ses cinq rouleaux font défiler chacun l'affiche d'un
+   film, de plus en plus lentement. opt.trouves : les rouleaux déjà trouvés par ce joueur (cochés). */
+const VITESSES = [0.22, 0.32, 0.5, 0.8, 1.3, 2.2, 4.2], FLOUS = [4, 3.2, 2.4, 1.6, 0.9, 0.4, 0];
+function jackpotHTML(e, src, opt = {}) {
+  const rs = e.rouleaux || [], arret = !!opt.titres, v = arret ? VITESSES.length - 1 : Math.min(VITESSES.length - 1, e.vitesse || 0);
+  const leg = arret ? opt.titres : e.legendes || [];
+  const trouves = new Set(opt.trouves || []);
+  const rouleau = (r, k) => `<div class="jp-col"><div class="jp-rouleau${trouves.has(k) ? ' trouve' : ''}" data-k="r${k}">` +
+    `<div class="jp-bande" style="--t:${VITESSES[v] + k * 0.03}s;--f:${FLOUS[v]}px"><img src="${src(r.img)}" alt=""><img src="${src(r.img)}" alt=""></div>` +
+    `${trouves.has(k) ? '<b class="jp-ok">✓</b>' : ''}</div><small class="jp-leg">${leg[k] ? esc(leg[k]) : '&nbsp;'}</small></div>`;
+  return `<div class="jackpot cinq${arret ? ' arrete' : ''}" data-k="jackpot"><div class="jp-fronton"><span class="jp-titre">SILVER MUSTANG</span>` +
+    `<span class="jp-ampoules">${'<i></i>'.repeat(16)}</span></div>` +
+    `<div class="jp-vitre">${rs.map(rouleau).join('')}</div>` +
+    `<div class="jp-bas"><span class="jp-fente"></span></div><span class="jp-levier"><i></i></span>` +
+    `<p class="jp-voix">“Hellooo!” <small>— Dougie Jones, au Silver Mustang Casino</small></p></div>`;
 }
 
-/* Mr. C's Coordinates : les nombres du film, tapés un à un sur la fiche de Mr. C */
-function coordonneesHTML(e) {
-  const ns = e.nombres || [], total = Math.max(e.total || 0, ns.length);
-  let h = '';
-  for (let i = 0; i < total; i++) {
-    const n = ns[i];
-    h += n ? `<li class="apparait" data-k="n${i}"><b>${esc(n[0])}</b><small>${esc(n[1])}</small></li>`
-           : `<li class="vide" data-k="n${i}"><b>&nbsp;</b><small>&nbsp;</small></li>`;
-  }
-  return `<div class="coordonnees" data-k="coord"><div class="co-fiche"><div class="co-tete">COORDONNÉES</div><ol>${h}</ol></div></div>`;
+/* Annie's Miss Twin Peaks : sept écharpes de candidates, chacune avec deux mots qui évoquent un film ;
+   le film qui n'a pas d'écharpe est l'absent. */
+function echarpesHTML(e) {
+  const c = ['#c8102e', '#2a5bd7', '#1f6b3f', '#8a6ae6', '#d9822b', '#b3121f', '#1d8a8a'];
+  return `<div class="miss" data-k="miss"><div class="miss-tete"><span class="miss-couronne">${OBJ.couronne_miss}</span>` +
+    `<b>Miss Twin Peaks</b></div><div class="echarpes">` + (e.echarpes || []).map((t, i) =>
+      `<span class="echarpe" style="--c:${c[i % c.length]};--r:${[-4, 3, -2, 4, -3, 2, -1][i % 7]}deg;--i:${i}"><i>${i + 1}</i>${esc(t)}</span>`).join('') +
+    '</div></div>';
 }
 
-/* Lil's Coded Dress : la robe de Lil, neuf objets épinglés dessus (chacun évoque un film) */
-function robeHTML(e) {
-  const pos = [[30, 26], [50, 22], [70, 26], [26, 50], [50, 47], [74, 50], [30, 74], [50, 78], [70, 74]];
-  const objets = (e.robe || []).map((o, i) => `<span class="rb-objet" style="left:${pos[i % 9][0]}%;top:${pos[i % 9][1]}%;--r:${o.r || 0}deg;--i:${i}">${o.v}</span>`).join('');
-  return `<div class="robe-lil" data-k="robe"><svg class="rl-robe" viewBox="0 0 300 400" aria-hidden="true"><defs>` +
-    '<linearGradient id="rl-t" x1="0" x2="1"><stop offset="0" stop-color="#7a0e1c"/><stop offset=".5" stop-color="#c8102e"/><stop offset="1" stop-color="#6a0c18"/></linearGradient></defs>' +
-    '<path d="M110 20c10 14 70 14 80 0l22 10-10 64c30 40 70 150 84 290H14C28 244 68 134 98 94L88 30z" fill="url(#rl-t)"/>' +
-    '<path d="M110 20c10 14 70 14 80 0" fill="none" stroke="#3a0610" stroke-width="4"/>' +
-    '<path d="M98 94c30 10 74 10 104 0" fill="none" stroke="#ffffff22" stroke-width="3"/></svg>' +
-    `<span class="rl-rose">${OBJ.rose}</span>${objets}</div>`;
+/* ===================================================================== v9 : Mike, Windom Earle, Harold Smith, Jacques Renault */
+
+/* Mike's Future or Past : l'affiche et son titre ; le compteur d'années (« ???? ») se fige chiffre par chiffre. */
+function anneeHTML(v, src) {
+  const e = v.etat || {}, rev = v.phase === 'reponse' && v.nombre;
+  const cpt = String(rev ? v.nombre : e.compteur || '????').padEnd(4, '?').slice(0, 4);
+  return `<div class="mike" data-k="mike"><figure class="mk-affiche" data-k="mk-a"><img src="${src(e.img)}" alt="">` +
+    `<figcaption>${esc(e.titre || '')}</figcaption></figure><div class="mk-droite">` +
+    `<p class="mk-q">${OBJ.bras_mike || ''}<span>“${esc(citation('mike')[0])}”</span></p>` +
+    `<div class="mk-compteur${rev ? ' fige' : ''}" data-k="mk-c">${[...cpt].map((c, i) =>
+      `<b class="${c === '?' ? 'inconnu' : 'connu'}" style="--i:${i}">${esc(c)}</b>`).join('')}</div>` +
+    `<p class="mk-aide">${rev ? 'Sorti en' : 'En quelle année est-il sorti ?'}</p></div></div>`;
+}
+
+/* Windom Earle's Chessboard : les pièces avancées sur l'échiquier, et la feuille de partie qui dit qui elles sont. */
+function echiquierHTML(e) {
+  const ps = e.pieces || [], total = Math.max(e.total || 0, ps.length);
+  const col = c => 'abcdefgh'.indexOf(c[0]), lig = c => 8 - Number(c[1]);
+  let cases = '';
+  for (let r = 0; r < 8; r++) for (let c = 0; c < 8; c++) cases += `<i class="${(r + c) % 2 ? 'n' : 'b'}"></i>`;
+  const pieces = ps.map((p, k) => `<span class="ec-piece${k === ps.length - 1 ? ' derniere' : ''}" data-k="p${k}" ` +
+    `style="--c:${col(p.case)};--l:${lig(p.case) - 2}">${p.sym}<small>${k + 1}</small></span>`).join('');
+  const lignes = Array.from({length: total}, (_, k) => {
+    const p = ps[k];
+    return p ? `<li class="apparait" data-k="l${k}"><span class="ec-sym">${p.sym}</span><span class="ec-qui"><small>${esc(p.piece)} · ` +
+      `${esc(p.metier)}</small><b>${esc(p.nom)}</b>${p.role ? `<em>${esc(p.role)}</em>` : ''}</span></li>`
+      : `<li class="vide" data-k="l${k}"><span class="ec-sym">·</span><span class="ec-qui"><small>&nbsp;</small><b>&nbsp;</b></span></li>`;
+  }).join('');
+  return `<div class="echiquier" data-k="echiquier"><div class="ec-plateau" data-k="plateau"><div class="ec-cases">${cases}</div>` +
+    `${pieces}</div><ol class="ec-feuille" data-k="feuille"><li class="ec-tete"><b>“The king must die.”</b><small>— Windom Earle</small></li>${lignes}</ol></div>`;
+}
+
+/* Harold's Orchids : cinq pétales autour du cœur de l'orchidée, chacun un détail de l'affiche vu à la loupe. */
+function orchideeHTML(e, src) {
+  const ps = e.petales || [];
+  const petales = Array.from({length: 5}, (_, k) => {
+    const id = ps[k];
+    return `<div class="or-petale${id === undefined ? ' ferme' : ''}" style="--a:${k * 72 - 90}deg;--i:${k}" data-k="pt${k}">` +
+      (id !== undefined ? `<img src="${src(id)}" alt="" style="--z:${e.zoom || 0}">` : '') + '</div>';
+  }).join('');
+  return `<div class="orchidee" data-k="orchidee"><svg class="or-tige" viewBox="0 0 200 300" aria-hidden="true">` +
+    `<path d="M100 150C96 200 108 250 92 300" fill="none" stroke="#5f8a3a" stroke-width="7" stroke-linecap="round"/>` +
+    `<path d="M98 232c-40-6-70 8-88 34 34 4 64-6 88-34zM102 262c34-14 64-8 86 12-30 10-60 6-86-12z" fill="#3f6b2a"/></svg>` +
+    `${petales}<div class="or-coeur">${OBJ.coeur_orchidee || ''}</div>` +
+    `<p class="or-note">Living Novel <small>— H.S.</small></p></div>`;
+}
+
+/* Jacques Renault's Card Table : cinq cartes distribuées (les affiches) ; les cartes pas encore données sont de dos.
+   opt.cellule(i) -> {cls, badge} (sélection du joueur, résultat). */
+function brelanHTML(v, src, opt = {}) {
+  const e = v.etat || {}, items = e.items || [], mo = v.moteur || {};
+  const rev = v.phase === 'reponse' && mo.bons, n = rev ? items.length : e.donnes ?? items.length;
+  const coins = ['A♠', 'K♥', 'Q♣', 'J♦', '10♠'];
+  const cartes = items.map((it, i) => {
+    const c = opt.cellule ? opt.cellule(i) || {} : {};
+    const bon = rev && mo.bons.includes(i);
+    if (i >= n) return `<figure class="bj-carte dos" data-k="c${i}" style="--i:${i};--y:${Math.abs(i - 2) * 8}px"><div class="bj-face"></div></figure>`;
+    return `<figure class="bj-carte ${c.cls || ''}${rev ? (bon ? ' bon' : ' terne') : ''}" data-i="${i}" data-k="c${i}" style="--i:${i};--y:${Math.abs(i - 2) * 8}px">` +
+      `<div class="bj-face"><img src="${src(it.img)}" alt=""><span class="bj-coin">${coins[i]}</span>` +
+      `<span class="bj-coin bas">${coins[i]}</span>${c.badge ? `<b class="badge-ordre">${c.badge}</b>` : ''}</div>` +
+      `<figcaption>${esc(it.txt)}</figcaption></figure>`;
+  }).join('');
+  const bandeau = rev ? `<p class="bj-commun"><small>${esc(mo.metier || '')}</small><b>${esc(mo.commun || '')}</b></p>`
+    : '<p class="frise-aide">Trois cartes ont quelqu\'un en commun : lesquelles ?</p>';
+  return `<div class="brelan" data-k="brelan"><div class="bj-table">${cartes}</div>` +
+    `<span class="bj-jetons" aria-hidden="true">${OBJ.jetons || ''}</span>${bandeau}</div>` + (rev ? '' : indicesHTML(e));
 }

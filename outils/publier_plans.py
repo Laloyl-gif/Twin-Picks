@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 """Met en ligne les plans rangés (outils/preparer_plans.py) sur la branche « plans » du dépôt GitHub du jeu.
 
-    python outils/publier_plans.py  [dossier rangé]        (par défaut : donnees/plans_tries/)
+    python outils/publier_plans.py  [dossier rangé ou .zip]   (par défaut : donnees/plans_tries/)
+    (ou glisser le .zip des plans sur outils\publier_plans.bat)
 
 Il faut que le jeu soit un clone git du dépôt (c'est le cas après installer.bat / installer.sh) et que git sache
 pousser sur GitHub (identifiants enregistrés). Les plans ne sont jamais mêlés au code : la branche « plans » est à
@@ -28,6 +29,17 @@ def git(*args, cwd=None, ok=False):
 
 def main():
     source = sys.argv[1] if len(sys.argv) > 1 else os.path.join(config.DOSSIER_DONNEES, "plans_tries")
+    if os.path.isfile(source) and source.lower().endswith(".zip"):            # le zip des plans rangés
+        import tempfile
+        import zipfile
+        tmp = tempfile.mkdtemp()
+        with zipfile.ZipFile(source) as z:
+            z.extractall(tmp)
+        source = tmp
+        for racine, _, fichiers in os.walk(tmp):
+            if "index.json" in fichiers:
+                source = racine
+                break
     if not os.path.isfile(os.path.join(source, "index.json")):
         raise SystemExit(f"Pas d'index.json dans {source} : lancez d'abord outils/preparer_plans.py")
     url = git("config", "--get", "remote.origin.url", cwd=ICI).stdout.strip()

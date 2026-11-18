@@ -27,14 +27,14 @@ def complices(api, pid, realisateur, nmax=6):
             if a["id"] != pid:
                 compte[a["id"]] += 1
                 qui.setdefault(a["id"], {"nom": a["nom"], "photo": a.get("photo"), "metier": "acteur"})
-                ensemble.setdefault(a["id"], f["title"])                 # leur film commun le plus connu
+                ensemble.setdefault(a["id"], f)                          # leur film commun le plus connu
         for r in fi["realisateurs"][:2]:
             if r["id"] != pid:
                 compte[r["id"]] += 1
                 qui.setdefault(r["id"], {"nom": r["nom"], "photo": None, "metier": "réalisateur"})
-                ensemble.setdefault(r["id"], f["title"])
+                ensemble.setdefault(r["id"], f)
     top = [(i, n) for i, n in compte.most_common(nmax * 2) if n >= 2][:nmax]
-    return [dict(qui[i], n=n, id=i, film=ensemble.get(i, "")) for i, n in top], films
+    return [dict(qui[i], n=n, id=i, film=ensemble.get(i)) for i, n in top], films
 
 
 def construire(api, cfg, pool, deja):
@@ -67,8 +67,15 @@ def construire(api, cfg, pool, deja):
     # Pas toujours (le jeu garde son sens) : un ou deux complices disent aussi un film fait ensemble, en indice
     if random.random() < float(cfg.get("phillip_lien", 60)) / 100:
         for k in random.sample(range(n), min(n, random.choice((1, 2)))):
-            if liste[k].get("film"):
-                items[k]["film"] = liste[k]["film"]
+            f = liste[k].get("film")
+            if f:
+                items[k]["film"] = f.get("title", "")
+                if f.get("poster_path"):                 # la petite affiche du film, à côté du complice
+                    try:
+                        images.append(en_jpeg(ImageOps.fit(api.image(f["poster_path"], "w154").convert("RGB"), (120, 180)), 180))
+                        items[k]["img_f"] = len(images) - 1
+                    except Exception:  # noqa: BLE001
+                        pass
     etat = {"complices": [], "total": n, "metier": "Réalisateur" if real else "Acteur ou actrice", "trous": ""}
     evts = [(round(duree * 0.72 * k / max(1, n - 1), 2), lambda k=k: etat.update(complices=items[:k + 1])) for k in range(n)]
     evts.append((duree * 0.85, lambda: etat.update(trous=trous(p["name"], 0))))

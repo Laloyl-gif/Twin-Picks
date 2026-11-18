@@ -8,7 +8,6 @@ import random
 from PIL import Image, ImageOps
 
 import images_film as imf
-from texte import correspond, proche
 from tmdb import cle_film, details_film
 from visuels import en_jpeg
 from .commun import affiche, chronologie, cles_reponses, reponse_affichee, tirer, trous
@@ -71,82 +70,11 @@ def construire(api, cfg, pool, deja):
     etapes = chronologie(evts, lambda: {**etat, "lames": list(etat["lames"]), "indices": list(etat["indices"])})
     titres = [reponse_affichee(cfg, fa, da), reponse_affichee(cfg, fb, db)]
     return dict(jeu="carl", vue="caravane", duree=duree, etapes=etapes, images=[en_jpeg(melange, 900)],
-                revelation=en_jpeg(duo), reponse="paire", suggestions=True,
-                paire_cles=[cles_reponses(fa["title"], fa.get("original_title"), *da["noms"]),
+                revelation=en_jpeg(duo), reponse="plusieurs", suggestions=True,
+                films_cles=[cles_reponses(fa["title"], fa.get("original_title"), *da["noms"]),
                             cles_reponses(fb["title"], fb.get("original_title"), *db["noms"])],
-                paire_titres=titres, cles=[], bonne="", solution=" + ".join(titres),
+                films_titres=titres, cles=[], bonne="", solution=" + ".join(titres),
                 detail="Une lame sur deux : " + " · ".join(titres), films=[cle_film(fa), cle_film(fb)])
 
 
-class Moteur:
-    """Les deux films : chacun tape des titres ; chaque film trouvé rapporte des points (plus tôt = plus)."""
-    suggestions = True
-
-    def __init__(self, partie, cfg, m):
-        self.p, self.cfg, self.m = partie, cfg, m
-        self.trouves, self.essais, self.gains = {}, {}, {}
-
-    def ok(self):
-        return ""
-
-    def _max(self):
-        return 2 * int(self.cfg.get("max_essais", 3))
-
-    def action(self, pid, d, frac, info=None):
-        texte = str(d.get("texte", "")).strip()
-        if not texte:
-            return {"ok": False, "msg": "Tapez un titre"}
-        tr = self.trouves.setdefault(pid, {})
-        if len(tr) == 2:
-            return {"ok": False, "msg": "Les deux films sont trouvés !"}
-        if self.essais.get(pid, 0) >= self._max():
-            return {"ok": False, "msg": "Plus d'essais"}
-        for k, cles in enumerate(self.m["paire_cles"]):
-            if any(correspond(texte, c) for c in cles):
-                if k in tr:
-                    return {"ok": False, "msg": "Celui-là est déjà trouvé : l'autre !"}
-                tr[k] = frac
-                self.p.joueurs[pid].essais = 1
-                reste = "Les deux, bravo !" if len(tr) == 2 else "Plus qu'un !"
-                return {"ok": True, "correct": len(tr) == 2, "msg": f"{self.m['paire_titres'][k]} : trouvé. {reste}"}
-        self.essais[pid] = self.essais.get(pid, 0) + 1
-        reste = self._max() - self.essais[pid]
-        presque = any(proche(texte, c) for cles in self.m["paire_cles"] for c in cles)
-        return {"ok": False, "msg": ("Presque ! Vérifiez l'orthographe. " if presque else "Raté. ") +
-                (f"{reste} essai(s) restant(s)" if reste else "Plus d'essais.")}
-
-    def fini(self):
-        J = self.p.joueurs
-        return bool(J) and all(len(self.trouves.get(p, {})) == 2 or self.essais.get(p, 0) >= self._max() for p in J)
-
-    def clore(self):
-        pts, deux = int(self.cfg.get("carl_pts", 600)), int(self.cfg.get("carl_deux", 300))
-        for pid, j in self.p.joueurs.items():
-            tr = self.trouves.get(pid, {})
-            gain = sum(pts + int(self.cfg["bonus_vitesse"] * f) for f in tr.values())
-            if len(tr) == 2:
-                gain += deux
-            j.gain += gain
-            j.score += gain
-            j.trouve = len(tr) == 2
-            j.serie = j.serie + 1 if j.trouve else 0
-            self.gains[pid] = gain
-
-    def statut(self, pid):
-        n = len(self.trouves.get(pid, {}))
-        return {"t": f"{n}/2", "c": "ok" if n == 2 else ""} if n else {"t": "", "c": ""}
-
-    def avancement(self):
-        J = self.p.joueurs
-        return f"{sum(1 for p in J if len(self.trouves.get(p, {})) == 2)} / {len(J)} ont trouvé les deux films"
-
-    def vue(self, pid, revele):
-        v = {"titres": self.m["paire_titres"] if revele else []}
-        if pid:
-            tr = self.trouves.get(pid, {})
-            v.update(mes_films=[self.m["paire_titres"][k] for k in sorted(tr)],
-                     actif=len(tr) < 2 and self.essais.get(pid, 0) < self._max() and not revele and not self.p.pause)
-        if revele:
-            v["resultats"] = sorted([dict(j.public(), n=len(self.trouves.get(p, {})), gain=self.gains.get(p, 0))
-                                     for p, j in self.p.joueurs.items()], key=lambda x: -x["gain"])
-        return v
+from .plusieurs import Moteur  # noqa: E402,F401  (les deux films : le moteur « plusieurs films à trouver »)

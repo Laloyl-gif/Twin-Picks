@@ -85,12 +85,15 @@ def mettre_a_jour(base, depot):
     return code
 
 
-def demarrer(base, depot):
+def demarrer(base, depot, libs=""):
     """L'adresse de la page à ouvrir : une partie du Wi-Fi, ou celle ouverte ici (avec la clé d'administrateur)."""
     if _SERVEUR:
         return _SERVEUR
     os.environ["TP_DONNEES"] = os.path.join(base, "donnees")
     os.environ["TP_DEPOT"] = depot or ""
+    cf = os.path.join(libs or "", "libcloudflared.so")
+    if libs and os.path.isfile(cf):                     # tunnel Internet (code de la partie hors du Wi-Fi)
+        os.environ["TP_CLOUDFLARED"] = cf
     code = mettre_a_jour(base, depot)
     if code not in sys.path:
         sys.path.insert(0, code)

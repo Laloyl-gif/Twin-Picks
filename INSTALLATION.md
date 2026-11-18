@@ -96,6 +96,13 @@ Pour mettre des plans en ligne :
 Un dossier `plans/` posé à côté du jeu marche aussi (il passe en premier) : pratique pour essayer.
 La Dame à la bûche utilise aussi ces plans (les moyens et les faciles).
 
+## Rejoindre avec le code de la partie
+
+Le code (5 caractères) est affiché sur l'écran hôte. Sur le téléphone : « Rejoindre une autre partie avec un code ».
+Sur le même Wi-Fi, ça marche toujours. Depuis un autre réseau, l'ordinateur ouvre tout seul un tunnel cloudflared
+(téléchargé la première fois dans `donnees/outils`) et publie son adresse : le code suffit. Le code est gardé dans
+`donnees/salle.json` (le même d'une soirée à l'autre).
+
 ## En cas de souci
 
 - *Le raccourci ne se met pas à jour* : le dossier doit être un clone git (`installer.bat` le vérifie).

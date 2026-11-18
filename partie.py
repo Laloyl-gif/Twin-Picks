@@ -56,13 +56,10 @@ def images_de(etat):
         ids.add(etat["pochette"])
     for du in etat.get("duels", []):                           # Leo : les deux films de chaque duel
         ids.update(x["img"] for x in (du.get("a"), du.get("b")) if x)
-    for dm in etat.get("dominos", []):                         # Hank : acteur et film de chaque domino
-        ids.update((dm["img_a"], dm["img_f"]))
-    ids.update(c["img"] for c in etat.get("complices", []) if c.get("img") is not None)     # Phillip
-    for dm in etat.get("chaine", []):                          # Hank : les films des bouts, les acteurs dévoilés
-        ids.update(x for x in (dm.get("img_f"), dm.get("img_a")) if x is not None)
-    ids.update(k for k, arrete in enumerate(etat.get("rouleaux", [])) if arrete)          # Dougie
-    ids.update(etat.get("leurres", []))
+    for c in etat.get("complices", []):                        # Phillip : le portrait, la petite affiche du film
+        ids.update(x for x in (c.get("img"), c.get("img_f")) if x is not None)
+    ids.update(etat.get("petales", []))                        # Harold : les pétales de l'orchidée
+    ids.update(r["img"] for r in etat.get("rouleaux", []) if isinstance(r, dict))           # Dougie
     return ids
 
 
@@ -825,7 +822,7 @@ class Partie:
                 v["qcm"] = self.qcm
         else:
             v.update(solution=m["solution"], detail=m.get("detail", ""), revelation="r" in self.publies,
-                     morceau=m.get("morceau", ""),
+                     morceau=m.get("morceau", ""), nombre=m.get("nombre"),
                      resultats=self._resultats(), rev_t=round(self.duree_reponse - self.reste_reponse, 1),
                      rev_duree=round(self.duree_reponse, 1))
             if self.qcm:

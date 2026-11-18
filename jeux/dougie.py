@@ -1,46 +1,60 @@
-"""Dougie's Jackpots (Le jackpot) : au casino, Dougie Jones touche le jackpot à chaque machine (« Hellooo ! »). Ici, la
-machine à sous a trois rouleaux ; ils tournent sur des morceaux d'affiches, puis s'arrêtent un à un : chacun sur un
-tiers de l'affiche du film mystère. Quand les trois sont arrêtés : jackpot, l'affiche est entière.
-Indices : genre et année, puis titre à trous.
+"""Dougie's Jackpots (Le jackpot) : au Silver Mustang Casino, Dougie Jones touche le jackpot à chaque machine
+(« Hellooo! »). Ici, la machine à sous tourne : ses cinq rouleaux font défiler chacun l'affiche d'un film, très vite
+puis de plus en plus lentement. Il faut retrouver les cinq films pendant que la machine tourne : chaque film trouvé
+rapporte des points (plus tôt = plus), les cinq : un bonus. Indices : les années sous les rouleaux, puis les
+initiales. À la réponse : les cinq affiches.
 """
 import random
 
-from PIL import ImageFilter, ImageOps
+from PIL import Image, ImageOps
 
+import sagas
 from tmdb import cle_film, details_film
 from visuels import en_jpeg
-from .commun import affiche, chronologie, manche_titre, reponse_affichee, tirer, trous
+from .commun import affiche, chronologie, cles_reponses, reponse_affichee
 
-L, H = 360, 540
+NB, ETAPES = 5, 6
+L, H = 240, 360
 
 
 def construire(api, cfg, pool, deja):
     duree = float(cfg["dur_dougie"])
-    film = tirer(pool, deja, lambda f: not f.get("tv") and f.get("poster_path"))
-    d = details_film(api, film)
-    poster = ImageOps.fit(affiche(api, film, "w500").convert("RGB"), (L, H))
-    tiers = [poster.crop((k * L // 3, 0, (k + 1) * L // 3, H)) for k in range(3)]
-    leurres = [f for f in pool if f["id"] != film["id"] and f.get("poster_path")]
-    random.shuffle(leurres)
-    flous = []
-    for f in leurres[:6]:
+    cands = [f for f in pool if not f.get("tv") and f.get("poster_path")]
+    random.shuffle(cands)
+    neufs = [f for f in cands if cle_film(f) not in deja] or cands
+    choisis = []
+    for f in neufs + cands:
+        if len(choisis) == NB:
+            break
+        if any(f["id"] == g["id"] or sagas.meme_univers(f, g) for g, _ in choisis):
+            continue
         try:
-            p = ImageOps.fit(affiche(api, f, "w342").convert("RGB"), (L, H))
+            choisis.append((f, details_film(api, f)))
         except Exception:  # noqa: BLE001
             continue
-        k = random.randrange(3)
-        flous.append(p.crop((k * L // 3, 0, (k + 1) * L // 3, H)).filter(ImageFilter.GaussianBlur(1.2)))
-    images = [en_jpeg(t, H) for t in tiers] + [en_jpeg(f, H) for f in flous]
-    etat = {"rouleaux": [False, False, False], "leurres": list(range(3, 3 + len(flous))), "indices": [], "trous": ""}
+    if len(choisis) < NB:
+        raise RuntimeError("Le jackpot : pas assez de films dans les listes choisies.")
+    for f, _ in choisis:
+        deja.add(cle_film(f))
+    posters = [ImageOps.fit(affiche(api, f, "w342").convert("RGB"), (L, H)) for f, _ in choisis]
+    images = [en_jpeg(p, H) for p in posters]
+    tous = Image.new("RGB", (NB * L + (NB + 1) * 10, H + 20), (14, 12, 17))
+    for k, p in enumerate(posters):
+        tous.paste(p, (10 + k * (L + 10), 10))
+    titres = [reponse_affichee(cfg, f, d) for f, d in choisis]
+    etat = {"rouleaux": [{"img": k} for k in range(NB)], "vitesse": 0, "legendes": [""] * NB, "indices": []}
 
-    def arreter(k):
-        etat["rouleaux"][k] = True
-    evts = [(duree * t, lambda k=k: arreter(k)) for k, t in enumerate((0.22, 0.42, 0.62))]
-    depart = " · ".join(x for x in (", ".join(d["genres"][:2]), d["annee"]) if x)
-    if depart:
-        evts.append((duree * 0.5, lambda: etat["indices"].append(depart)))
-    evts.append((duree * 0.8, lambda: etat.update(trous=trous(reponse_affichee(cfg, film, d), 0))))
-    etapes = chronologie(evts, lambda: {**etat, "rouleaux": list(etat["rouleaux"]), "indices": list(etat["indices"])})
-    m = manche_titre("dougie", "jackpot", duree, film, d, etapes, images, en_jpeg(affiche(api, film, "w500")), cfg)
-    m["films"] = [cle_film(film)]
-    return m
+    def legendes(fn):
+        etat["legendes"] = [fn(k) for k in range(NB)]
+    evts = [(round(duree * 0.75 * k / ETAPES, 2), lambda k=k: etat.update(vitesse=k)) for k in range(1, ETAPES + 1)]
+    if cfg.get("dougie_indices", True):
+        evts.append((duree * 0.45, lambda: legendes(lambda k: choisis[k][1]["annee"] or "")))
+        evts.append((duree * 0.72, lambda: legendes(lambda k: (choisis[k][1]["annee"] or "") + " · " +
+                                                     " ".join(m[0].upper() + "…" for m in titres[k].split()[:3]))))
+    etapes = chronologie(evts, lambda: {**etat, "rouleaux": [dict(r) for r in etat["rouleaux"]],
+                                        "legendes": list(etat["legendes"]), "indices": list(etat["indices"])})
+    return dict(jeu="dougie", vue="jackpot", duree=duree, etapes=etapes, images=images, revelation=en_jpeg(tous, 380),
+                reponse="plusieurs", suggestions=True,
+                films_cles=[cles_reponses(f["title"], f.get("original_title"), *d["noms"]) for f, d in choisis],
+                films_titres=titres, cles=[], bonne="", solution=" · ".join(titres),
+                detail="« Hellooo! » — Dougie Jones", films=[cle_film(f) for f, _ in choisis])

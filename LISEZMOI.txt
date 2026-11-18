@@ -57,11 +57,13 @@ Les jeux
   Carl's Fat Trout Trailers                   Les deux films     derrière le store, deux films mêlés : trouvez les deux
   Phillip's Associates                        Les complices      qui est-ce ? ceux avec qui il a le plus tourné
   Jerry's Trip                                Le rébus           le titre du film en rébus phonétique
-  Hank's Dominoes                             Le domino manquant le film qui fait le pont entre deux films
-  Lil's Coded Dress                           L'absent           neuf objets sur la robe de Lil : quel film manque ?
-  Dougie's Jackpots                           Le jackpot         les rouleaux s'arrêtent sur les morceaux d'une affiche
-  Mr. C's Coordinates                         Les coordonnées    le film donné par ses seuls nombres
-  Mike's Missing Arm                          La pièce manquante quelle pièce complète l'affiche ?
+  Hank's Dominoes                             L'alignement       rangez cinq dominos (box-office, budget, durée, note)
+  Annie's Miss Twin Peaks                     L'absente          sept écharpes, huit affiches : laquelle n'a pas d'écharpe ?
+  Dougie's Jackpots                           Le jackpot         la machine tourne : trouvez ses cinq films à temps
+  Mike's Future or Past                       L'année            l'affiche et le titre : en quelle année ?
+  Windom Earle's Chessboard                   L'échiquier        chaque pièce est un membre de l'équipe du film
+  Harold's Orchids                            Les pétales        des détails de l'affiche vus à la loupe
+  Jacques Renault's Card Table                Le brelan          cinq affiches : les trois qui ont quelqu'un en commun
 
 Décors
   Jamais de fond qui dénote : des objets (web/objets.js, web/decor.js). Les objets ne sont jamais cachés derrière
@@ -84,8 +86,10 @@ Décors
     Denise : porte-carte de la DEA, le nom en cases.   Carl : la caravane, son store, l'enseigne du Fat Trout.
     James : la jaquette de la cassette, la moto devant (à gauche, les roues tournent ; la pochette reste visible).
     Albert : un point bleu lumineux.   Phillip : le réseau relié par l'électricité, le téléphone.
-    Jerry : les cartes du rébus, la baguette.   Hank : la chaîne de dominos.   Lil : sa robe rouge, la rose bleue.
-    Dougie : la machine à sous.   Mr. C : la fiche des coordonnées.   Mike : l'affiche trouée et les pièces.
+    Jerry : les cartes du rébus, la baguette.   Hank : les dominos debout.   Annie : la couronne, les écharpes.
+    Dougie : la machine à sous qui tourne (« Hellooo! »).   Mike : le compteur d'années.
+    Windom Earle : l'échiquier et la feuille de partie.   Harold : l'orchidée, son carnet « Living Novel ».
+    Jacques Renault : les cartes du One Eyed Jack's, les jetons.
     Et toujours : Norma (Double R), Shelly (cherry pie), Lucy (téléphone), Donna (One-Eyed Jack's), Pete (post-it),
       Ben et Josie (registres), Big Ed (pompe), le Géant (cartons, bague de la grotte du hibou, nœud papillon),
       la Dame à la bûche (le trou du nœud), la Red Room (sans lumière de lampe).
@@ -297,25 +301,34 @@ Autres jeux
     Dans 60 % des manches (réglable), un ou deux d'entre eux disent aussi un film fait ensemble. Le nom à trous à la
     fin (jamais caché ; sur téléphone, une grille simple et lisible).
   Le rébus (Jerry Horne) : un vrai rébus phonétique. Le titre est découpé en sons, et chaque morceau est dessiné par
-    un mot qui se prononce pareil ou presque, articles et noms propres compris (« Le Roi lion » : lait-roi-lion,
-    « Les Dents de la mer » : lait-dent-deux-las-mère). Un même son a souvent plusieurs images (« de » : un dé ou un
-    2…), tirées au sort. Un son qui ne se dessine pas est écrit. Indices : genre et année, puis les mots sous les
-    images, puis le titre à trous. Les titres qui se dessinent entièrement passent en priorité.
-  Le domino manquant (Hank Jennings) : une chaîne de dominos relie deux films par leurs acteurs, mais le domino du
-    milieu manque : c'est le film mystère. Il partage un acteur avec le film de gauche et un autre avec celui de
-    droite. Les deux acteurs charnières se dévoilent sur les dominos, puis genre et année, puis le titre à trous.
-  L'absent (Lil) : neuf objets épinglés sur la robe de Lil évoquent neuf films (mots-clés TMDB, titre) ; dix affiches
-    sont proposées : laquelle n'est pas sur la robe ? Indice : deux affiches représentées barrées à mi-temps.
-  Le jackpot (Dougie Jones) : la machine à sous du Silver Mustang ; ses trois rouleaux tournent sur des morceaux
-    d'affiches puis s'arrêtent un à un sur un tiers de l'affiche du film mystère. Jackpot : « Hellooo! »
-  Les coordonnées (Mr. C) : le film donné par ses seuls nombres, tapés un à un sur la fiche de Mr. C : année, durée,
-    note TMDB, budget, recettes, mots et lettres du titre… Puis le genre et le titre à trous.
-  La pièce manquante (Mike) : il manque un morceau à l'affiche ; quatre pièces, découpées au même endroit dans quatre
-    affiches : laquelle la complète ? À la réponse : l'affiche entière.
+    un mot qui a exactement les mêmes sons (« Le Roi lion » : le + roi + lion). Les images montrent directement le
+    mot ; quand il en faut plusieurs, elles sont dans un cadre (« zoo » : une girafe, un lion, un tigre). Un même son
+    peut avoir plusieurs images, tirées au sort. Ce qui ne se dessine pas est écrit. Indices : genre et année, puis
+    les mots sous les images, puis le titre à trous. Les titres qui se dessinent le mieux passent en priorité.
+  Les complices (Phillip) : quand un complice dit un film fait ensemble, sa petite affiche est épinglée à côté.
+  L'alignement (Hank Jennings) : cinq dominos debout, cinq films ; rangez-les selon le critère de la manche (du plus
+    gros box-office au plus petit, du plus gros budget, du plus long, du mieux noté — critères réglables). Même
+    geste que la frise de Nadine. Indice : la valeur du premier domino à mi-temps. Points par domino bien placé.
+  L'absente (Annie Blackburn) : Annie concourt pour Miss Twin Peaks. Sept candidates portent une écharpe avec deux
+    mots qui évoquent un film (mots-clés TMDB traduits en français) ; huit affiches : laquelle n'a pas d'écharpe ?
+    Indice : deux affiches qui ont leur écharpe sont barrées à mi-temps.
+  Le jackpot (Dougie Jones) : la machine à sous du Silver Mustang tourne ; chacun de ses cinq rouleaux fait défiler
+    l'affiche d'un film, très vite puis de plus en plus lentement. Retrouvez les cinq films pendant qu'elle tourne :
+    chaque film trouvé rapporte des points, les cinq un bonus. Indices : les années, puis les initiales.
+  L'année (Mike) : « Is it future, or is it past? ». L'affiche et le titre ; tapez l'année de sortie. L'année exacte
+    rapporte le plus (tolérance commune des années). Indices : un film sorti la même année, puis la décennie.
+  L'échiquier (Windom Earle) : chaque pièce avancée est quelqu'un de l'équipe du film : les pions (seconds rôles),
+    le cavalier (directeur de la photo), la tour (compositeur), le fou (scénariste), la dame (tête d'affiche), le
+    roi (réalisateur). La feuille de partie dit qui elles sont. Indices : l'année, puis le titre à trous.
+  Les pétales (Harold Smith) : chaque pétale de l'orchidée montre un détail de l'affiche (sans texte si TMDB en a
+    une), vu à la loupe ; les pétales s'ouvrent, puis le détail s'élargit. Indices : le genre, puis le titre à trous.
+  Le brelan (Jacques Renault) : le croupier du One Eyed Jack's distribue cinq cartes (cinq affiches) ; trois ont une
+    même personne au générique (acteur, réalisateur, compositeur, scénariste, directeur de la photo). Touchez les
+    trois puis « Miser ». Brelan exact : tous les points ; deux sur trois : une partie. Indice : le métier commun.
   Images du menu : chaque carte du menu a un petit bouton « image » (en haut à gauche, au survol). On choisit une
     image, on la cadre (glisser, zoom) et l'aperçu montre aussitôt la carte choisie et non choisie, l'en-tête de la
     partie et la photo de profil. Les images ajoutées sont gardées dans donnees/images_menu/ ; « Remettre l'image
-    d'origine » les retire. Pratique pour Lil, Dougie, Mr. C et Mike, qui n'ont pas encore d'image.
+    d'origine » les retire. Annie, Dougie, Mike, Windom Earle, Harold et Jacques ont maintenant leur image.
   Préparation à l'avance : chaque manche est préparée deux manches avant d'être jouée, pendant que l'on joue.
 
 Affiche vidée (Pete)
@@ -400,3 +413,15 @@ Musique d'ambiance
     Partie : https://music.youtube.com/playlist?list=OLAK5uy_mlZa8Lsr_mNkYfrYynkfQE1ZyamvGWY3A
   Les liens music.youtube.com marchent comme les liens youtube.com (seul l'identifiant « list= » compte).
   Volume et activation : Réglages › Général. Un clic sur l'égaliseur coupe le son.
+
+Version 9
+  - Code de la partie : affiché en grand sur l'écran hôte (et sur le téléphone). « Rejoindre une autre partie avec un
+    code » sur le téléphone : on tape le code ; même Wi-Fi : on y va directement ; sinon par Internet (le tunnel
+    s'ouvre tout seul, réglage « Code de la partie : joignable aussi par Internet »).
+  - Profils : dans Listes, l'interrupteur « Films vus en commun » (l'intersection des films vus par les joueurs
+    présents ; un seul profil : ses films vus). Activé, les listes « Ajouter » s'ajoutent à ces films, pour chaque
+    jeu ; désactivé, on revient aux listes incluses habituelles.
+  - Plans de Truman : les plans fournis, triés en trois niveaux (1_difficile, 2_moyen, 3_facile). Le zip
+    plans_twin_picks.zip se décompresse en plans/ à côté du jeu, ou se publie avec outils\publier_plans.bat.
+  - Menu sur téléphone : boutons Profils / Listes / Réglages bien distincts, moins d'informations inutiles.
+  - Nouvelle icône : la tasse de café dont la vapeur dessine les deux sommets, sur le sol de la Black Lodge.

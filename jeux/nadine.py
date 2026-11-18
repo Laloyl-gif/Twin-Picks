@@ -79,7 +79,7 @@ class Moteur:
             return {"ok": False, "msg": "Frise déjà envoyée"}
         o = d.get("ordre")
         if not isinstance(o, list) or sorted(o) != list(range(self.n)) or any(type(x) is not int for x in o):
-            return {"ok": False, "msg": "Touchez tous les films, du plus ancien au plus récent"}
+            return {"ok": False, "msg": "Touchez tous les films, dans l'ordre demandé"}
         self.reponses[pid], self.fracs[pid] = list(o), frac
         self.p.joueurs[pid].essais = 1
         return {"ok": True, "msg": "Frise accrochée !"}
@@ -98,9 +98,10 @@ class Moteur:
             justes = [a == b for a, b in zip(o, bonne)]
             self.justes[pid] = justes
             parfait = all(justes)
-            gain = self.cfg["nadine_pts"] * sum(justes)
+            jeu = self.m.get("jeu", "nadine")
+            gain = self.cfg.get(f"{jeu}_pts", self.cfg["nadine_pts"]) * sum(justes)
             if parfait:
-                gain += self.cfg["nadine_parfait"] + int(self.cfg["bonus_vitesse"] * self.fracs.get(pid, 0))
+                gain += self.cfg.get(f"{jeu}_parfait", self.cfg["nadine_parfait"]) + int(self.cfg["bonus_vitesse"] * self.fracs.get(pid, 0))
             j.gain += gain
             j.score += gain
             j.trouve = parfait

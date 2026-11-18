@@ -1,85 +1,70 @@
-"""Hank's Dominoes (Le domino manquant) : Hank Jennings et ses dominos. Une chaîne de dominos relie deux films par
-leurs acteurs, mais le domino du milieu manque : c'est le film mystère. À gauche, un film A ; à droite, un film C.
-Le film du milieu partage un acteur avec A et un autre acteur avec C : quel film fait le pont ?
-Les deux acteurs « charnières » se dévoilent l'un après l'autre (photo sur le domino), puis genre et année, puis le
-titre à trous. Rien à voir avec le casting : il faut trouver le film qui raccorde deux autres films.
+"""Hank's Dominoes (L'alignement) : Hank Jennings aligne ses dominos. Cinq films sont posés comme des dominos, dans le
+désordre ; chacun les range selon le critère de la manche (du plus gros box-office au plus petit, du plus long au plus
+court, du mieux noté au moins bien noté, du plus cher au moins cher). À la réponse, les dominos se remettent en ordre
+et leurs valeurs s'affichent. Points par domino à la bonne place, bonus si tout l'alignement est juste.
+(Même mécanique de réponse que La frise de Nadine : touchez les films dans l'ordre.)
 """
 import random
 
 from PIL import ImageOps
 
-from tmdb import cle_film, details_film, fiche, filmographie
+import sagas
+from tmdb import cle_film, fiche
 from visuels import en_jpeg
-from .commun import affiche, chronologie, manche_titre, reponse_affichee, tirer, trous
-
-CONNU = 300                  # votes TMDB minimum des films A et C (des films que l'on connaît)
+from .commun import affiche, chronologie
 
 
-def _bout(api, acteur, autre, interdits):
-    """Un film connu de l'acteur où l'autre acteur charnière n'a pas joué (sinon le pont serait ambigu)."""
-    films = [f for f in filmographie(api, acteur["id"])[:25]
-             if f["id"] not in interdits and f["votes"] >= CONNU and f.get("poster_path")]
-    random.shuffle(films)
-    films.sort(key=lambda f: -f["votes"] // 4000)                 # les plus connus d'abord, un peu de hasard
-    for f in films[:6]:
-        try:
-            fi = fiche(api, dict(f, tv=False))
-        except Exception:  # noqa: BLE001
-            continue
-        if all(a["id"] != autre["id"] for a in fi["acteurs"]):
-            return f
-    return None
+def millions(x):
+    m = x / 1e6
+    return (f"{m / 1000:.2f}".replace(".", ",") + " Md$") if m >= 1000 else f"{m:.0f} M$"
+
+
+CRITERES = {
+    "recettes": ("Du plus gros box-office au plus petit", lambda fi: fi.get("recettes", 0), millions, 0.25),
+    "budget": ("Du plus gros budget au plus petit", lambda fi: fi.get("budget", 0), millions, 0.25),
+    "duree": ("Du plus long au plus court", lambda fi: fi.get("duree", 0), lambda v: f"{v // 60} h {v % 60:02d}", 0.06),
+    "note": ("Du mieux noté au moins bien noté (TMDB)", lambda fi: round(fi.get("note", 0), 1),
+             lambda v: f"★ {v:.1f}".replace(".", ","), 0.04),
+}
 
 
 def construire(api, cfg, pool, deja):
-    duree = float(cfg["dur_hank"])
-    for _ in range(14):
-        film = tirer(pool, deja, lambda f: not f.get("tv"))
-        try:
-            fi = fiche(api, film)
-        except Exception:  # noqa: BLE001
-            continue
-        cast = [a for a in fi["acteurs"][:10] if a.get("photo")]
-        if len(cast) < 2:
-            continue
-        random.shuffle(cast)
-        trouve = None
-        for i, x in enumerate(cast[:6]):
-            for y in cast[i + 1:7]:
-                a = _bout(api, x, y, {film["id"]})
-                if not a:
-                    continue
-                c = _bout(api, y, x, {film["id"], a["id"]})
-                if c:
-                    trouve = (x, a, y, c)
-                    break
-            if trouve:
+    nb, duree = 5, float(cfg["dur_hank"])
+    crits = [c for c in CRITERES if cfg.get("hank_" + c, True)] or list(CRITERES)
+    films = [f for f in pool if not f.get("tv") and f.get("poster_path")]
+    random.shuffle(films)
+    for _ in range(6):
+        crit = random.choice(crits)
+        titre, val, fmt, ecart = CRITERES[crit]
+        choisis = []
+        for f in ([x for x in films if cle_film(x) not in deja] or films)[:45]:
+            if len(choisis) == nb:
                 break
-        if trouve:
+            try:
+                v = val(fiche(api, f))
+            except Exception:  # noqa: BLE001
+                continue
+            if not v or any(abs(v - w) <= ecart * max(v, w) for _, w in choisis):
+                continue                                 # deux valeurs trop proches : impossible à départager
+            if any(sagas.meme_univers(f, g) for g, _ in choisis):
+                continue
+            choisis.append((f, v))
+        if len(choisis) == nb:
             break
     else:
-        raise RuntimeError("Le domino manquant : pas assez de films reliés aux films des listes.")
-    x, a, y, c = trouve
-    d = details_film(api, film)
-    photos = api.images([x["photo"], y["photo"]], "w185")
-    images = [en_jpeg(ImageOps.fit(affiche(api, a, "w342"), (200, 300)), 300),
-              en_jpeg(ImageOps.fit(photos[0].convert("RGB"), (200, 260)), 260),
-              en_jpeg(ImageOps.fit(photos[1].convert("RGB"), (200, 260)), 260),
-              en_jpeg(ImageOps.fit(affiche(api, c, "w342"), (200, 300)), 300)]
-    etat = {"chaine": [{"film": a["title"], "img_f": 0, "acteur": "", "img_a": None},
-                       {"film": c["title"], "img_f": 3, "acteur": "", "img_a": None}],
-            "indices": [], "trous": ""}
-    dev = [(x["nom"], 1), (y["nom"], 2)]
-
-    def devoiler(k):
-        etat["chaine"][k].update(acteur=dev[k][0], img_a=dev[k][1])
-    evts = [(duree * 0.3, lambda: devoiler(0)), (duree * 0.5, lambda: devoiler(1))]
-    depart = " · ".join(v for v in (", ".join(d["genres"][:2]), d["annee"]) if v)
-    if depart:
-        evts.append((duree * 0.66, lambda: etat["indices"].append(depart)))
-    evts.append((duree * 0.82, lambda: etat.update(trous=trous(reponse_affichee(cfg, film, d), 0))))
-    etapes = chronologie(evts, lambda: {**etat, "chaine": [dict(v) for v in etat["chaine"]], "indices": list(etat["indices"])})
-    m = manche_titre("hank", "dominos", duree, film, d, etapes, images, en_jpeg(affiche(api, film, "w500")), cfg)
-    m["films"] = [cle_film(film)]
-    m["detail"] = f"{a['title']} —{x['nom']}— {film['title']} —{y['nom']}— {c['title']}"
-    return m
+        raise RuntimeError("L'alignement : pas assez de films aux valeurs connues dans les listes.")
+    for f, _ in choisis:
+        deja.add(cle_film(f))
+    ordre = sorted(range(nb), key=lambda i: -choisis[i][1])            # du plus grand au plus petit
+    images = [en_jpeg(ImageOps.fit(affiche(api, f, "w342"), (300, 450)), 450) for f, _ in choisis]
+    valeurs = [fmt(v) for _, v in choisis]
+    etat = {"items": [{"img": i, "txt": f["title"]} for i, (f, _) in enumerate(choisis)], "annees": {},
+            "consigne": titre, "indices": []}
+    evts = []
+    if cfg.get("hank_indice", True):
+        i = ordre[0]
+        evts.append((duree * 0.5, lambda i=i: etat["annees"].update({str(i): valeurs[i]})))
+    etapes = chronologie(evts, lambda: {**etat, "annees": dict(etat["annees"]), "indices": list(etat["indices"])})
+    return dict(jeu="hank", vue="frise", duree=duree, reponse="ordre", etapes=etapes, revelation=None, images=images,
+                cles=[], bonne="", solution=titre, detail=" → ".join(f"{choisis[i][0]['title']} ({valeurs[i]})" for i in ordre),
+                ordre=ordre, annees=valeurs, films=[cle_film(f) for f, _ in choisis])

@@ -250,6 +250,13 @@ $('#zone').onclick = ev => {
     if (k >= 0) ordreTel.splice(k, 1); else ordreTel.push(i);
     return rendre();
   }
+  const bj = ev.target.closest('.bj-carte.actif');
+  if (bj) {
+    const i = Number(bj.dataset.i), k = ordreTel.indexOf(i);
+    if (k >= 0) ordreTel.splice(k, 1); else if (ordreTel.length < 3) ordreTel.push(i);
+    return rendre();
+  }
+  if (ev.target.closest('#b-brelan-ok')) return action('/api/jouer', {pid, cartes: ordreTel.slice()});
   if (ev.target.closest('#b-frise-effacer')) { ordreTel = []; return rendre(); }
   if (ev.target.closest('#b-frise-ok')) return action('/api/jouer', {pid, ordre: ordreTel.slice()});
   const df = ev.target.closest('.duel-film.actif');
@@ -361,7 +368,7 @@ function gainTel() {
 function choixTel() {
   const rev = S.phase === 'reponse', m = S.moi, actif = !rev && !m.repondu && !S.pause;
   const n = ((S.etat || {}).items || []).length;
-  const grille = (S.jeu === 'josie' ? josieHTML : choixHTML)(S, i => `/img/${S.seq}/${i}`, {colsChoix: S.jeu === 'maddy' || S.jeu === 'mike' ? n : S.jeu === 'lil' ? 5 : n > 4 && !(S.etat || {}).paire ? 3 : 2, sansVotes: true, sansSolution: true, cellule: i =>
+  const grille = (S.jeu === 'josie' ? josieHTML : choixHTML)(S, i => `/img/${S.seq}/${i}`, {colsChoix: S.jeu === 'maddy' || S.jeu === 'mike' ? n : S.jeu === 'annie' ? 4 : n > 4 && !(S.etat || {}).paire ? 3 : 2, sansVotes: true, sansSolution: true, cellule: i =>
     actif ? {cls: 'actif'} : m.reponse === i ? {cls: 'verrou', badge: 'Ma réponse'} : {cls: rev ? '' : 'terne'}});
   if (!rev) return grille + (m.repondu ? message('<span class="doux">Réponse envoyée</span>') : '');
   const bon = m.reponse === (S.choix || {}).bonne;
@@ -470,9 +477,30 @@ function friseTel() {
     return {cls: 'actif' + (k >= 0 ? ' choisi' : ''), badge: k >= 0 ? k + 1 : ''};
   }});
   const complet = ordreTel.length === n;
-  return frise + `<p class="centre doux">Touchez les films du plus ancien au plus récent (${ordreTel.length}/${n})</p>` +
+  return frise + `<p class="centre doux">${esc(((S.etat || {}).consigne || 'Du plus ancien au plus récent'))} : touchez-les dans l'ordre (${ordreTel.length}/${n})</p>` +
     `<div class="boutons-frise"><button id="b-frise-effacer" class="discret" ${ordreTel.length ? '' : 'disabled'}>Effacer</button>` +
     `<button id="b-frise-ok" class="primaire" ${complet ? '' : 'disabled'}>Accrocher</button></div>`;
+}
+
+/* Jacques Renault's Card Table : toucher les trois cartes du brelan, puis « Miser ». */
+function brelanTel() {
+  const mo = S.moteur || {}, rev = S.phase === 'reponse', src = i => `/img/${S.seq}/${i}`;
+  if (ordreSeq !== S.seq) { ordreSeq = S.seq; ordreTel = []; }
+  if (rev) {
+    const o = mo.ma_reponse || [], bons = mo.bons || [], justes = o.filter(i => bons.includes(i)).length;
+    const jeu = brelanHTML(S, src, {cellule: i => o.includes(i) ? {cls: bons.includes(i) ? 'juste choisi' : 'faux'} : {}});
+    const ban = mo.ma_reponse ? banniere(justes === 3 ? 'ok' : justes ? '' : 'ko', justes === 3 ? 'Brelan !' : `${justes} carte${justes > 1 ? 's' : ''} sur 3`, '')
+      : banniere('ko', 'Pas de mise', '');
+    return ban + jeu + gainTel();
+  }
+  if (!mo.actif) {
+    const o = mo.ma_reponse;
+    return brelanHTML(S, src, {cellule: i => o && o.includes(i) ? {cls: 'choisi'} : {}}) +
+      message(`<span class="doux">${o ? 'Mise posée' : 'Patientez'}</span>`);
+  }
+  const jeu = brelanHTML(S, src, {cellule: i => ({cls: 'actif' + (ordreTel.includes(i) ? ' choisi' : '')})});
+  return jeu + `<div class="boutons-frise"><button id="b-frise-effacer" class="discret" ${ordreTel.length ? '' : 'disabled'}>Effacer</button>` +
+    `<button id="b-brelan-ok" class="primaire" ${ordreTel.length === 3 ? '' : 'disabled'}>Miser (${ordreTel.length}/3)</button></div>`;
 }
 
 /* Fenêtre de confirmation (changer une condition du bingo) : renvoie une promesse vraie si l'on confirme. */
@@ -509,15 +537,16 @@ function vueZone() {
   if (S.type === 'duels') return ['de' + JSON.stringify([S.phase, S.seq, S.etat, S.moteur, S.classement]), duelsTel()];
   if (S.type === 'double') return ['do' + JSON.stringify([S.phase, S.seq, S.etat, S.moteur, S.classement]), benTel()];
   if (S.type === 'ordre') return ['or' + JSON.stringify([S.phase, S.seq, S.etat, S.moteur, ordreTel, S.classement]), friseTel()];
-  if (S.type === 'paire') {                        // Carl : les deux films
-    const mo = S.moteur || {}, miens = mo.mes_films || [];
+  if (S.type === 'brelan') return ['bj' + JSON.stringify([S.phase, S.seq, S.etat, S.moteur, ordreTel, S.classement]), brelanTel()];
+  if (S.type === 'plusieurs' || S.type === 'paire') {     // Carl : les deux films ; Dougie : le jackpot
+    const mo = S.moteur || {}, miens = mo.mes_films || [], n = mo.n || 2;
     if (S.phase === 'reponse') {
       const r = (mo.resultats || []).find(x => x.id === m.id) || {n: 0};
-      return ['pa' + S.seq + JSON.stringify(S.classement), banniere(r.n === 2 ? 'ok' : r.n ? '' : 'ko',
-        r.n === 2 ? 'Les deux !' : r.n ? 'Un sur deux' : 'Aucun', `<b>${esc(S.solution)}</b>`) + gainTel()];
+      return ['pa' + S.seq + JSON.stringify(S.classement), banniere(r.n === n ? 'ok' : r.n ? '' : 'ko',
+        r.n === n ? (n === 2 ? 'Les deux !' : 'Tous trouvés !') : r.n ? `${r.n} sur ${n}` : 'Aucun', `<b>${esc(S.solution)}</b>`) + gainTel()];
     }
-    if (!mo.actif) return ['pa-ok' + S.seq + miens.length, message(miens.length === 2
-      ? cooper(true, 'grand') + '<span class="ok">Les deux films !</span>' : '<span class="doux">Plus d\'essais</span>')];
+    if (!mo.actif) return ['pa-ok' + S.seq + miens.length, message(miens.length === n
+      ? cooper(true, 'grand') + `<span class="ok">${n === 2 ? 'Les deux films !' : 'Les ' + n + ' films !'}</span>` : '<span class="doux">Plus d\'essais</span>')];
     return ['saisie', null];
   }
   if (S.type === 'duree') {
@@ -561,10 +590,10 @@ function rendre() {
   }
   document.body.dataset.jeu = enManche ? (S.jeu || '') : '';                      // décor du jeu (style.css)
   GRAINE_DECOR = S.seq || 0;
-  const vis = $('#visuel'), avecVisuel = enManche && !['complice', 'choix', 'bingo', 'ordre', 'double', 'duels'].includes(S.type);
+  const vis = $('#visuel'), avecVisuel = enManche && !['complice', 'choix', 'bingo', 'ordre', 'double', 'duels', 'brelan'].includes(S.type);
   vis.hidden = !avecVisuel;
   if (avecVisuel) {
-    maj(vis, `${S.phase}|${S.seq}|${S.revelation}|${JSON.stringify(S.etat)}|${S.vue === 'cassette' ? S.pause || !!S.main : ''}|${(S.moteur || {}).contrainte || ''}|${S.type === 'duree' ? JSON.stringify(S.moteur) : ''}`,
+    maj(vis, `${S.phase}|${S.seq}|${S.revelation}|${JSON.stringify(S.etat)}|${S.vue === 'cassette' ? S.pause || !!S.main : ''}|${(S.moteur || {}).contrainte || ''}|${S.type === 'duree' || S.type === 'plusieurs' ? JSON.stringify(S.moteur) : ''}`,
         enveloppe(() => visuelHTML(S, {largeur: vis.clientWidth || 340, tuile: 44, cols: 4})), S.seq);
     ajuster(vis, Math.round(window.innerHeight * 0.5));
   }
@@ -586,12 +615,12 @@ function rendre() {
       : 'Titre';
     $('#saisie').inputMode = S.type === 'nombre' ? 'numeric' : S.type === 'duree' ? 'decimal' : 'text';
     $('#aide-saisie').textContent = annee || S.type === 'chrono' || S.type === 'bingo' ? ''
-      : S.type === 'paire' ? '' : S.mode === 'buzzer' ? 'À vous' : `${m.essais} essai${m.essais > 1 ? 's' : ''}`;
+      : S.type === 'paire' || S.type === 'plusieurs' ? '' : S.mode === 'buzzer' ? 'À vous' : `${m.essais} essai${m.essais > 1 ? 's' : ''}`;
     if (S.type === 'duree') apercuDuree();
-    if (S.type === 'paire') {
-      const miens = mo.mes_films || [];
-      $('#aide-saisie').innerHTML = `<span class="paire-tel">${[0, 1].map(k => miens[k]
-        ? `<b class="ok">✓ ${esc(miens[k])}</b>` : '<i>film ' + (k + 1) + ' ?</i>').join('')}</span>`;
+    if (S.type === 'paire' || S.type === 'plusieurs') {
+      const miens = mo.mes_films || [], n = mo.n || 2;
+      $('#aide-saisie').innerHTML = `<span class="paire-tel">${Array.from({length: n}, (_, k) => miens[k]
+        ? `<b class="ok">✓ ${esc(miens[k])}</b>` : '<i>?</i>').join('')}</span>`;
     }
     if (!etaitSaisie) $('#saisie').focus();
   }

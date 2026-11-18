@@ -698,3 +698,24 @@ Object.assign(OBJ, {
     <rect x="236" y="110" width="58" height="28" rx="8" fill="url(#cp8)" transform="rotate(14 265 124)"/>
     <ellipse cx="40" cy="84" rx="10" ry="32" fill="#7a838a"/>`),
 });
+/* Annie : la couronne de Miss Twin Peaks */
+Object.assign(OBJ, {
+  couronne_miss: SVG('0 0 160 90', `<defs><linearGradient id="cm9" x1="0" x2="1"><stop offset="0" stop-color="#9aa2aa"/><stop offset=".5" stop-color="#ffffff"/><stop offset="1" stop-color="#8a939a"/></linearGradient></defs>
+    <path d="M14 78l8-46 26 26 32-48 32 48 26-26 8 46z" fill="url(#cm9)" stroke="#6d757d" stroke-width="2"/>
+    <g fill="#7fd0ff"><circle cx="80" cy="40" r="7"/><circle cx="46" cy="60" r="5"/><circle cx="114" cy="60" r="5"/></g>
+    <path d="M14 78h132" stroke="#c9d1d6" stroke-width="6" stroke-linecap="round"/>`),
+});
+/* v9 : Mike (le bras absent, la manche épinglée), Harold (le cœur de l'orchidée), Jacques (les jetons du One Eyed Jack's) */
+Object.assign(OBJ, {
+  bras_mike: SVG('0 0 60 60', `<circle cx="30" cy="30" r="27" fill="#2a1b12" stroke="#c9a46a" stroke-width="2"/>
+    <path d="M18 42c4-12 8-20 12-22s8 6 12 22" fill="none" stroke="#c9a46a" stroke-width="3" stroke-linecap="round"/>
+    <circle cx="30" cy="17" r="5" fill="#c9a46a"/><path d="M24 30h12" stroke="#b3121f" stroke-width="3"/>`),
+  coeur_orchidee: SVG('0 0 120 120', `<defs><radialGradient id="co9"><stop offset="0" stop-color="#fff6c8"/><stop offset=".6" stop-color="#f2c84b"/><stop offset="1" stop-color="#b8782a"/></radialGradient></defs>
+    <path d="M60 18c18 10 26 30 22 50-4 18-14 30-22 34-8-4-18-16-22-34-4-20 4-40 22-50z" fill="#f5e7f0" stroke="#c98fb5" stroke-width="2"/>
+    <path d="M60 46c10 4 14 14 12 24s-6 16-12 18c-6-2-10-8-12-18s2-20 12-24z" fill="url(#co9)"/>
+    <g fill="#8a2a5a"><circle cx="54" cy="62" r="2.4"/><circle cx="66" cy="60" r="2.2"/><circle cx="58" cy="74" r="2"/><circle cx="64" cy="72" r="1.8"/></g>`),
+  jetons: SVG('0 0 120 90', `<g stroke="#00000055" stroke-width="1.5">
+    <ellipse cx="40" cy="70" rx="30" ry="10" fill="#b3121f"/><rect x="10" y="44" width="60" height="26" fill="#b3121f"/><ellipse cx="40" cy="44" rx="30" ry="10" fill="#d8323c"/>
+    <ellipse cx="88" cy="74" rx="26" ry="9" fill="#1d1d24"/><rect x="62" y="58" width="52" height="16" fill="#1d1d24"/><ellipse cx="88" cy="58" rx="26" ry="9" fill="#3a3a46"/></g>
+    <g fill="none" stroke="#fff" stroke-width="3" stroke-dasharray="6 7"><ellipse cx="40" cy="44" rx="22" ry="7"/><ellipse cx="88" cy="58" rx="19" ry="6"/></g>`),
+});

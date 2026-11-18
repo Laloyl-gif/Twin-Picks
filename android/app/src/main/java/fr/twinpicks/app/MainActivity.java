@@ -127,7 +127,8 @@ public class MainActivity extends Activity {
                 if (!Python.isStarted()) Python.start(new AndroidPlatform(this));
                 module = Python.getInstance().getModule("demarrage");
                 ui.post(suivi);
-                String url = module.callAttr("demarrer", getFilesDir().getAbsolutePath(), BuildConfig.DEPOT).toString();
+                String url = module.callAttr("demarrer", getFilesDir().getAbsolutePath(), BuildConfig.DEPOT,
+                        getApplicationInfo().nativeLibraryDir).toString();
                 ui.post(() -> {
                     pret = true;
                     web.loadUrl(url);

@@ -124,18 +124,26 @@ JEUX = {
                     "Une personne mystère, devinée d'après ceux avec qui elle a le plus tourné.", "phillip", "titre",
                     listes=False),
     "jerry": _jeu("Jerry's Trip", "Le rébus", "Jerry", "Le titre du film écrit en images.", "jerry", "titre"),
-    "hank": _jeu("Hank's Dominoes", "Le domino manquant", "Hank",
-                 "Le film qui fait le pont entre deux autres films, par leurs acteurs.", "hank", "titre"),
+    "hank": _jeu("Hank's Dominoes", "L'alignement", "Hank",
+                 "Rangez les cinq dominos : box-office, budget, durée ou note, du plus grand au plus petit.", "hank",
+                 "ordre"),
     "carl": _jeu("Carl's Fat Trout Trailers", "Les deux films", "Carl",
-                 "Derrière le store, une lame sur deux montre un film différent : trouvez les deux.", "carl", "paire"),
-    "lil": _jeu("Lil's Coded Dress", "L'absent", "Lil",
-                "Neuf objets sur la robe de Lil évoquent neuf films : lequel des dix manque ?", "lil", "choix"),
+                 "Derrière le store, une lame sur deux montre un film différent : trouvez les deux.", "carl", "plusieurs"),
+    "annie": _jeu("Annie's Miss Twin Peaks", "L'absente", "Annie",
+                  "Sept écharpes de candidates évoquent sept films : lequel des huit n'a pas la sienne ?", "annie",
+                  "choix"),
     "dougie": _jeu("Dougie's Jackpots", "Le jackpot", "Dougie",
-                   "Les rouleaux de la machine à sous s'arrêtent sur les morceaux d'une affiche.", "dougie", "titre"),
-    "mrc": _jeu("Mr. C's Coordinates", "Les coordonnées", "Mr. C",
-                "Le film donné par ses seuls nombres : année, durée, budget…", "mrc", "titre"),
-    "mike": _jeu("Mike's Missing Arm", "La pièce manquante", "Mike",
-                 "Il manque un morceau à l'affiche : laquelle des quatre pièces le complète ?", "mike", "choix"),
+                   "La machine à sous tourne : retrouvez les cinq films de ses rouleaux avant qu'elle s'arrête.",
+                   "dougie", "plusieurs"),
+    "mike": _jeu("Mike's Future or Past", "L'année", "Mike", "L'affiche et le titre : en quelle année est-il sorti ?",
+                 "mike", "nombre"),
+    "windom": _jeu("Windom Earle's Chessboard", "L'échiquier", "Windom Earle",
+                   "Chaque pièce avancée est un membre de l'équipe du film, des pions jusqu'au roi.", "windom", "titre"),
+    "harold": _jeu("Harold's Orchids", "Les pétales", "Harold Smith",
+                   "Chaque pétale montre un détail de l'affiche, vu à la loupe, puis de plus en plus large.", "harold",
+                   "titre"),
+    "jacques": _jeu("Jacques Renault's Card Table", "Le brelan", "Jacques Renault",
+                    "Cinq cartes, cinq affiches : trouvez les trois qui ont quelqu'un en commun.", "jacques", "brelan"),
 }
 # Garde-fou : les noms du menu sont figés (CONSIGNES.md). Un nom changé par erreur arrête le jeu au lancement.
 TITRES_FIGES = {
@@ -150,8 +158,9 @@ TITRES_FIGES = {
     "ben": "Ben's Ghostwood Deal", "josie": "Josie's Double Ledger", "maddy": "Maddy's Impersonation",
     "james": "James' Just You", "ed": "Big Ed's Gas Farm", "loglady": "The Log Lady's Knothole",
     "leo": "Leo's New Shoes", "geant": "The Giant's Three Clues", "catherine": "Catherine's Disguise",
-    "denise": "Denise's Undercover", "carl": "Carl's Fat Trout Trailers", "phillip": "Phillip's Associates", "lil": "Lil's Coded Dress",
-    "dougie": "Dougie's Jackpots", "mrc": "Mr. C's Coordinates", "mike": "Mike's Missing Arm",
+    "denise": "Denise's Undercover", "carl": "Carl's Fat Trout Trailers", "phillip": "Phillip's Associates", "annie": "Annie's Miss Twin Peaks",
+    "dougie": "Dougie's Jackpots", "mike": "Mike's Future or Past", "windom": "Windom Earle's Chessboard",
+    "harold": "Harold's Orchids", "jacques": "Jacques Renault's Card Table",
     "jerry": "Jerry's Trip", "hank": "Hank's Dominoes",
 }
 assert all(JEUX[g]["titre"] == t for g, t in TITRES_FIGES.items() if g in JEUX), \
@@ -170,7 +179,7 @@ SOURCES_COMPTE = {
     -5: ("rated", "movies", "Films notés"),
     -6: ("rated", "tv", "Séries notées"),
 }
-VERSION_REGLAGES = 14
+VERSION_REGLAGES = 15
 
 PLAYLIST_MENU = "https://music.youtube.com/playlist?list=PLA7jHGp_FUM4"
 PLAYLIST_JEU = "https://music.youtube.com/playlist?list=OLAK5uy_mlZa8Lsr_mNkYfrYynkfQE1ZyamvGWY3A"
@@ -255,8 +264,12 @@ PARAMS = [
        aide="Dossiers musique/films/ et musique/partie/, playlist YouTube ci-dessous, ou extraits Deezer."),
     _p("musique_jeu_youtube", "general", "Musique de la partie : playlist YouTube (lien)", PLAYLIST_JEU, type="texte",
        placeholder="https://www.youtube.com/playlist?list=…"),
+    _p("salle_internet", "general", "Code de la partie : joignable aussi par Internet", True,
+       aide="Le tunnel cloudflared s'ouvre tout seul (téléchargé la première fois) : avec le code, on rejoint la partie "
+            "même sans être sur le même Wi-Fi."),
     _p("profils_auto", "general", "Profils : listes choisies selon les joueurs présents", True,
-       aide="Si des joueurs ont un profil, les jeux utilisent les films vus par tous (intersection de leurs listes)."),
+       aide="Si des joueurs ont un profil, les jeux utilisent les films vus par tous (intersection de leurs listes), "
+            "plus les listes ajoutées pour chaque jeu (bouton Listes)."),
     _p("profils_fichier", "general", "Profils : compter aussi les films du fichier importé", False,
        aide="Sinon le fichier importé ne sert que pour les notes (et pour les profils sans liste)."),
     _p("sagas", "general", "Films d'une saga : le nom de la saga suffit", True,
@@ -460,6 +473,11 @@ PARAMS = [
     _p("phillip_lien", "phillip", "Part des manches où un ou deux complices disent un film fait ensemble (%)", 60, 0, 100, 5),
     _p("dur_jerry", "jerry", "Durée d'une manche (s)", 30, 10, 120, 5),
     _p("dur_hank", "hank", "Durée d'une manche (s)", 40, 10, 120, 5),
+    _p("hank_indice", "hank", "Indice : la valeur du premier domino à mi-temps", True),
+    _p("hank_pts", "hank", "Points par domino bien placé", 150, 10, 1000, 10),
+    _p("hank_parfait", "hank", "Bonus alignement parfait", 400, 0, 2000, 50),
+    *[_p("hank_" + k, "hank", v, True, bloc="Critères possibles") for k, v in
+      (("recettes", "Box-office"), ("budget", "Budget"), ("duree", "Durée"), ("note", "Note TMDB"))],
 
     _p("dur_carl", "carl", "Durée d'une manche (s)", 45, 10, 120, 5),
     _p("carl_indices", "carl", "Indices (genres, années, titres à trous)", True),
@@ -467,12 +485,22 @@ PARAMS = [
     _p("carl_deux", "carl", "Bonus si les deux films sont trouvés", 300, 0, 3000, 50),
     _p("jerry_indices", "jerry", "Indices (genre et année, mots sous les images)", True),
 
-    _p("dur_lil", "lil", "Durée d'une manche (s)", 40, 10, 120, 5),
-    _p("lil_indice", "lil", "Indice : deux affiches représentées barrées à mi-temps", True),
-    _p("dur_dougie", "dougie", "Durée d'une manche (s)", 30, 10, 120, 5),
-    _p("dur_mrc", "mrc", "Durée d'une manche (s)", 40, 10, 120, 5),
+    _p("dur_annie", "annie", "Durée d'une manche (s)", 40, 10, 120, 5),
+    _p("annie_indice", "annie", "Indice : deux affiches qui ont leur écharpe barrées à mi-temps", True),
+    _p("dur_dougie", "dougie", "Durée d'une manche (s)", 45, 15, 120, 5),
+    _p("dougie_indices", "dougie", "Indices : les années sous les rouleaux, puis les initiales", True),
+    _p("dougie_pts", "dougie", "Points par film trouvé", 300, 0, 3000, 50),
+    _p("dougie_tous", "dougie", "Bonus si les cinq films sont trouvés", 500, 0, 3000, 50),
     _p("dur_mike", "mike", "Durée d'une manche (s)", 25, 10, 120, 5),
-    _p("mike_indice", "mike", "Indice : une mauvaise pièce barrée à mi-temps", True),
+    _p("mike_indices", "mike", "Indices : un film sorti la même année, puis la décennie", True),
+    _p("dur_windom", "windom", "Durée d'une manche (s)", 45, 15, 120, 5),
+    _p("windom_indices", "windom", "Indices (année, titre à trous)", True),
+    _p("dur_harold", "harold", "Durée d'une manche (s)", 40, 15, 120, 5),
+    _p("harold_indices", "harold", "Indices (genre, titre à trous)", True),
+    _p("dur_jacques", "jacques", "Durée d'une manche (s)", 40, 10, 120, 5),
+    _p("jacques_indice", "jacques", "Indice : le métier de la personne commune", True),
+    _p("jacques_pts", "jacques", "Points pour le brelan exact", 1000, 0, 3000, 50),
+    _p("jacques_deux", "jacques", "Points pour deux cartes justes sur trois", 300, 0, 3000, 50),
 
     _p("dur_hawk", "hawk", "Durée d'une manche (s)", 30, 10, 120, 5),
     _p("hawk_indices", "hawk", "Indices petit à petit (genre et année, réalisateur, acteur, personnage, titre à trous)",
@@ -497,7 +525,7 @@ def defauts():
     s = {p["cle"]: p["defaut"] for p in PARAMS}
     s.update(version=VERSION_REGLAGES, api_key="", session_id="", account_id=0, account_name="", reponse="texte",
              jeux={g: {"on": g == "affiche", "n": 5} for g in JEUX},
-             listes={g: {"inc": [LISTE_DEFAUT], "exc": []} for g in JEUX_LISTES},
+             listes={g: {"inc": [LISTE_DEFAUT], "exc": [], "plus": []} for g in JEUX_LISTES},
              listes_connues=[{"id": LISTE_DEFAUT, "nom": "list-pour-jeu", "nb": 0}])
     return s
 
@@ -550,7 +578,8 @@ def valider(brut, base=None):
     if isinstance(brut.get("listes"), dict):
         for g, v in brut["listes"].items():
             if g in s["listes"] and isinstance(v, dict):
-                s["listes"][g] = {"inc": _ids(v.get("inc")), "exc": _ids(v.get("exc"))}
+                cur = s["listes"][g]
+                s["listes"][g] = {k: _ids(v[k]) if k in v else list(cur.get(k, [])) for k in ("inc", "exc", "plus")}
     if isinstance(brut.get("listes_connues"), list):
         connues = {}
         for l in brut["listes_connues"]:
@@ -655,6 +684,23 @@ def migrer(brut):
                     listes[g] = copy.deepcopy(modele)
         for cle in ("dur_carl", "dur_hank"):
             brut.pop(cle, None)
+    if version < 15:                         # Annie remplace Lil, Mr. C s'en va ; Windom, Harold, Jacques arrivent
+        listes = brut.get("listes")
+        if isinstance(listes, dict):
+            modele = listes.get("affiche") or listes.get("pete")
+            for g in ("annie", "dougie", "mike", "windom", "harold", "jacques", "hank"):
+                if modele and g not in listes:
+                    listes[g] = copy.deepcopy(listes.get("lil") if g == "annie" and listes.get("lil") else modele)
+            for g in ("lil", "mrc"):
+                listes.pop(g, None)
+        for cle in ("dur_lil", "lil_indice", "dur_mrc", "dur_mike", "mike_indice", "dur_dougie", "dur_hank"):
+            brut.pop(cle, None)
+        jeux = brut.get("jeux")
+        if isinstance(jeux, dict):
+            if "lil" in jeux and "annie" not in jeux:
+                jeux["annie"] = jeux.pop("lil")
+            for g in ("lil", "mrc"):
+                jeux.pop(g, None)
     brut["version"] = VERSION_REGLAGES
     return brut
 

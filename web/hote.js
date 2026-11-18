@@ -50,7 +50,11 @@ function sourceJeu(g, d) {
       : `<button class="lien alerte" data-profils="1">${d.profils} profil${d.profils > 1 ? 's' : ''} requis</button>`;
   }
   if (!d.listes) return '';
-  if (actifs.length) return `<button class="lien" data-listes="${g}" title="Films vus par ${actifs.map(esc).join(', ')}">Profils</button>`;
+  if (actifs.length) {
+    const plus = (R().listes[g].plus || []).length;
+    return `<button class="lien" data-listes="${g}" title="Films vus par ${actifs.map(esc).join(', ')}">` +
+      `Films vus${plus ? ` + ${plus} liste${plus > 1 ? 's' : ''}` : ''}</button>`;
+  }
   const s = R().listes[g];
   if (!s.inc.length) return `<button class="lien alerte" data-listes="${g}">Aucune liste</button>`;
   const connues = Object.fromEntries(R().listes_connues.map(l => [l.id, l]));
@@ -63,7 +67,8 @@ function dessinerJeux() {
   $('#jeux').innerHTML = Object.entries(CFG.jeux).map(([g, d]) => {
     const on = jeux[g].on, n = jeux[g].n;
     if (on) { total += n; nbOn++; }
-    const bas = on ? `<div class="jeu-bas"><span class="jeu-source">${sourceJeu(g, d)}` +
+    const source = sourceJeu(g, d);
+    const bas = on ? `<div class="jeu-bas"><span class="jeu-source${TEL && !source.includes('alerte') ? ' discrete' : ''}">${source}` +
         `${g === 'pete' ? '<button class="lien prep" id="prep-pete" data-affiches="1"></button>' : ''}</span>` +
         `<div class="pas"><button data-pas="-1" title="Moins de manches">−</button><span>${n}</span>` +
         `<button data-pas="1" title="Plus de manches">+</button></div></div>` : '';
@@ -292,10 +297,12 @@ function ouvrirListes(g) {
   $('#d-listes').showModal();
 }
 function dessinerListes() {
+  const actifs = profilsActifs(), presents = E.profils_presents || [], cle = actifs.length ? 'plus' : 'inc';
   $('#l-jeux').innerHTML = jeuxAvecListes().map(g => {
-    const n = R().listes[g].inc.length;
+    const n = (R().listes[g][cle] || []).length;
     return `<button class="${g === jeuListes ? 'actif' : ''} ${R().jeux[g].on ? '' : 'eteint'}" data-g="${g}">` +
-      `${portrait(CFG.jeux[g].perso, CFG.persos, 'mini')}<span>${esc(CFG.jeux[g].nom)}</span><small class="${n ? '' : 'alerte'}">${n}</small></button>`;
+      `${portrait(CFG.jeux[g].perso, CFG.persos, 'mini')}<span>${esc(CFG.jeux[g].nom)}</span>` +
+      `<small class="${n || actifs.length ? '' : 'alerte'}">${actifs.length ? (n ? '∩ + ' + n : '∩') : n}</small></button>`;
   }).join('');
   $('#l-compte').innerHTML = CFG.compte
     ? `<span>Compte <b>${esc(CFG.compte)}</b></span><button class="discret petit" data-a="actualiser">Actualiser</button>
@@ -303,20 +310,28 @@ function dessinerListes() {
     : jetonTMDB
       ? `<span>Validez (Approve) sur TMDB, puis</span><button class="primaire petit" data-a="session">Continuer</button>`
       : `<button class="discret petit" data-a="token">Connecter mon compte TMDB</button>`;
-  const actifs = profilsActifs();
-  $('#l-compte').innerHTML += actifs.length ? `<p class="note-profils">Profils présents : les films vus par ${actifs.map(esc).join(' et ')} sont ` +
-    'utilisés à la place des listes incluses (les listes exclues restent exclues).</p>' : '';
-  const sel = R().listes[jeuListes], filtre = $('#l-filtre').value.trim().toLowerCase();
+  // Profils présents : la source « films vus en commun » (l'intersection), qu'on peut couper ; les listes incluses
+  // s'y ajoutent alors (listes[g].plus), les listes exclues restent exclues.
+  $('#l-commun').hidden = !presents.length;
+  if (presents.length) {
+    const qui = presents.map(esc).join(presents.length > 1 ? ' ∩ ' : '');
+    $('#l-commun').innerHTML = `<label class="commun-bascule${actifs.length ? ' on' : ''}"><input type="checkbox" data-commun ${actifs.length ? 'checked' : ''}>` +
+      `<span class="cb-rond"></span><span><b>${presents.length > 1 ? 'Films vus en commun' : 'Films vus'}</b> <small>${qui}</small></span></label>` +
+      `<p class="aide">${actifs.length ? (presents.length > 1 ? 'L\'intersection des films vus' : 'Les films vus') +
+        ', plus les listes incluses ci-dessous (pour ce jeu).' : 'Désactivé : seules les listes incluses comptent.'}</p>`;
+  }
+  const sel = R().listes[jeuListes], filtre = $('#l-filtre').value.trim().toLowerCase(), inc = sel[cle] || [];
   const lignes = R().listes_connues
     .filter(l => !filtre || l.nom.toLowerCase().includes(filtre) || String(l.id) === filtre)
     .sort((a, b) => (a.id > 0) - (b.id > 0) || a.nom.localeCompare(b.nom));
   $('#l-lignes').innerHTML = lignes.map(l => {
-    const etat = sel.inc.includes(l.id) ? 'inc' : sel.exc.includes(l.id) ? 'exc' : '';
+    const etat = inc.includes(l.id) ? 'inc' : sel.exc.includes(l.id) ? 'exc' : '';
     const bouton = (e, t) => `<button data-e="${e}" class="${etat === e ? 'actif' : ''}">${t}</button>`;
     return `<div class="ligne-liste ${etat}"><div><b>${esc(l.nom)}</b>${l.nb ? `<small>${l.nb} titres</small>` : ''}</div>
-      <div class="tri" data-id="${l.id}">${bouton('inc', 'Inclure')}${bouton('exc', 'Exclure')}${bouton('', '–')}</div></div>`;
+      <div class="tri" data-id="${l.id}">${bouton('inc', actifs.length ? 'Ajouter' : 'Inclure')}${bouton('exc', 'Exclure')}${bouton('', '–')}</div></div>`;
   }).join('') || '<p class="doux centre">Aucune liste</p>';
-  $('#l-resume').textContent = `${sel.inc.length} incluse${sel.inc.length > 1 ? 's' : ''}` +
+  $('#l-resume').textContent = (actifs.length ? `Films vus${inc.length ? ` + ${inc.length} liste${inc.length > 1 ? 's' : ''}` : ''}`
+    : `${inc.length} incluse${inc.length > 1 ? 's' : ''}`) +
     (sel.exc.length ? ` · ${sel.exc.length} exclue${sel.exc.length > 1 ? 's' : ''}` : '');
 }
 $('#l-jeux').onclick = ev => { const b = ev.target.closest('[data-g]'); if (b) { jeuListes = b.dataset.g; dessinerListes(); } };
@@ -324,22 +339,23 @@ $('#l-filtre').oninput = dessinerListes;
 $('#l-lignes').onclick = ev => {
   const b = ev.target.closest('[data-e]');
   if (!b) return;
-  const id = Number(b.closest('.tri').dataset.id), s = R().listes[jeuListes];
-  const inc = s.inc.filter(x => x !== id), exc = s.exc.filter(x => x !== id);
+  const id = Number(b.closest('.tri').dataset.id), s = R().listes[jeuListes], cle = profilsActifs().length ? 'plus' : 'inc';
+  const inc = (s[cle] || []).filter(x => x !== id), exc = s.exc.filter(x => x !== id);
   if (b.dataset.e === 'inc') inc.push(id);
   if (b.dataset.e === 'exc') exc.push(id);
-  regler({listes: {[jeuListes]: {inc, exc}}});
+  regler({listes: {[jeuListes]: {[cle]: inc, exc}}});
 };
+$('#l-commun').onchange = ev => { if (ev.target.matches('[data-commun]')) regler({profils_auto: ev.target.checked}); };
 $('#d-listes footer').onclick = ev => {
   const b = ev.target.closest('[data-tout]');
   if (!b) return;
-  const s = R().listes[jeuListes];
+  const s = R().listes[jeuListes], cle = profilsActifs().length ? 'plus' : 'inc';
   if (b.dataset.tout === 'copier') {
-    regler({listes: Object.fromEntries(jeuxAvecListes().map(g => [g, {inc: [...s.inc], exc: [...s.exc]}]))});
+    regler({listes: Object.fromEntries(jeuxAvecListes().map(g => [g, {inc: [...s.inc], exc: [...s.exc], plus: [...(s.plus || [])]}]))});
   } else if (b.dataset.tout === 'inc') {
-    regler({listes: {[jeuListes]: {inc: R().listes_connues.filter(l => l.id > 0).map(l => l.id), exc: []}}});
+    regler({listes: {[jeuListes]: {[cle]: R().listes_connues.filter(l => l.id > 0).map(l => l.id), exc: []}}});
   } else {
-    regler({listes: {[jeuListes]: {inc: [], exc: []}}});
+    regler({listes: {[jeuListes]: {[cle]: [], exc: []}}});
   }
 };
 $('#l-compte').onclick = async ev => {
@@ -361,7 +377,7 @@ $('#l-compte').onclick = async ev => {
 async function ajouterListe() {
   const texte = $('#l-ajout').value.trim();
   if (!texte) return;
-  const r = await post('/api/hote/tmdb' + Q, {action: 'ajouter', texte, jeu: jeuListes});
+  const r = await post('/api/hote/tmdb' + Q, {action: 'ajouter', texte, jeu: jeuListes, plus: profilsActifs().length > 0});
   if (r.erreur) return alert(r.erreur);
   CFG = r;
   $('#l-ajout').value = '';
@@ -509,7 +525,9 @@ function rendreLobby() {
     $('#qr').src = '/qr.png' + Q + '&u=' + encodeURIComponent(url);
   }
   const t = E.tunnel || '';
-  $('#b-tunnel').textContent = t === 'connexion' ? 'Connexion…' : E.en_ligne ? 'En ligne · revenir au Wi-Fi' : 'Jouer hors du Wi-Fi';
+  maj($('#code-partie'), [E.code, E.en_ligne, t].join('|'), E.code ? `<small>Code de la partie</small><b>${esc(E.code)}</b>` +
+    `<span class="${E.en_ligne ? 'ok' : ''}">${E.en_ligne ? '● Joignable aussi par Internet' : t === 'connexion' ? 'Ouverture sur Internet…' : 'Sur ce Wi-Fi'}</span>` : '');
+  $('#b-tunnel').textContent = t === 'connexion' ? 'Connexion…' : E.en_ligne ? 'Fermer l\'accès Internet' : 'Ouvrir sur Internet';
   $('#b-tunnel').disabled = t === 'connexion';
   $('#tunnel-info').textContent = t.startsWith('erreur:') ? t.slice(7) : '';
   const js = E.classement || [];
@@ -518,7 +536,7 @@ function rendreLobby() {
     ? js.map(j => `<div class="joueur-ligne">${puce(j)}${j.profil && j.profil.toLowerCase() !== j.nom.toLowerCase()
                   ? `<small class="tag-profil" title="Relié au profil ${esc(j.profil)}">${esc(j.profil)}</small>` : ''}` +
                   `<button class="retirer" data-id="${j.id}" title="Retirer">×</button></div>`).join('')
-    : '<p class="doux centre attente-joueurs">Scannez le QR code pour rejoindre</p>');
+    : `<p class="doux centre attente-joueurs">${TEL ? 'Personne pour l\'instant' : 'Scannez le QR code pour rejoindre'}</p>`);
   afficherPrep(false);
   const cleProfils = JSON.stringify(E.profils_actifs || []);
   if (cleProfils !== rendreLobby.profils) { rendreLobby.profils = cleProfils; if (CFG) dessinerJeux(); }
@@ -598,6 +616,10 @@ function bandeau(e) {
   }
   if (e.phase === 'reponse' && ['note', 'chrono', 'bingo'].includes(e.type)) return '';
   if (e.phase === 'reponse' && e.type === 'ordre') return `<div class="detail">${esc(e.detail || '')}</div>`;
+  if (e.phase === 'reponse' && ['plusieurs', 'paire', 'brelan', 'duels', 'double', 'duree'].includes(e.type)) {
+    // les résultats de chacun sont déjà sous le jeu : ici, la solution seule
+    return `<div class="solution">${esc(e.solution)}</div>` + (e.detail ? `<div class="detail">${esc(e.detail)}</div>` : '');
+  }
   if (e.phase === 'reponse' && e.type !== 'complice') {
     const r = e.resultats || [];
     const puces = r.map(x => puce(x, (e.type === 'nombre' ? ` ${x.reponse}` : '') + (x.gain ? ` <em>+${x.gain}</em>` : ''),
@@ -693,11 +715,17 @@ function moteurHote(e) {
     return d + `<div class="frise-res">${(mo.resultats || []).map(r => puce(r, ` ${r.justes}/${mo.n}` + (r.gain ? ` <em>+${r.gain}</em>` : ''),
       r.justes === mo.n ? 'juste' : r.justes ? '' : 'faux')).join('')}</div>`;
   }
-  if (e.type === 'paire') {                          // Carl : les deux films
-    const v = visuelHTML(e, {q: Q, hote: true});
+  if (e.type === 'brelan') {                             // Jacques : le brelan
+    const b = brelanHTML(e, src);
+    if (!rev) return b;
+    return b + `<div class="frise-res">${(mo.resultats || []).map(r => puce(r, ` ${r.justes}/3` + (r.gain ? ` <em>+${r.gain}</em>` : ''),
+      r.justes === 3 ? 'juste' : r.justes ? '' : 'faux')).join('')}</div>`;
+  }
+  if (e.type === 'plusieurs' || e.type === 'paire') {     // Carl : les deux films ; Dougie : le jackpot
+    const v = visuelHTML(e, {q: Q, hote: true}), n = mo.n || 2;
     if (!rev) return v;
-    return v + `<div class="frise-res">${(mo.resultats || []).map(r => puce(r, ` ${r.n}/2` + (r.gain ? ` <em>+${r.gain}</em>` : ''),
-      r.n === 2 ? 'juste' : r.n ? '' : 'faux')).join('')}</div>`;
+    return v + `<div class="frise-res">${(mo.resultats || []).map(r => puce(r, ` ${r.n}/${n}` + (r.gain ? ` <em>+${r.gain}</em>` : ''),
+      r.n === n ? 'juste' : r.n ? '' : 'faux')).join('')}</div>`;
   }
   if (e.type === 'duree') {
     const v = visuelHTML(e, {q: Q});
@@ -756,6 +784,7 @@ function rendreJeu() {
   $('#b-pause').textContent = e.pause ? 'Reprendre' : 'Pause';
   $('#b-pause').hidden = $('#b-passer').hidden = e.phase === 'fin';
   $('#b-rejouer').hidden = e.phase !== 'fin';
+  $('#code-jeu').innerHTML = e.code ? `Partie <b>${esc(e.code)}</b>` : '';
   t.hidden = e.phase !== 'manche';
   const r = restant(e);
   $('#j-barre').style.width = e.phase === 'manche' ? (100 * r / Math.max(1, e.duree)) + '%' : '0';
@@ -779,7 +808,7 @@ function rendreJeu() {
     const n = ((e.etat || {}).items || []).length;
     maj(vis, `${e.phase}|${e.seq}|${e.revelation}|${JSON.stringify(e.etat)}|${arret}|${JSON.stringify(e.choix || '')}`,
         enveloppe(() => visuelHTML(e, {q: Q, hote: true, largeur: vis.clientWidth - 40, tuile: 80, cols: 5,
-                             colsChoix: (e.etat || {}).paire ? (n <= 4 ? 2 : 3) : n <= 6 ? n : Math.ceil(n / 2)})), e.seq);
+                             colsChoix: (e.etat || {}).paire ? (n <= 4 ? 2 : 3) : (e.etat || {}).echarpes ? 8 : n <= 6 ? n : Math.ceil(n / 2)})), e.seq);
   }
   ajuster(vis);
   placerColles(e);

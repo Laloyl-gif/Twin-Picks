@@ -25,7 +25,9 @@ def mettre_a_jour():
     if not os.path.isdir(os.path.join(ICI, ".git")):
         return
     print("Mise à jour…", flush=True)
-    if git("pull", "--ff-only", "--quiet"):
+    # seulement le code (branche main) : les plans (branche « plans ») sont lus en ligne, image par image
+    git("config", "remote.origin.fetch", "+refs/heads/main:refs/remotes/origin/main")
+    if git("pull", "--ff-only", "--quiet", "origin", "main"):
         return
     if git("fetch", "--quiet", "origin"):                 # historique divergent : la version en ligne gagne
         branche = subprocess.run(["git", "rev-parse", "--abbrev-ref", "HEAD"], cwd=ICI, capture_output=True,

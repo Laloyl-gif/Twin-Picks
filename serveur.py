@@ -14,6 +14,7 @@ import profils
 from affiches import detection as affiches_detection
 from affiches.preparation import PREPARATEUR
 from partie import Partie
+import reseau
 from reseau import Tunnel, ip_locale, qr_png
 from jeux.contraintes import noms_realisateurs
 from tmdb import TMDB, charger_pools, connecter, id_liste, lire_listes_compte, resoudre_liste
@@ -92,6 +93,8 @@ class App:
         self.jeton = secrets.token_urlsafe(12)            # clé de l'écran hôte
         self.verrou = threading.Lock()
         self.tunnel, self.tunnel_etat, self.url_locale = Tunnel(config.PORT), "", ""
+        self.code = self._code_salle()                     # le code de la partie (le même d'un lancement à l'autre)
+        self.salle_publiee = False
         self._qr = (None, None)
         self._sig_affiches = None                         # dernière préparation automatique lancée
         threading.Thread(target=self._surveiller_affiches, daemon=True).start()
@@ -99,6 +102,56 @@ class App:
     def definir_port(self, port):
         self.url_locale = f"http://{ip_locale()}:{port}"
         self.tunnel = Tunnel(port)
+        threading.Thread(target=self._salle, daemon=True).start()
+
+    # ---------- code de la partie ----------
+    @staticmethod
+    def _code_salle():
+        fichier = config.donnee("salle.json")
+        try:
+            with open(fichier, encoding="utf-8") as f:
+                code = reseau.normaliser_code(json.load(f).get("code", ""))
+            if len(code) >= 4:
+                return code
+        except (OSError, ValueError):
+            pass
+        code = reseau.nouveau_code()
+        try:
+            with open(fichier, "w", encoding="utf-8") as f:
+                json.dump({"code": code}, f)
+        except OSError:
+            pass
+        return code
+
+    def publier_salle(self):
+        try:
+            reseau.publier_salle(self.code, {"lan": self.url_locale, "net": self.tunnel.url or "", "type": self.type})
+            self.salle_publiee = True
+        except Exception:  # noqa: BLE001  (hors ligne : le code ne marchera que sur ce Wi-Fi)
+            self.salle_publiee = False
+
+    def _salle(self):
+        """Au lancement : le code est publié (adresse Wi-Fi), puis le tunnel Internet s'ouvre tout seul et le code
+        est republié avec l'adresse Internet. Republié toutes les 6 h (le relais garde 12 h)."""
+        import time
+        self.publier_salle()
+        if self.reglages.get("salle_internet", True) and not self.tunnel.url:
+            self.basculer_tunnel()
+        while True:
+            time.sleep(6 * 3600)
+            self.publier_salle()
+
+    def rejoindre_salle(self, code):
+        code = reseau.normaliser_code(code)
+        if code == self.code:
+            return {"lan": self.url_locale, "net": self.tunnel.url or "", "ici": True}
+        try:
+            infos = reseau.resoudre_salle(code)
+        except Exception:  # noqa: BLE001
+            raise RuntimeError("Impossible de chercher la partie : pas d'Internet ?")
+        if not infos:
+            raise RuntimeError(f"Aucune partie avec le code {code}.")
+        return infos
 
     @property
     def url(self):
@@ -153,8 +206,9 @@ class App:
 
     def etat_hote(self):
         v = self.partie.vue_hote()
-        v.update(url=self.url, en_ligne=bool(self.tunnel.url), tunnel=self.tunnel_etat,
+        v.update(url=self.url, en_ligne=bool(self.tunnel.url), tunnel=self.tunnel_etat, code=self.code,
                  profils_actifs=self.partie.profils_presents() if self.reglages["profils_auto"] else [],
+                 profils_presents=self.partie.profils_presents(),
                  affiches=PREPARATEUR.etat())
         return v
 
@@ -164,7 +218,7 @@ class App:
         r = self.reglages
         l = r["listes"]["pete"]
         noms = tuple(sorted(self.partie.profils_presents())) if r["profils_auto"] else ()
-        return (tuple(sorted(l["inc"])), tuple(sorted(l["exc"])), noms, r["pete_textes"], r["pete_personnages"],
+        return (tuple(sorted(l["inc"])), tuple(sorted(l["exc"])), tuple(sorted(l.get("plus", []))), noms, r["pete_textes"], r["pete_personnages"],
                 r["pete_objets"], r["pete_ordre"])
 
     def _surveiller_affiches(self):
@@ -176,7 +230,7 @@ class App:
             try:
                 r = self.reglages
                 sig = self._signature_affiches()
-                if r["pete_auto"] and (sig[0] or sig[2]) and sig != self._sig_affiches:
+                if r["pete_auto"] and (sig[0] or sig[3]) and sig != self._sig_affiches:
                     if PREPARATEUR.actif():
                         if PREPARATEUR.signature is not None:     # préparation automatique dépassée : on l'arrête
                             PREPARATEUR.arreter()
@@ -251,6 +305,7 @@ class App:
                 self.tunnel_etat = ""
             except Exception as err:  # noqa: BLE001
                 self.tunnel_etat = "erreur:" + str(err)
+            self.publier_salle()                          # le code mène maintenant aussi par Internet
 
         threading.Thread(target=ouvrir, daemon=True).start()
 
@@ -285,7 +340,8 @@ class App:
             jeu = d.get("jeu")
             if jeu in self.reglages["listes"]:
                 s = self.reglages["listes"][jeu]
-                self.maj_reglages({"listes": {jeu: {"inc": s["inc"] + ([] if lid in s["inc"] else [lid]),
+                cle = "plus" if d.get("plus") else "inc"            # profils présents : ajoutée aux films vus
+                self.maj_reglages({"listes": {jeu: {cle: s.get(cle, []) + ([] if lid in s.get(cle, []) else [lid]),
                                                     "exc": [i for i in s["exc"] if i != lid]}}})
         return self.config_hote()
 
@@ -388,6 +444,8 @@ def fabriquer_handler(app):
                 return self._envoyer(data, "audio/mpeg", cache="private, max-age=600") if data else self.send_error(404)
             if c == "/api/etat":
                 return self._envoyer(p.vue_joueur(q.get("pid", [""])[0]))
+            if c == "/api/salle":
+                return self._envoyer({"code": app.code, "internet": bool(app.tunnel.url)})
             if c == "/api/couleurs":
                 return self._envoyer(p.couleurs())
             if c == "/api/suggestions":
@@ -438,6 +496,7 @@ def fabriquer_handler(app):
                 "/api/jouer": lambda: p.jouer(pid, {k: v for k, v in d.items() if k != "pid"}),
                 "/api/choisir": lambda: p.choisir(pid, d.get("i")),
                 "/api/buzz": lambda: p.buzz(pid),
+                "/api/salle/rejoindre": lambda: app.rejoindre_salle(d.get("code", "")),
             }
             hote = {
                 "/api/hote/reglages": lambda: (app.maj_reglages(d), app.config_hote())[1],

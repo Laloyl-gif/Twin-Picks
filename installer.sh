@@ -2,6 +2,12 @@
 # À lancer UNE fois (macOS / Linux), depuis le dossier du jeu (un clone git du dépôt) : crée le raccourci du bureau.
 cd "$(dirname "$0")" || exit 1
 ICI="$(pwd)"
+case "$(uname -s)" in
+  MINGW*|MSYS*|CYGWIN*)                      # Windows (Git Bash) : c'est installer.bat qu'il faut
+    echo "Sous Windows, lancez installer.bat (double-clic dans l'Explorateur)."
+    cmd.exe //c installer.bat
+    exit $? ;;
+esac
 chmod +x lancer.sh
 python3 -m pip install --quiet --disable-pip-version-check -r requirements.txt
 mkdir -p donnees && cp requirements.txt donnees/requirements.installe

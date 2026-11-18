@@ -19,11 +19,16 @@ _SPECIAUX = {"et": "e", "est": "e", "les": "le", "des": "de", "mes": "me", "tes"
              "un": "I", "une": "yn", "the": "z2", "of": "of", "and": "And", "a": "a", "à": "a", "y": "i", "eu": "y",
              "monsieur": "m2sj2", "femme": "fam", "femmes": "fam", "oignon": "oNO", "second": "s2gO", "seconde": "s2gOd",
              "sept": "set", "huit": "wit", "dix": "dis", "six": "sis", "os": "os", "fils": "fis", "temps": "tA",
-             "corps": "kor", "oeil": "2j", "oeufs": "2", "œufs": "2", "boeufs": "b2", "bœufs": "b2", "août": "ut", "yeux": "j2", "pied": "pje", "pieds": "pje", "clef": "kle", "nez": "ne", "chez": "Se", "assez": "ase"}
+             "corps": "kor", "oeil": "2j", "oeufs": "2", "œufs": "2", "boeufs": "b2", "bœufs": "b2", "août": "ut", "yeux": "j2", "pied": "pje", "pieds": "pje", "clef": "kle", "nez": "ne", "chez": "Se", "assez": "ase",
+             "doigt": "dwa", "doigts": "dwa", "cinq": "sIk", "tronc": "trO", "clown": "klun", "jean": "dZin",
+             "yoyo": "jojo", "cerf": "ser", "fusil": "fyzi", "gens": "ZA", "paon": "pA", "b": "be", "m": "em", "p": "pe",
+             "o": "o", "i": "i", "huit": "yit", "coq": "kok", "porc": "por", "banc": "bA", "blanc": "blA", "franc": "frA",
+             "estomac": "estoma", "tabac": "taba", "croc": "kro", "broc": "bro", "escroc": "eskro", "joker": "Zok2r"}
 
 
 _S_PRONONCE = {"os", "bus", "ours", "fils", "as", "sens", "tennis", "bis", "lis", "vis", "maïs", "mais", "hélas", "atlas",
-               "cactus", "virus", "bonus", "campus", "papyrus", "iris", "jadis", "oasis", "ananas", "tournevis"}
+               "cactus", "virus", "bonus", "campus", "papyrus", "iris", "jadis", "oasis", "ananas", "tournevis",
+               "rhinoceros", "rhinocéros", "albatros", "cosmos", "pathos", "chaos", "tétanos", "lotus", "blocus", "humus", "fœtus"}
 _X_MUETS = {"prix", "paix", "choix", "voix", "croix", "noix", "deux", "yeux", "faix", "perdrix", "flux"}
 
 
@@ -63,13 +68,16 @@ def mot(m):
         m = m[:-2] + "é"
     elif m.endswith("et") and len(m) > 2:
         m = m[:-2] + "è"
-    elif m.endswith("ent") and len(m) > 4 and m[-4] not in "aeiouy":
-        m = m[:-3]                                        # ils chantent
     e_final = False
     if len(m) > 3 and m.endswith("es") and m[-3] not in "é":
         m, e_final = m[:-2] + "\x04", True
     elif len(m) > 2 and m.endswith("e"):
         m, e_final = m[:-1] + "\x04", True               # e muet final (« belle » -> bel, « amie » -> ami)
+    if not e_final:
+        if len(m) > 3 and m[-1] == "s" and m not in _S_PRONONCE and m[-2] != "s":
+            m = m[:-1]                                    # le pluriel : dents, chats
+            if m.endswith("e") and len(m) > 2:
+                m, e_final = m[:-1] + "\x04", True
     if not e_final:
         while len(m) > 2 and m[-1] in _MUETTES_FIN and m[-2] not in _MUETTES_FIN:
             if m in _S_PRONONCE:
@@ -80,13 +88,14 @@ def mot(m):
         if len(m) > 3 and m[-2:] in ("nt", "nd", "mp") and m[-3] in "aeiouy":
             m = m[:-1]                                    # dents, grands, temps : la nasale seule
     m = re.sub(r"e([bcdfghjklmnpqrstvz])\1", r"è\1", m)       # e devant une consonne doublée : è (belle, ennemi)
+    m = m.replace("ss", "\x06")                           # « ss » reste [s] entre deux voyelles (tasse, poisson)
     m = re.sub(r"(.)\1", r"\1", m)                         # lettres doublées
     for fin, son in (("euil", "2\x05"), ("ouil", "u\x05"), ("ail", "a\x05"), ("eil", "e\x05"), ("oeil", "2\x05")):
         if m.endswith(fin):
             m = m[:-len(fin)] + son
     regles = [
         ("eaux", "o"), ("eau", "o"), ("au", "o"),
-        ("oi", "wa"), ("oy", "waj"), ("ou", "u"), ("où", "u"), ("oû", "u"), ("oe", "2"), ("eu", "2"),
+        ("oi", "wa"), ("oy", "waj"), ("ou", "u"), ("où", "u"), ("oû", "u"), ("oeu", "2"), ("oe", "2"), ("eu", "2"),
         ("ai", "e"), ("ei", "e"), ("ay", "ej"), ("ey", "e"), ("tion", "sjO"), ("ph", "f"), ("th", "t"), ("gn", "N"),
         ("ch", "S"), ("sh", "S"), ("qu", "k"), ("ck", "k"), ("gu", "g"), ("ill", "ij"), ("ee", "i"), ("oo", "u"),
     ]
@@ -114,12 +123,14 @@ def mot(m):
         if fait:
             continue
         # voyelles nasales : voyelle + n/m, puis consonne ou fin de mot
-        if c in "aeiouy" and suivant and suivant in "nm" and (not apres or apres not in "aeiouyéèênm\x01\x04"):
+        if c in "aeiouy" and suivant and suivant in "nm" and (not apres or apres not in "aeiouyéèênm\x01\x03\x04"):
             out.append({"a": "A", "e": "A", "i": "I", "y": "I", "o": "O", "u": "I"}[c])
             i += 2
             continue
         if c == "\x04":
             pass
+        elif c == "\x06":
+            out.append("s")
         elif c == "\x05":
             out.append("j")
         elif c == "\x01":
@@ -153,7 +164,7 @@ def mot(m):
         elif c == "j":
             out.append("Z")
         elif c == "s":
-            entre = out and out[-1][-1] in VOYELLES and suivant and suivant in "aeiouyéèê\x04"
+            entre = out and out[-1][-1] in "ae2ioyu" and suivant and suivant in "aeiouyéèê\x04"
             out.append("z" if entre else "s")
         elif c == "x":
             out.append("ks")
@@ -161,6 +172,8 @@ def mot(m):
             pass
         elif c == "w":
             out.append("w")
+        elif c == "q":
+            out.append("k")
         elif c in "bdfklmnprtvz":
             out.append(c)
         i += 1

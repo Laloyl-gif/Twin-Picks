@@ -426,8 +426,8 @@ def completer(api, films, maxi=250):
 # ---------- pools de jeu ----------
 def charger_pools(api, cfg, jeux, profils=()):
     """Un pool par jeu : union des listes incluses moins les listes exclues, sans doublon.
-    Si des joueurs ont un profil (et « profils_auto ») : les films vus par TOUS ces joueurs (intersection),
-    moins les listes exclues du jeu. Norma / Shelly : pool « notes » (films notés dans les profils).
+    Si des joueurs ont un profil (et « profils_auto ») : les films vus par TOUS ces joueurs (intersection), plus les
+    listes ajoutées à ces films pour le jeu (listes[g]["plus"]), moins les listes exclues du jeu. Norma / Shelly : pool « notes » (films notés dans les profils).
     Retourne (pools, info)."""
     pools, info = {}, ""
     if any(g in jeux for g in ("filmo", "andy", "denise", "phillip")):              # Andy : autocomplétion des manches d'acteur
@@ -437,6 +437,7 @@ def charger_pools(api, cfg, jeux, profils=()):
     ids = {i for g in jeux_films for i in cfg["listes"][g]["exc"]}
     if actifs:
         ids |= {i for p in actifs for i in p["listes"]}
+        ids |= {i for g in jeux_films for i in cfg["listes"][g].get("plus", [])}
     else:
         ids |= {i for g in jeux_films for i in cfg["listes"][g]["inc"]}
 
@@ -486,6 +487,19 @@ def charger_pools(api, cfg, jeux, profils=()):
         films, erreurs = {}, []
         if base is not None:
             films = {k: f for k, f in base.items() if k not in interdits}
+            ajout = []
+            for i in cfg["listes"][g].get("plus", []):               # les listes ajoutées aux films vus en commun
+                lst, err = lus[i]
+                if err:
+                    erreurs.append(err)
+                    continue
+                for f in lst:
+                    k = cle_film(f)
+                    if k not in interdits and k not in films:
+                        films[k] = f
+                        ajout.append(f)
+            if ajout:
+                completer(api, ajout)
         else:
             for i in inc:
                 lst, err = lus[i]

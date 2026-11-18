@@ -44,6 +44,11 @@ android {
             signingConfig signingConfigs.stable
         }
     }
+    packaging {
+        jniLibs {
+            useLegacyPackaging true            // libcloudflared.so extrait sur le téléphone (exécutable)
+        }
+    }
     lint {
         checkReleaseBuilds false
         abortOnError false

@@ -98,12 +98,15 @@ function restant(v) { return Math.max(0, (v.duree || 0) - (v.ecoule || 0)); }
 
 /* ---------- emblèmes (dessins au trait, couleur = currentColor) ---------- */
 const TRAITS = {
-  lil: '<path d="M32 30v26"/><path d="M32 44c-6 0-10-4-10-8 6 0 10 3 10 8zM32 40c6 0 9-3 9-7-6 0-9 3-9 7z"/>' +
-       '<path d="M24 20c0-6 4-10 8-10s8 4 8 10-4 10-8 10-8-4-8-10z"/><path d="M28 18c2 3 6 3 8 0M30 22c1 2 3 2 4 0"/>',
-  dougie: '<rect x="14" y="16" width="30" height="36" rx="4"/><path d="M18 26h22v14H18z"/><path d="M25.3 26v14M32.6 26v14"/>' +
-          '<path d="M50 20v16"/><circle cx="50" cy="18" r="3"/><path d="M44 34h6"/><path d="M20 46h18"/>',
-  mrc: '<rect x="16" y="10" width="30" height="44" rx="4"/><path d="M31 20c-6 6-10 10-10 14 0 3 3 5 6 4l3-2-2 8h6l-2-8 3 2c3 1 6-1 6-4 0-4-4-8-10-14z"/>',
-  mike: '<path d="M14 18h14a4 4 0 1 1 8 0h14v14a4 4 0 1 0 0 8v14H36a4 4 0 1 0-8 0H14V40a4 4 0 1 1 0-8z"/>',
+  annie: '<path d="M12 46l5-24 10 12 5-18 5 18 10-12 5 24z"/><path d="M12 52h40"/><circle cx="32" cy="24" r="2"/>',
+  dougie: '<rect x="10" y="16" width="40" height="36" rx="4"/><path d="M14 26h32v14H14z"/><path d="M20.4 26v14M26.8 26v14M33.2 26v14M39.6 26v14"/>' +
+          '<path d="M56 20v16"/><circle cx="56" cy="18" r="3"/><path d="M50 34h6"/><path d="M18 46h24"/>',
+  mike: '<rect x="12" y="14" width="40" height="38" rx="4"/><path d="M12 24h40M22 10v8M42 10v8"/><path d="M24 40l4-8 4 8 4-8 4 8"/>',
+  windom: '<path d="M22 54h24M24 48h20l-2-8c6-4 6-14 0-20-6-5-14-4-18 2l-6 10 6 2 4-4c0 6-2 10-4 18z"/><circle cx="34" cy="22" r="1.5"/>',
+  harold: '<path d="M32 32c-10-14-22-10-20 0 2 8 14 6 20 0zM32 32c10-14 22-10 20 0-2 8-14 6-20 0zM32 32c-8 10-6 22 0 22s8-12 0-22z"/>' +
+          '<path d="M32 32c-4-10 0-20 0-20s4 10 0 20z"/><circle cx="32" cy="32" r="3"/>',
+  jacques: '<rect x="12" y="12" width="26" height="38" rx="3" transform="rotate(-8 25 31)"/><rect x="26" y="14" width="26" height="38" rx="3" transform="rotate(8 39 33)"/>' +
+           '<path d="M39 26c-3 3-6 5-6 8 0 2 2 3 4 2l2-1-1 5h4l-1-5 2 1c2 1 4 0 4-2 0-3-3-5-6-8z"/>',
   pics: '<path d="M4 50 22 19l10 16 10-19 18 34"/><path d="m17 27 5 4 4-3M37 25l5 4 4-3"/><path d="M2 50h60"/>',
   cooper: '<path d="M14 28h30v9a14 14 0 0 1-14 14h-2a14 14 0 0 1-14-14z"/><path d="M44 31h3a5 5 0 0 1 0 10h-4"/>' +
           '<path d="M9 56h40"/><path d="M22 22c-2-3 2-5 0-8M29 22c-2-3 2-5 0-8M36 22c-2-3 2-5 0-8"/>',
@@ -215,6 +218,8 @@ function visuelHTML(v, opt = {}) {
   if (v.vue === 'buche') return bucheHTML(v, src) + (v.phase === 'reponse' ? '' : indicesHTML(e));
   if (v.vue === 'duels') return duelsHTML(v, src, opt);
   if (v.vue === 'noeud') return noeudHTML(v, src) + (v.phase === 'reponse' ? '' : trousHTML(e) + indicesHTML(e));
+  if (v.vue === 'annee') return anneeHTML(v, src) + (v.phase === 'reponse' ? '' : indicesHTML(e));
+  if (v.vue === 'brelan') return brelanHTML(v, src, opt);
   if (v.phase === 'reponse') return v.revelation ? `<img class="scene-img" src="${src('r')}" alt="">` : '';
   if (v.vue === 'image') {
     const img = `<img class="scene-img" src="${src(e.img)}" alt="">`;
@@ -230,9 +235,9 @@ function visuelHTML(v, opt = {}) {
   if (v.vue === 'identite') return identiteHTML(e);
   if (v.vue === 'complices') return complicesHTML(e, src) + trousHTML(e);
   if (v.vue === 'rebus') return rebusHTML(e) + trousHTML(e) + indicesHTML(e);
-  if (v.vue === 'dominos') return dominosHTML(e, src) + trousHTML(e) + indicesHTML(e);
-  if (v.vue === 'jackpot') return jackpotHTML(e, src) + trousHTML(e) + indicesHTML(e);
-  if (v.vue === 'coordonnees') return coordonneesHTML(e) + trousHTML(e) + indicesHTML(e);
+  if (v.vue === 'jackpot') return jackpotHTML(e, src, {trouves: (v.moteur || {}).mes_k, titres: v.phase === 'reponse' ? (v.moteur || {}).titres : null}) + (v.phase === 'reponse' ? '' : indicesHTML(e));
+  if (v.vue === 'echiquier') return echiquierHTML(e) + trousHTML(e) + indicesHTML(e);
+  if (v.vue === 'orchidee') return orchideeHTML(e, src) + trousHTML(e) + indicesHTML(e);
   if (v.vue === 'caravane') return caravaneHTML(e, src) + trousHTML(e) + indicesHTML(e);
   if (v.vue === 'briggs') return briggsHTML(e) + trousHTML(e) + indicesHTML(e);
   if (v.vue === 'pages') return pagesHTML(e) + trousHTML(e) + indicesHTML(e);
@@ -367,10 +372,10 @@ function friseHTML(v, src, opt = {}) {
       `<div class="toile"><img src="${src(it.img)}" alt="">${c.badge ? `<b class="badge-ordre">${c.badge}</b>` : ''}</div>` +
       `<figcaption>${esc(it.txt)}</figcaption><em class="annee ${an ? 'vue' : ''}">${an ? esc(an) : '&nbsp;'}</em></figure>`;
   }).join('');
-  return `<div class="frise${rev ? ' revelee' : ''}" style="--n:${n}" data-k="frise"><div class="tringle"><i></i><i></i></div>` +
+  return `<div class="frise${rev ? ' revelee' : ''}${v.jeu === 'hank' ? ' dominos-rang' : ''}" style="--n:${n}" data-k="frise"><div class="tringle"><i></i><i></i></div>` +
     `<div class="drapes"><figure class="drape gabarit" data-k="gab" aria-hidden="true"><span class="anneau"></span>` +
     `<span class="crochet"></span><div class="toile"><div class="vide23"></div></div><figcaption>&nbsp;<br>&nbsp;</figcaption>` +
-    `<em class="annee">&nbsp;</em></figure>${drapes}</div>${rev ? '' : `<p class="frise-aide">Du plus ancien au plus récent</p>`}</div>` +
+    `<em class="annee">&nbsp;</em></figure>${drapes}</div>${rev ? '' : `<p class="frise-aide">${esc(e.consigne || 'Du plus ancien au plus récent')}</p>`}</div>` +
     (rev ? '' : indicesHTML(e));
 }
 
@@ -460,11 +465,11 @@ function choixHTML(v, src, opt = {}) {
     if (cols >= casesL.length - 1) colsVues = cols + 1;
   }
   const cases = casesL.join('');
-  const imgSeul = e.film && v.jeu === 'mike' && rev ? src('r') : e.film ? src(e.film.img) : '';     // Mike : l'affiche entière
+  const imgSeul = e.film ? src(e.film.img) : '';
   const seul = e.film ? `<div class="film-seul" data-k="film"><img src="${imgSeul}" alt=""><div><b>${esc(e.film.txt)}</b>` +
     (e.film.sous ? `<small>${esc(e.film.sous)}</small>` : '') + '</div></div>' : '';
-  if (e.robe) {                                                        // Lil : la robe et les dix affiches
-    return tete + `<div class="lil-jeu" data-k="lil">${robeHTML(e)}<div class="cgrille choix" data-k="grille" style="--cols:5">${cases}</div></div>`;
+  if (e.echarpes) {                                                    // Annie : les écharpes, puis les huit affiches
+    return tete + echarpesHTML(e) + `<div class="cgrille choix annie-grille" data-k="grille" style="--cols:${opt.colsChoix || 8}">${cases}</div>`;
   }
   if (v.jeu === 'leland') {               // Leland : le portrait de Laura (reine du lycée), sa carte d'avocat, les films à côté
     return `<div class="palmer" data-k="palmer"><figure class="pa-portrait"><div class="pa-cadre"><img src="/web/laura_bal.jpg" alt=""></div>` +

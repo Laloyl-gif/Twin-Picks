@@ -19,6 +19,7 @@
   </header>
   <div class="lobby-corps">
     <aside class="rejoindre">
+      <div id="code-partie" class="code-partie"></div>
       <div class="qr-cadre"><img id="qr" alt="QR code"><div id="qr-aide" class="aide centre" hidden>pip install qrcode</div></div>
       <div id="url" class="url"></div>
       <button id="b-tunnel" class="lien petit"></button>
@@ -61,6 +62,7 @@
     <button id="b-son" class="discret petit" hidden>Activer le son</button>
     <button id="b-rejouer" class="primaire petit" hidden>Rejouer</button>
     <button id="b-menu" class="lien">Menu</button>
+    <span id="code-jeu" class="code-jeu"></span>
   </footer>
 </section>
 
@@ -78,6 +80,7 @@
     <nav id="l-jeux" class="nav-laterale"></nav>
     <div class="champs">
       <div id="l-compte" class="compte"></div>
+      <div id="l-commun" class="commun" hidden></div>
       <div class="ligne-outils">
         <input id="l-ajout" placeholder="Numéro ou lien d'une liste TMDB">
         <button id="l-ajouter" class="discret">Ajouter</button>

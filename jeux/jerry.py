@@ -1,68 +1,46 @@
 """Jerry's Trip (Le rébus) : perdu dans les bois, Jerry Horne voit des choses (« Tu n'es pas mon pied ! »). Ici, le
-titre du film est un vrai rébus phonétique : il est découpé en sons, et chaque morceau est dessiné par un mot qui se
-prononce pareil (ou presque), articles et noms propres compris (« Le Roi lion » : 🥛 👑 🦁 = lait-roi-lion). Un même son
-peut avoir plusieurs images (« de » : 🎲 ou 2️⃣ ? tiré au sort à chaque manche). Indices : genre et année, puis les mots
+titre du film est un vrai rébus phonétique : il est découpé en sons, et chaque morceau est dessiné par un mot qui a
+exactement les mêmes sons (« Le Roi lion » : le + 🤴 + 🦁). Les images montrent directement le mot (jamais une girafe
+pour « zoo » : un cadre avec une girafe, un lion et un tigre). Un son sans image s'écrit en lettres. Un même son
+peut avoir plusieurs images (« dé » : 🎲 ; « deux » : 2️⃣…, tiré au sort à chaque manche). Indices : genre et année, puis les mots
 sous les images, puis le titre à trous.
 """
-import itertools
 import random
 
 from tmdb import cle_film, details_film
 from visuels import en_jpeg
 from .commun import affiche, chronologie, manche_titre, reponse_affichee, tirer, trous
 from .phonetique import texte as sons_du_texte
-from .rebus_sons import LONGUEUR_MAX, PRESQUE, VOCAB
+from .rebus_sons import LONGUEUR_MAX, VOCAB
 
-PROCHES = {"2": "e", "e": "2", "i": "j", "j": "i", "u": "w", "w": "u"}     # sons interchangeables (coût en plus)
 LETTRES = {"a": "a", "e": "é", "2": "e", "i": "i", "o": "o", "u": "ou", "y": "u", "A": "an", "O": "on", "I": "in",
            "S": "ch", "Z": "j", "N": "gn", "j": "y", "w": "w"}
 
 
-def _variantes(frag):
-    """Le fragment et ses variantes proches (« l2 » ≈ « le »), avec leur coût."""
-    pos = [i for i, c in enumerate(frag) if c in PROCHES]
-    yield frag, 0.0
-    for k in range(1, min(2, len(pos)) + 1):
-        for choix in itertools.combinations(pos, k):
-            v = list(frag)
-            for i in choix:
-                v[i] = PROCHES[v[i]]
-            yield "".join(v), 0.45 * k
+LETTRES_IMAGES = {"a", "be", "o", "i", "em", "pe"}           # 🅰️ 🅱️ … : des lettres, moins jolies qu'une vraie image
 
 
-def _proches(frag):
-    """Les sons du vocabulaire qui dessinent ce fragment : le même son, ou à une consonne près."""
-    if frag in VOCAB:
-        yield frag, 0.0
-    for k in PRESQUE.get(frag, ()):                       # l'image a une consonne de plus (« tour » pour « tou »)
-        yield k, 0.7
-    if len(frag) > 2:
-        for i, c in enumerate(frag):                      # le titre a une consonne de plus (« dent » pour « dents »)
-            if c not in "ae2ioyuAOI":
-                v = frag[:i] + frag[i + 1:]
-                if v in VOCAB:
-                    yield v, 0.8
-
-
-def decouper(sons):
-    """Le découpage du texte en mots-images qui coûte le moins : [(début, fin, son du vocabulaire ou None)]."""
+def decouper(sons, fins=(), debuts=(0,)):
+    """Le découpage du texte en mots-images qui coûte le moins : [(début, fin, son du vocabulaire ou None)].
+    Les images ont exactement les sons du titre (pas de « lait » pour « le ») ; ce qui n'a pas d'image s'écrit en
+    lettres. Une image qui tombe pile sur un mot du titre est préférée (fins, debuts : les bornes des mots)."""
     n = len(sons)
     inf = float("inf")
     cout, prec = [0.0] + [inf] * n, [None] * (n + 1)
+    bornes = set(fins) | set(debuts) | {0, n}
     for i in range(n):
         if cout[i] == inf:
             continue
-        if sons[i] == "2" and cout[i] + 0.35 < cout[i + 1]:                       # e muet qu'on peut avaler
-            cout[i + 1], prec[i + 1] = cout[i] + 0.35, (i, "")
         for L in range(1, min(LONGUEUR_MAX, n - i) + 1):
-            for v, extra in _variantes(sons[i:i + L]):
-                for k, e2 in _proches(v):
-                    c = cout[i] + 1 + extra + e2
-                    if c < cout[i + L]:
-                        cout[i + L], prec[i + L] = c, (i, k)
-        c = cout[i] + 2.6                                                          # un son écrit en lettres
-        if c < cout[i + 1]:
-            cout[i + 1], prec[i + 1] = c, (i, None)
+            v = sons[i:i + L]
+            if v in VOCAB:
+                c = cout[i] + (1.25 if v in LETTRES_IMAGES or len(v) == 1 else 1.0) - \
+                    (0.3 if i in bornes and i + L in bornes else 0)
+                if c < cout[i + L]:
+                    cout[i + L], prec[i + L] = c, (i, v)
+            c = cout[i] + 0.6 + 1.0 * L                                    # un morceau écrit en lettres
+            if c < cout[i + L]:
+                cout[i + L], prec[i + L] = c, (i, None)
     morceaux, j = [], n
     while j > 0:
         i, v = prec[j]
@@ -74,14 +52,23 @@ def decouper(sons):
 
 def rebus(titre, rng=random):
     """[{"t": "emoji", "v": émoji, "mot": mot} | {"t": "son", "v": lettres}] et la part des sons dessinés."""
-    sons = "".join(s for _, s in sons_du_texte(titre))
+    mots = sons_du_texte(titre)
+    sons, fins, debuts, k = "", set(), set(), 0
+    for _, s in mots:
+        debuts.add(k)
+        sons += s
+        k += len(s)
+        fins.add(k)
     if not sons:
         return None, 0.0
     out, dessines = [], 0
-    for i, j, v in decouper(sons):
+    for i, j, v in decouper(sons, fins, debuts):
         if v:
             mot, emo = rng.choice(VOCAB[v])
-            out.append({"t": "emoji", "v": emo, "mot": mot})
+            if emo.startswith("["):                       # plusieurs images dans un cadre (« zoo » : girafe, lion, tigre)
+                out.append({"t": "emoji", "v": emo.strip("[]"), "mot": mot, "cadre": True})
+            else:
+                out.append({"t": "emoji", "v": emo, "mot": mot})
             dessines += j - i
         else:
             frag = sons[i:j]
@@ -98,11 +85,12 @@ def construire(api, cfg, pool, deja):
     notes = []
     for f in [x for x in pool if not x.get("tv")]:
         r, part = rebus(f["title"], rng)
-        if r and 2 <= len(r) <= 8:
+        if r and 2 <= len(r) <= 8 and sum(1 for x in r if x["t"] == "emoji") >= 2:
             notes.append((part, f))
     if not notes:
         raise RuntimeError("Le rébus : aucun titre des listes ne se dessine.")
-    meilleurs = [f for p, f in notes if p >= 0.999] or [f for p, f in notes if p >= 0.85] or [f for _, f in notes]
+    meilleurs = ([f for p, f in notes if p >= 0.85] or [f for p, f in notes if p >= 0.6] or
+                 [f for _, f in notes])
     film = tirer(meilleurs, deja)
     r, _ = rebus(film["title"], rng)
     d = details_film(api, film)
