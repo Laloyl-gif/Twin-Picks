@@ -1,14 +1,14 @@
 """Harold's Orchids (Les pétales) : Harold Smith ne sort jamais de chez lui ; il cultive ses orchidées et les regarde
-de très près. Chaque pétale de l'orchidée montre un détail de l'affiche du film, vu à la loupe ; les pétales
-s'ouvrent l'un après l'autre, puis s'élargissent : le détail recule et l'on comprend ce que l'on voit. Trouvez le film.
-L'affiche sans texte est prise quand TMDB en a une (sinon on évite le haut et le bas, où s'écrit le titre).
-Indices (réglables) : le genre, puis le titre à trous.
+de très près. Chaque pétale de l'orchidée montre, vu à la loupe, un détail d'une image différente du film : l'affiche,
+des plans du film, le visage d'un acteur… Les pétales s'ouvrent l'un après l'autre, puis s'élargissent : le détail
+recule et l'on comprend ce que l'on voit. Trouvez le film. L'affiche sans texte est prise quand TMDB en a une (sinon
+on évite le haut et le bas, où s'écrit le titre). Indices (réglables) : le genre, puis le titre à trous.
 """
 import random
 
 from PIL import Image, ImageFilter, ImageOps, ImageStat
 
-from tmdb import affiches_film, details_film
+from tmdb import affiches_film, details_film, fiche
 from visuels import en_jpeg
 from .commun import affiche, chronologie, manche_titre, reponse_affichee, tirer, trous
 
@@ -65,14 +65,58 @@ def detail(im, x, y, z):
     return im.crop((int(x0), int(y0), int(x0 + c), int(y0 + c))).resize((COTE, COTE), Image.LANCZOS)
 
 
+def sources(api, film, d):
+    """Les images des pétales : [(étiquette, image, (x, y) du détail ou None, sans_texte)], cinq au plus, variées."""
+    out = []
+    im, sans_texte = _affiche(api, film)
+    out.append(("Affiche", im, None, sans_texte))
+    plans = []
+    for chemin in (d.get("fonds_neutres") or [])[:6]:
+        try:
+            plans.append(api.image(chemin, "w780").convert("RGB"))
+        except Exception:  # noqa: BLE001
+            pass
+        if len(plans) == 2:
+            break
+    acteurs = []
+    try:
+        for a in fiche(api, film).get("acteurs", [])[:4]:
+            if a.get("photo"):
+                acteurs.append(api.image(a["photo"], "h632").convert("RGB"))
+            if len(acteurs) == 2:
+                break
+    except Exception:  # noqa: BLE001
+        pass
+    if plans:
+        out.append(("Plan", plans[0], None, True))
+    if acteurs:
+        out.append(("Acteur", acteurs[0], (0.5, 0.3), True))       # le visage : vers le haut du portrait
+    if len(plans) > 1:
+        out.append(("Plan", plans[1], None, True))
+    if len(acteurs) > 1:
+        out.append(("Acteur", acteurs[1], (0.5, 0.3), True))
+    while len(out) < NB:                                             # pas assez d'images : d'autres coins de l'affiche
+        out.append(("Affiche", im, None, sans_texte))
+    return out[:NB]
+
+
 def construire(api, cfg, pool, deja):
     duree = float(cfg["dur_harold"])
     film = tirer([f for f in pool if f.get("poster_path")] or pool, deja)
     d = details_film(api, film)
-    im, sans_texte = _affiche(api, film)
-    pts = centres(im, sans_texte)
-    images = [en_jpeg(detail(im, x, y, z), COTE) for z in ZOOMS for x, y in pts]
-    etat = {"petales": [], "ouverts": 0, "zoom": 0, "indices": [], "trous": ""}
+    srcs = sources(api, film, d)
+    pts, deja_pris = [], {}
+    for _, img, centre, sans_texte in srcs:
+        if centre:
+            pts.append(centre)
+            continue
+        # une même image (l'affiche) peut servir deux fois : deux détails différents
+        lst = deja_pris.setdefault(id(img), centres(img, sans_texte, NB))
+        pts.append(lst.pop(0))
+    images = [en_jpeg(detail(img, x, y, z if not c else min(0.95, z * 1.6)), COTE)
+              for z in ZOOMS for (_, img, c, _), (x, y) in zip(srcs, pts)]
+    im = srcs[0][1]
+    etat = {"petales": [], "ouverts": 0, "zoom": 0, "sources": [x[0] for x in srcs], "indices": [], "trous": ""}
 
     def ouvrir(k):
         etat["ouverts"] = k + 1

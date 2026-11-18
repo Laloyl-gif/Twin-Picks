@@ -35,4 +35,4 @@ CONSTRUCTEURS = {
 }
 MOTEURS = {"note": norma.Moteur, "chrono": lucy.Moteur, "bingo": donna.Moteur, "ordre": nadine.Moteur,
            "double": ben.Moteur, "duree": ed.Moteur, "duels": leo.Moteur,
-           "plusieurs": plusieurs.Moteur, "brelan": jacques.Moteur, "paire": plusieurs.Moteur}
+           "plusieurs": plusieurs.Moteur, "brelan": jacques.Moteur, "paires": mike.Moteur, "paire": plusieurs.Moteur}

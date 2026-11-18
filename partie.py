@@ -59,7 +59,8 @@ def images_de(etat):
     for c in etat.get("complices", []):                        # Phillip : le portrait, la petite affiche du film
         ids.update(x for x in (c.get("img"), c.get("img_f")) if x is not None)
     ids.update(etat.get("petales", []))                        # Harold : les pétales de l'orchidée
-    ids.update(r["img"] for r in etat.get("rouleaux", []) if isinstance(r, dict))           # Dougie
+    for b in etat.get("bandes", []):                           # Dougie : les affiches de chaque rouleau
+        ids.update(b)
     return ids
 
 

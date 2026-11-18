@@ -218,8 +218,8 @@ function visuelHTML(v, opt = {}) {
   if (v.vue === 'buche') return bucheHTML(v, src) + (v.phase === 'reponse' ? '' : indicesHTML(e));
   if (v.vue === 'duels') return duelsHTML(v, src, opt);
   if (v.vue === 'noeud') return noeudHTML(v, src) + (v.phase === 'reponse' ? '' : trousHTML(e) + indicesHTML(e));
-  if (v.vue === 'annee') return anneeHTML(v, src) + (v.phase === 'reponse' ? '' : indicesHTML(e));
   if (v.vue === 'brelan') return brelanHTML(v, src, opt);
+  if (v.vue === 'paires') return pairesHTML(v, src, opt);
   if (v.phase === 'reponse') return v.revelation ? `<img class="scene-img" src="${src('r')}" alt="">` : '';
   if (v.vue === 'image') {
     const img = `<img class="scene-img" src="${src(e.img)}" alt="">`;
@@ -235,7 +235,7 @@ function visuelHTML(v, opt = {}) {
   if (v.vue === 'identite') return identiteHTML(e);
   if (v.vue === 'complices') return complicesHTML(e, src) + trousHTML(e);
   if (v.vue === 'rebus') return rebusHTML(e) + trousHTML(e) + indicesHTML(e);
-  if (v.vue === 'jackpot') return jackpotHTML(e, src, {trouves: (v.moteur || {}).mes_k, titres: v.phase === 'reponse' ? (v.moteur || {}).titres : null}) + (v.phase === 'reponse' ? '' : indicesHTML(e));
+  if (v.vue === 'jackpot') return jackpotHTML(e, src, {arret: v.phase === 'reponse'}) + (v.phase === 'reponse' ? '' : indicesHTML(e));
   if (v.vue === 'echiquier') return echiquierHTML(e) + trousHTML(e) + indicesHTML(e);
   if (v.vue === 'orchidee') return orchideeHTML(e, src) + trousHTML(e) + indicesHTML(e);
   if (v.vue === 'caravane') return caravaneHTML(e, src) + trousHTML(e) + indicesHTML(e);
@@ -372,7 +372,7 @@ function friseHTML(v, src, opt = {}) {
       `<div class="toile"><img src="${src(it.img)}" alt="">${c.badge ? `<b class="badge-ordre">${c.badge}</b>` : ''}</div>` +
       `<figcaption>${esc(it.txt)}</figcaption><em class="annee ${an ? 'vue' : ''}">${an ? esc(an) : '&nbsp;'}</em></figure>`;
   }).join('');
-  return `<div class="frise${rev ? ' revelee' : ''}${v.jeu === 'hank' ? ' dominos-rang' : ''}" style="--n:${n}" data-k="frise"><div class="tringle"><i></i><i></i></div>` +
+  return `<div class="frise${rev ? ' revelee' : ''}" style="--n:${n}" data-k="frise"><div class="tringle"><i></i><i></i></div>` +
     `<div class="drapes"><figure class="drape gabarit" data-k="gab" aria-hidden="true"><span class="anneau"></span>` +
     `<span class="crochet"></span><div class="toile"><div class="vide23"></div></div><figcaption>&nbsp;<br>&nbsp;</figcaption>` +
     `<em class="annee">&nbsp;</em></figure>${drapes}</div>${rev ? '' : `<p class="frise-aide">${esc(e.consigne || 'Du plus ancien au plus récent')}</p>`}</div>` +
@@ -439,7 +439,7 @@ function bingoHTML(e, cases, opt = {}) {
 function choixHTML(v, src, opt = {}) {
   const e = v.etat || {}, items = e.items || [], rev = v.phase === 'reponse' && v.choix;
   const cols = opt.colsChoix || (items.length <= 4 ? items.length : 3);
-  const tete = rev && opt.sansSolution ? '' : rev ? `<h2 class="cbanniere" data-k="tete">${esc(v.solution || '')}</h2>` +
+  const tete = v.jeu === 'hank' && !rev ? '' : rev && opt.sansSolution ? '' : rev ? `<h2 class="cbanniere" data-k="tete">${esc(v.solution || '')}</h2>` +
     `<p class="csous" data-k="sous">${esc(v.detail || '')}</p>`
     : `<h2 class="cbanniere" data-k="tete">${esc(e.question || '')}</h2><p class="csous" data-k="sous">` +
       `${e.question_petit ? `« ${esc(e.question_petit)} »` : '&nbsp;'}</p>`;
@@ -456,6 +456,7 @@ function choixHTML(v, src, opt = {}) {
     const texte = it.img === undefined || it.img === null;
     if (texte) cls += ' texte';
     if (it.barre && !rev) cls += ' barre';
+    if ((it.tombe || rev && v.jeu === 'hank') && !(rev && i === v.choix.bonne)) cls += ' tombe';
     return `<div class="cfilm ${cls}" data-i="${i}"><b class="badge">${rev && i === v.choix.bonne ? cooper(true, 'mini') : c.badge || ''}</b>` +
       (texte ? '' : `<img src="${src(it.img)}" alt="">`) + `<span>${esc(it.txt)}</span>${dessous}</div>`;
   });
@@ -470,6 +471,13 @@ function choixHTML(v, src, opt = {}) {
     (e.film.sous ? `<small>${esc(e.film.sous)}</small>` : '') + '</div></div>' : '';
   if (e.echarpes) {                                                    // Annie : les écharpes, puis les huit affiches
     return tete + echarpesHTML(e) + `<div class="cgrille choix annie-grille" data-k="grille" style="--cols:${opt.colsChoix || 8}">${cases}</div>`;
+  }
+  if (v.jeu === 'hank') {                 // Hank : les dominos debout ; ceux qui ne collent pas aux indices tombent
+    const regles = rev && v.detail ? v.detail.split(' · ') : e.regles || [];
+    return `<div class="hank" data-k="hank"><ol class="hk-regles" data-k="regles">` +
+      regles.map((r, k) => `<li class="apparait" data-k="h${k}"><b>${k + 1}</b>${esc(r)}</li>`).join('') +
+      (rev ? '' : `<li class="attente"><b>${regles.length + 1}</b>…</li>`) + '</ol>' +
+      `<div class="cgrille choix hk-dominos" data-k="grille" style="--cols:${opt.colsChoix || 6}">${cases}</div></div>`;
   }
   if (v.jeu === 'leland') {               // Leland : le portrait de Laura (reine du lycée), sa carte d'avocat, les films à côté
     return `<div class="palmer" data-k="palmer"><figure class="pa-portrait"><div class="pa-cadre"><img src="/web/laura_bal.jpg" alt=""></div>` +

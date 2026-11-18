@@ -616,7 +616,7 @@ function bandeau(e) {
   }
   if (e.phase === 'reponse' && ['note', 'chrono', 'bingo'].includes(e.type)) return '';
   if (e.phase === 'reponse' && e.type === 'ordre') return `<div class="detail">${esc(e.detail || '')}</div>`;
-  if (e.phase === 'reponse' && ['plusieurs', 'paire', 'brelan', 'duels', 'double', 'duree'].includes(e.type)) {
+  if (e.phase === 'reponse' && ['plusieurs', 'paire', 'brelan', 'paires', 'duels', 'double', 'duree'].includes(e.type)) {
     // les résultats de chacun sont déjà sous le jeu : ici, la solution seule
     return `<div class="solution">${esc(e.solution)}</div>` + (e.detail ? `<div class="detail">${esc(e.detail)}</div>` : '');
   }
@@ -715,6 +715,12 @@ function moteurHote(e) {
     return d + `<div class="frise-res">${(mo.resultats || []).map(r => puce(r, ` ${r.justes}/${mo.n}` + (r.gain ? ` <em>+${r.gain}</em>` : ''),
       r.justes === mo.n ? 'juste' : r.justes ? '' : 'faux')).join('')}</div>`;
   }
+  if (e.type === 'paires') {                             // Mike : les paires
+    const pr = pairesHTML(e, src);
+    if (!rev) return pr;
+    return pr + `<div class="frise-res">${(mo.resultats || []).map(r => puce(r, ` ${r.justes}/4` + (r.gain ? ` <em>+${r.gain}</em>` : ''),
+      r.justes === 4 ? 'juste' : r.justes ? '' : 'faux')).join('')}</div>`;
+  }
   if (e.type === 'brelan') {                             // Jacques : le brelan
     const b = brelanHTML(e, src);
     if (!rev) return b;
@@ -808,7 +814,7 @@ function rendreJeu() {
     const n = ((e.etat || {}).items || []).length;
     maj(vis, `${e.phase}|${e.seq}|${e.revelation}|${JSON.stringify(e.etat)}|${arret}|${JSON.stringify(e.choix || '')}`,
         enveloppe(() => visuelHTML(e, {q: Q, hote: true, largeur: vis.clientWidth - 40, tuile: 80, cols: 5,
-                             colsChoix: (e.etat || {}).paire ? (n <= 4 ? 2 : 3) : (e.etat || {}).echarpes ? 8 : n <= 6 ? n : Math.ceil(n / 2)})), e.seq);
+                             colsChoix: (e.etat || {}).paire ? (n <= 4 ? 2 : 3) : (e.etat || {}).echarpes ? 8 : e.jeu === 'hank' ? 6 : n <= 6 ? n : Math.ceil(n / 2)})), e.seq);
   }
   ajuster(vis);
   placerColles(e);

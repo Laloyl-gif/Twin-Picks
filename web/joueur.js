@@ -250,6 +250,19 @@ $('#zone').onclick = ev => {
     if (k >= 0) ordreTel.splice(k, 1); else ordreTel.push(i);
     return rendre();
   }
+  const mb = ev.target.closest('.mk-boite.actif');
+  if (mb) { const k = Number(mb.dataset.b); pairesSel = pairesSel === k ? -1 : k; return rendre(); }
+  const mf = ev.target.closest('.mk-affiche-p.actif');
+  if (mf && pairesSel >= 0) {
+    const f = Number(mf.dataset.f), autre = pairesTel_.indexOf(f);
+    if (autre >= 0) pairesTel_[autre] = undefined;
+    pairesTel_[pairesSel] = f;
+    const libre = [0, 1, 2, 3].find(k => pairesTel_[k] === undefined || pairesTel_[k] === null);
+    pairesSel = libre === undefined ? -1 : libre;
+    return rendre();
+  }
+  if (ev.target.closest('#b-paires-effacer')) { pairesTel_ = []; pairesSel = 0; return rendre(); }
+  if (ev.target.closest('#b-paires-ok')) return action('/api/jouer', {pid, paires: [0, 1, 2, 3].map(k => pairesTel_[k])});
   const bj = ev.target.closest('.bj-carte.actif');
   if (bj) {
     const i = Number(bj.dataset.i), k = ordreTel.indexOf(i);
@@ -368,7 +381,7 @@ function gainTel() {
 function choixTel() {
   const rev = S.phase === 'reponse', m = S.moi, actif = !rev && !m.repondu && !S.pause;
   const n = ((S.etat || {}).items || []).length;
-  const grille = (S.jeu === 'josie' ? josieHTML : choixHTML)(S, i => `/img/${S.seq}/${i}`, {colsChoix: S.jeu === 'maddy' || S.jeu === 'mike' ? n : S.jeu === 'annie' ? 4 : n > 4 && !(S.etat || {}).paire ? 3 : 2, sansVotes: true, sansSolution: true, cellule: i =>
+  const grille = (S.jeu === 'josie' ? josieHTML : choixHTML)(S, i => `/img/${S.seq}/${i}`, {colsChoix: S.jeu === 'maddy' || S.jeu === 'mike' ? n : S.jeu === 'annie' || S.jeu === 'hank' ? 4 : n > 4 && !(S.etat || {}).paire ? 3 : 2, sansVotes: true, sansSolution: true, cellule: i =>
     actif ? {cls: 'actif'} : m.reponse === i ? {cls: 'verrou', badge: 'Ma réponse'} : {cls: rev ? '' : 'terne'}});
   if (!rev) return grille + (m.repondu ? message('<span class="doux">Réponse envoyée</span>') : '');
   const bon = m.reponse === (S.choix || {}).bonne;
@@ -482,6 +495,29 @@ function friseTel() {
     `<button id="b-frise-ok" class="primaire" ${complet ? '' : 'disabled'}>Accrocher</button></div>`;
 }
 
+/* Mike's Shoe Samples : toucher une boîte (un personnage), puis l'affiche de son film ; « Envoyer » quand les quatre
+   boîtes ont leur film. Une affiche déjà donnée à une autre boîte change de boîte. */
+let pairesTel_ = [], pairesSel = -1, pairesSeq = -1;
+function pairesTel() {
+  const mo = S.moteur || {}, rev = S.phase === 'reponse', src = i => `/img/${S.seq}/${i}`;
+  if (pairesSeq !== S.seq) { pairesSeq = S.seq; pairesTel_ = []; pairesSel = 0; }
+  if (rev) {
+    const j = mo.mes_justes, nb = (j || []).filter(Boolean).length;
+    const ban = mo.ma_reponse ? banniere(nb === 4 ? 'ok' : nb ? '' : 'ko', nb === 4 ? 'Toutes les paires !' : `${nb} paire${nb > 1 ? 's' : ''} sur 4`, '')
+      : banniere('ko', 'Pas de paires envoyées', '');
+    return ban + pairesHTML(S, src, {justes: j || null}) + gainTel();
+  }
+  if (!mo.actif) {
+    return pairesHTML(S, src, {affect: mo.ma_reponse || []}) +
+      message(`<span class="doux">${mo.ma_reponse ? 'Paires envoyées' : 'Patientez'}</span>`);
+  }
+  const n = pairesTel_.filter(x => x !== undefined && x !== null).length;
+  return pairesHTML(S, src, {affect: pairesTel_, sel: pairesSel, actif: true}) +
+    `<p class="centre doux">${pairesSel >= 0 ? 'Touchez maintenant son film' : 'Touchez un personnage'}</p>` +
+    `<div class="boutons-frise"><button id="b-paires-effacer" class="discret" ${n ? '' : 'disabled'}>Effacer</button>` +
+    `<button id="b-paires-ok" class="primaire" ${n === 4 ? '' : 'disabled'}>Envoyer (${n}/4)</button></div>`;
+}
+
 /* Jacques Renault's Card Table : toucher les trois cartes du brelan, puis « Miser ». */
 function brelanTel() {
   const mo = S.moteur || {}, rev = S.phase === 'reponse', src = i => `/img/${S.seq}/${i}`;
@@ -537,6 +573,7 @@ function vueZone() {
   if (S.type === 'duels') return ['de' + JSON.stringify([S.phase, S.seq, S.etat, S.moteur, S.classement]), duelsTel()];
   if (S.type === 'double') return ['do' + JSON.stringify([S.phase, S.seq, S.etat, S.moteur, S.classement]), benTel()];
   if (S.type === 'ordre') return ['or' + JSON.stringify([S.phase, S.seq, S.etat, S.moteur, ordreTel, S.classement]), friseTel()];
+  if (S.type === 'paires') return ['pr' + JSON.stringify([S.phase, S.seq, S.etat, S.moteur, pairesTel_, pairesSel, S.classement]), pairesTel()];
   if (S.type === 'brelan') return ['bj' + JSON.stringify([S.phase, S.seq, S.etat, S.moteur, ordreTel, S.classement]), brelanTel()];
   if (S.type === 'plusieurs' || S.type === 'paire') {     // Carl : les deux films ; Dougie : le jackpot
     const mo = S.moteur || {}, miens = mo.mes_films || [], n = mo.n || 2;
@@ -590,7 +627,7 @@ function rendre() {
   }
   document.body.dataset.jeu = enManche ? (S.jeu || '') : '';                      // décor du jeu (style.css)
   GRAINE_DECOR = S.seq || 0;
-  const vis = $('#visuel'), avecVisuel = enManche && !['complice', 'choix', 'bingo', 'ordre', 'double', 'duels', 'brelan'].includes(S.type);
+  const vis = $('#visuel'), avecVisuel = enManche && !['complice', 'choix', 'bingo', 'ordre', 'double', 'duels', 'brelan', 'paires'].includes(S.type);
   vis.hidden = !avecVisuel;
   if (avecVisuel) {
     maj(vis, `${S.phase}|${S.seq}|${S.revelation}|${JSON.stringify(S.etat)}|${S.vue === 'cassette' ? S.pause || !!S.main : ''}|${(S.moteur || {}).contrainte || ''}|${S.type === 'duree' || S.type === 'plusieurs' ? JSON.stringify(S.moteur) : ''}`,

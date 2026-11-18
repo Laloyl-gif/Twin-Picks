@@ -59,7 +59,8 @@ const REPLIQUES = {
   andy: [['We laid everything out, Hawk, and we can\'t find anything that\'s missing.', 'Deputy Andy Brennan']],
   dougie: [['Hellooo!', 'Dougie Jones'], ['Call for help.', 'Dougie Jones']],
   mike: [['Is it future, or is it past?', 'Mike, the one-armed man'],
-         ['Through the darkness of future past, the magician longs to see.', 'Mike, the one-armed man']],
+         ['Through the darkness of future past, the magician longs to see.', 'Mike, the one-armed man'],
+         ['Fire walk with me.', 'Mike, the one-armed man']],
   annie: [['The good Dale is in the Lodge, and he can\'t leave.', 'Annie Blackburn']],
 };
 let GRAINE_DECOR = 0;                                   // le numéro de manche : le même tirage sur tous les écrans
@@ -92,6 +93,7 @@ const COLLES = {
   leo: () => replique('leo', 'sous', 'griffe'),
   andy: () => replique('andy', 'bd', 'postit'),
   annie: () => replique('annie', 'sous', 'fiche'),
+  mike: () => replique('mike', 'bd', 'griffe'),
   maddy: () => '',
 };
 function colles(jeu) { return (COLLES[jeu] || (() => ''))(); }
@@ -416,22 +418,23 @@ function audreyHTML(cellules, cols) {
     `<div class="grille rh-casting" style="--cols:${cols}">${cellules.slice(moitie).join('')}</div></div>`;
 }
 
-/* Dougie's Jackpots : la machine à sous du Silver Mustang tourne ; ses cinq rouleaux font défiler chacun l'affiche d'un
-   film, de plus en plus lentement. opt.trouves : les rouleaux déjà trouvés par ce joueur (cochés). */
-const VITESSES = [0.22, 0.32, 0.5, 0.8, 1.3, 2.2, 4.2], FLOUS = [4, 3.2, 2.4, 1.6, 0.9, 0.4, 0];
+/* Dougie's Jackpots : la machine à sous du Silver Mustang. Trois rouleaux ; sur chacun défilent les affiches des cinq
+   films (dans un ordre différent), très vite puis de plus en plus lentement. opt.arret : la machine s'arrête. */
+const VITESSES = [0.9, 1.3, 1.9, 2.8, 4.2, 6.2, 9.5], FLOUS = [5, 4, 3, 2, 1.2, .5, 0];
 function jackpotHTML(e, src, opt = {}) {
-  const rs = e.rouleaux || [], arret = !!opt.titres, v = arret ? VITESSES.length - 1 : Math.min(VITESSES.length - 1, e.vitesse || 0);
-  const leg = arret ? opt.titres : e.legendes || [];
-  const trouves = new Set(opt.trouves || []);
-  const rouleau = (r, k) => `<div class="jp-col"><div class="jp-rouleau${trouves.has(k) ? ' trouve' : ''}" data-k="r${k}">` +
-    `<div class="jp-bande" style="--t:${VITESSES[v] + k * 0.03}s;--f:${FLOUS[v]}px"><img src="${src(r.img)}" alt=""><img src="${src(r.img)}" alt=""></div>` +
-    `${trouves.has(k) ? '<b class="jp-ok">✓</b>' : ''}</div><small class="jp-leg">${leg[k] ? esc(leg[k]) : '&nbsp;'}</small></div>`;
-  return `<div class="jackpot cinq${arret ? ' arrete' : ''}" data-k="jackpot"><div class="jp-fronton"><span class="jp-titre">SILVER MUSTANG</span>` +
-    `<span class="jp-ampoules">${'<i></i>'.repeat(16)}</span></div>` +
-    `<div class="jp-vitre">${rs.map(rouleau).join('')}</div>` +
+  const bs = e.bandes || [], arret = !!opt.arret, v = arret ? VITESSES.length - 1 : Math.min(VITESSES.length - 1, e.vitesse || 0);
+  const rouleau = (b, k) => {
+    const imgs = b.map(i => `<img src="${src(i)}" alt="">`).join('');
+    return `<div class="jp-rouleau" data-k="r${k}"><div class="jp-bande${k % 2 ? ' inverse' : ''}" ` +
+      `style="--t:${(VITESSES[v] * (1 + k * 0.13)).toFixed(2)}s;--f:${FLOUS[v]}px;--d:${-k * 0.37}s">${imgs}${imgs}</div></div>`;
+  };
+  return `<div class="jackpot trois${arret ? ' arrete' : ''}" data-k="jackpot"><div class="jp-fronton"><span class="jp-titre">SILVER MUSTANG</span>` +
+    `<span class="jp-ampoules">${'<i></i>'.repeat(12)}</span></div>` +
+    `<div class="jp-vitre">${bs.map(rouleau).join('')}</div>` +
     `<div class="jp-bas"><span class="jp-fente"></span></div><span class="jp-levier"><i></i></span>` +
-    `<p class="jp-voix">“Hellooo!” <small>— Dougie Jones, au Silver Mustang Casino</small></p></div>`;
+    `<p class="jp-voix">“Hellooo!” <small>— Dougie Jones</small></p></div>`;
 }
+
 
 /* Annie's Miss Twin Peaks : sept écharpes de candidates, chacune avec deux mots qui évoquent un film ;
    le film qui n'a pas d'écharpe est l'absent. */
@@ -444,18 +447,6 @@ function echarpesHTML(e) {
 }
 
 /* ===================================================================== v9 : Mike, Windom Earle, Harold Smith, Jacques Renault */
-
-/* Mike's Future or Past : l'affiche et son titre ; le compteur d'années (« ???? ») se fige chiffre par chiffre. */
-function anneeHTML(v, src) {
-  const e = v.etat || {}, rev = v.phase === 'reponse' && v.nombre;
-  const cpt = String(rev ? v.nombre : e.compteur || '????').padEnd(4, '?').slice(0, 4);
-  return `<div class="mike" data-k="mike"><figure class="mk-affiche" data-k="mk-a"><img src="${src(e.img)}" alt="">` +
-    `<figcaption>${esc(e.titre || '')}</figcaption></figure><div class="mk-droite">` +
-    `<p class="mk-q">${OBJ.bras_mike || ''}<span>“${esc(citation('mike')[0])}”</span></p>` +
-    `<div class="mk-compteur${rev ? ' fige' : ''}" data-k="mk-c">${[...cpt].map((c, i) =>
-      `<b class="${c === '?' ? 'inconnu' : 'connu'}" style="--i:${i}">${esc(c)}</b>`).join('')}</div>` +
-    `<p class="mk-aide">${rev ? 'Sorti en' : 'En quelle année est-il sorti ?'}</p></div></div>`;
-}
 
 /* Windom Earle's Chessboard : les pièces avancées sur l'échiquier, et la feuille de partie qui dit qui elles sont. */
 function echiquierHTML(e) {
@@ -481,7 +472,8 @@ function orchideeHTML(e, src) {
   const petales = Array.from({length: 5}, (_, k) => {
     const id = ps[k];
     return `<div class="or-petale${id === undefined ? ' ferme' : ''}" style="--a:${k * 72 - 90}deg;--i:${k}" data-k="pt${k}">` +
-      (id !== undefined ? `<img src="${src(id)}" alt="" style="--z:${e.zoom || 0}">` : '') + '</div>';
+      (id !== undefined ? `<img src="${src(id)}" alt="" style="--z:${e.zoom || 0}">` : '') +
+      (id !== undefined && (e.sources || [])[k] ? `<small class="or-etiq">${esc(e.sources[k])}</small>` : '') + '</div>';
   }).join('');
   return `<div class="orchidee" data-k="orchidee"><svg class="or-tige" viewBox="0 0 200 300" aria-hidden="true">` +
     `<path d="M100 150C96 200 108 250 92 300" fill="none" stroke="#5f8a3a" stroke-width="7" stroke-linecap="round"/>` +
@@ -501,12 +493,40 @@ function brelanHTML(v, src, opt = {}) {
     const bon = rev && mo.bons.includes(i);
     if (i >= n) return `<figure class="bj-carte dos" data-k="c${i}" style="--i:${i};--y:${Math.abs(i - 2) * 8}px"><div class="bj-face"></div></figure>`;
     return `<figure class="bj-carte ${c.cls || ''}${rev ? (bon ? ' bon' : ' terne') : ''}" data-i="${i}" data-k="c${i}" style="--i:${i};--y:${Math.abs(i - 2) * 8}px">` +
-      `<div class="bj-face"><img src="${src(it.img)}" alt=""><span class="bj-coin">${coins[i]}</span>` +
-      `<span class="bj-coin bas">${coins[i]}</span>${c.badge ? `<b class="badge-ordre">${c.badge}</b>` : ''}</div>` +
+      `<div class="bj-face"><span class="bj-cadre"><img src="${src(it.img)}" alt=""></span><span class="bj-coin">${coins[i].replace(/(.)$/, '<i>$1</i>')}</span>` +
+      `<span class="bj-coin bas">${coins[i].replace(/(.)$/, '<i>$1</i>')}</span>${c.badge ? `<b class="badge-ordre">${c.badge}</b>` : ''}</div>` +
       `<figcaption>${esc(it.txt)}</figcaption></figure>`;
   }).join('');
   const bandeau = rev ? `<p class="bj-commun"><small>${esc(mo.metier || '')}</small><b>${esc(mo.commun || '')}</b></p>`
     : '<p class="frise-aide">Trois cartes ont quelqu\'un en commun : lesquelles ?</p>';
   return `<div class="brelan" data-k="brelan"><div class="bj-table">${cartes}</div>` +
-    `<span class="bj-jetons" aria-hidden="true">${OBJ.jetons || ''}</span>${bandeau}</div>` + (rev ? '' : indicesHTML(e));
+    `<div class="bj-bas"><span class="bj-jetons" aria-hidden="true">${OBJ.jetons || ''}</span>${bandeau}` +
+    `<span class="bj-jetons d" aria-hidden="true">${OBJ.jetons || ''}</span></div></div>` + (rev ? '' : indicesHTML(e));
+}
+
+/* Mike's Shoe Samples : la valise d'échantillons ; quatre boîtes à chaussures (les personnages), quatre affiches.
+   opt.affect[k] : l'affiche donnée à la boîte k (ou undefined) ; opt.sel : la boîte choisie ; opt.actif : touchable ;
+   opt.justes[k] : résultat du joueur. À la réponse, chaque boîte s'ouvre sur la bonne affiche. */
+const COULEURS_PAIRES = ['#e0a526', '#3a86ff', '#e0457b', '#2bb673'];
+function pairesHTML(v, src, opt = {}) {
+  const e = v.etat || {}, bx = e.boites || [], items = e.items || [], mo = v.moteur || {};
+  const rev = v.phase === 'reponse' && mo.ordre, affect = opt.affect || [];
+  const boites = bx.map((b, k) => {
+    const f = rev ? mo.ordre[k] : affect[k];
+    const j = opt.justes ? opt.justes[k] : null;
+    return `<figure class="mk-boite${opt.sel === k ? ' sel' : ''}${opt.actif ? ' actif' : ''}${rev ? ' ouverte' : ''}${j === true ? ' juste' : j === false ? ' faux' : ''}" ` +
+      `data-b="${k}" data-k="b${k}" style="--c:${COULEURS_PAIRES[k]}"><span class="mk-couvercle"></span>` +
+      `<span class="mk-num">${k + 1}</span>` +
+      (rev && f !== undefined ? `<img class="mk-dedans" src="${src(items[f].img)}" alt="">` : '') +
+      `<figcaption><b>${esc(b.nom)}</b><small>${b.acteur ? 'joué par ' + esc(b.acteur) : '&nbsp;'}</small></figcaption></figure>`;
+  }).join('');
+  const affiches = items.map((it, i) => {
+    const k = rev ? mo.ordre.indexOf(i) : affect.indexOf(i);
+    return `<figure class="mk-affiche-p${opt.actif && opt.sel !== undefined && opt.sel >= 0 ? ' actif' : ''}${k >= 0 ? ' prise' : ''}" ` +
+      `data-f="${i}" data-k="f${i}" style="--c:${k >= 0 ? COULEURS_PAIRES[k] : 'transparent'}"><img src="${src(it.img)}" alt="">` +
+      `${k >= 0 ? `<b class="mk-badge">${k + 1}</b>` : ''}<figcaption>${esc(it.txt)}</figcaption></figure>`;
+  }).join('');
+  return `<div class="paires-mike" data-k="paires"><div class="mk-valise"><span class="mk-poignee"></span>${boites}</div>` +
+    `<p class="frise-aide">${rev ? 'Les bonnes paires' : 'Les chaussures vont par paires : à chaque personnage, son film'}</p>` +
+    `<div class="mk-affiches">${affiches}</div></div>` + (rev ? '' : indicesHTML(e));
 }

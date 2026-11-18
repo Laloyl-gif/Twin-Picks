@@ -51,16 +51,16 @@ arrête le programme.
 | carl        | Carl's Fat Trout Trailers                    | Les deux films           |
 | phillip     | Phillip's Associates                         | Les complices            |
 | jerry       | Jerry's Trip                                 | Le rébus                 |
-| hank        | Hank's Dominoes                              | L'alignement             |
+| hank        | Hank's Dominoes                              | L'effet domino           |
 | annie       | Annie's Miss Twin Peaks                      | L'absente                |
 | dougie      | Dougie's Jackpots                            | Le jackpot               |
-| mike        | Mike's Future or Past                        | L'année                  |
+| mike        | Mike's Shoe Samples                          | Les paires               |
 | windom      | Windom Earle's Chessboard                    | L'échiquier              |
 | harold      | Harold's Orchids                             | Les pétales              |
 | jacques     | Jacques Renault's Card Table                 | Le brelan                |
 
 Version 9 (novembre 2026, à la demande d'Etienne) : Mr. C retiré ; Annie remplace Lil ; Mike, Dougie et Hank
-changent de jeu (Mike's Missing Arm devient Mike's Future or Past) ; Windom Earle, Harold Smith, Jacques Renault arrivent.
+changent de jeu (Mike's Missing Arm devient Mike's Shoe Samples) ; Windom Earle, Harold Smith, Jacques Renault arrivent.
 
 Renommés à la demande d'Etienne (novembre 2026) : Norma's Double R (ex-Cherry Pie), Shelly's Cherry Pie
 (ex-Black Coffee), Maddy's Impersonation (nouveau jeu, ex-Blonde Wig puis Look-Alike),

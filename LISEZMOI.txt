@@ -57,12 +57,12 @@ Les jeux
   Carl's Fat Trout Trailers                   Les deux films     derrière le store, deux films mêlés : trouvez les deux
   Phillip's Associates                        Les complices      qui est-ce ? ceux avec qui il a le plus tourné
   Jerry's Trip                                Le rébus           le titre du film en rébus phonétique
-  Hank's Dominoes                             L'alignement       rangez cinq dominos (box-office, budget, durée, note)
+  Hank's Dominoes                             L'effet domino     douze affiches debout ; à chaque indice, des dominos tombent
   Annie's Miss Twin Peaks                     L'absente          sept écharpes, huit affiches : laquelle n'a pas d'écharpe ?
-  Dougie's Jackpots                           Le jackpot         la machine tourne : trouvez ses cinq films à temps
-  Mike's Future or Past                       L'année            l'affiche et le titre : en quelle année ?
+  Dougie's Jackpots                           Le jackpot         trois rouleaux, cinq films : trouvez-les pendant qu'ils tournent
+  Mike's Shoe Samples                         Les paires         quatre personnages, quatre films : faites les paires
   Windom Earle's Chessboard                   L'échiquier        chaque pièce est un membre de l'équipe du film
-  Harold's Orchids                            Les pétales        des détails de l'affiche vus à la loupe
+  Harold's Orchids                            Les pétales        des détails d'images du film vus à la loupe
   Jacques Renault's Card Table                Le brelan          cinq affiches : les trois qui ont quelqu'un en commun
 
 Décors
@@ -86,8 +86,8 @@ Décors
     Denise : porte-carte de la DEA, le nom en cases.   Carl : la caravane, son store, l'enseigne du Fat Trout.
     James : la jaquette de la cassette, la moto devant (à gauche, les roues tournent ; la pochette reste visible).
     Albert : un point bleu lumineux.   Phillip : le réseau relié par l'électricité, le téléphone.
-    Jerry : les cartes du rébus, la baguette.   Hank : les dominos debout.   Annie : la couronne, les écharpes.
-    Dougie : la machine à sous qui tourne (« Hellooo! »).   Mike : le compteur d'années.
+    Jerry : les cartes du rébus, la baguette.   Hank : les dominos qui tombent, sa liste d'indices.   Annie : la couronne, les écharpes.
+    Dougie : la machine à sous à trois rouleaux (« Hellooo! »).   Mike : la valise d'échantillons, les boîtes.
     Windom Earle : l'échiquier et la feuille de partie.   Harold : l'orchidée, son carnet « Living Novel ».
     Jacques Renault : les cartes du One Eyed Jack's, les jetons.
     Et toujours : Norma (Double R), Shelly (cherry pie), Lucy (téléphone), Donna (One-Eyed Jack's), Pete (post-it),
@@ -306,22 +306,26 @@ Autres jeux
     peut avoir plusieurs images, tirées au sort. Ce qui ne se dessine pas est écrit. Indices : genre et année, puis
     les mots sous les images, puis le titre à trous. Les titres qui se dessinent le mieux passent en priorité.
   Les complices (Phillip) : quand un complice dit un film fait ensemble, sa petite affiche est épinglée à côté.
-  L'alignement (Hank Jennings) : cinq dominos debout, cinq films ; rangez-les selon le critère de la manche (du plus
-    gros box-office au plus petit, du plus gros budget, du plus long, du mieux noté — critères réglables). Même
-    geste que la frise de Nadine. Indice : la valeur du premier domino à mi-temps. Points par domino bien placé.
+  L'effet domino (Hank Jennings) : douze affiches debout comme des dominos ; une seule est le film de Hank. Ses
+    indices arrivent un par un (langue, durée, genre, époque, note, pays, puis un acteur ou le réalisateur) et, à
+    chaque indice, les films qui ne collent pas basculent et tombent. On répond quand on veut en touchant une
+    affiche : plus tôt, plus de points, mais plus de dominos encore debout.
   L'absente (Annie Blackburn) : Annie concourt pour Miss Twin Peaks. Sept candidates portent une écharpe avec deux
     mots qui évoquent un film (mots-clés TMDB traduits en français) ; huit affiches : laquelle n'a pas d'écharpe ?
     Indice : deux affiches qui ont leur écharpe sont barrées à mi-temps.
-  Le jackpot (Dougie Jones) : la machine à sous du Silver Mustang tourne ; chacun de ses cinq rouleaux fait défiler
-    l'affiche d'un film, très vite puis de plus en plus lentement. Retrouvez les cinq films pendant qu'elle tourne :
-    chaque film trouvé rapporte des points, les cinq un bonus. Indices : les années, puis les initiales.
-  L'année (Mike) : « Is it future, or is it past? ». L'affiche et le titre ; tapez l'année de sortie. L'année exacte
-    rapporte le plus (tolérance commune des années). Indices : un film sorti la même année, puis la décennie.
+  Le jackpot (Dougie Jones) : la machine à sous du Silver Mustang et ses trois rouleaux ; sur chacun défilent les
+    affiches des cinq mêmes films, dans un ordre différent, très vite puis de plus en plus lentement. Retrouvez les
+    cinq films pendant qu'elle tourne : chaque film trouvé rapporte des points, les cinq un bonus. Indices : les
+    années, puis les initiales. À la réponse : les cinq affiches. « Hellooo! »
+  Les paires (Mike) : Mike, le manchot, est représentant en chaussures : il ouvre sa valise d'échantillons. Quatre
+    boîtes portent le nom d'un personnage, quatre affiches : rendez à chaque personnage son film (toucher une boîte,
+    puis l'affiche). Points par paire juste, bonus pour les quatre. Indice : l'acteur de chaque personnage.
   L'échiquier (Windom Earle) : chaque pièce avancée est quelqu'un de l'équipe du film : les pions (seconds rôles),
     le cavalier (directeur de la photo), la tour (compositeur), le fou (scénariste), la dame (tête d'affiche), le
     roi (réalisateur). La feuille de partie dit qui elles sont. Indices : l'année, puis le titre à trous.
-  Les pétales (Harold Smith) : chaque pétale de l'orchidée montre un détail de l'affiche (sans texte si TMDB en a
-    une), vu à la loupe ; les pétales s'ouvrent, puis le détail s'élargit. Indices : le genre, puis le titre à trous.
+  Les pétales (Harold Smith) : chaque pétale de l'orchidée montre, vu à la loupe, un détail d'une image différente du
+    film : l'affiche (sans texte si TMDB en a une), des plans du film, le visage d'acteurs (une étiquette dit ce que
+    c'est). Les pétales s'ouvrent, puis le détail s'élargit. Indices : le genre, puis le titre à trous.
   Le brelan (Jacques Renault) : le croupier du One Eyed Jack's distribue cinq cartes (cinq affiches) ; trois ont une
     même personne au générique (acteur, réalisateur, compositeur, scénariste, directeur de la photo). Touchez les
     trois puis « Miser ». Brelan exact : tous les points ; deux sur trois : une partie. Indice : le métier commun.
@@ -424,4 +428,5 @@ Version 9
   - Plans de Truman : les plans fournis, triés en trois niveaux (1_difficile, 2_moyen, 3_facile). Le zip
     plans_twin_picks.zip se décompresse en plans/ à côté du jeu, ou se publie avec outils\publier_plans.bat.
   - Menu sur téléphone : boutons Profils / Listes / Réglages bien distincts, moins d'informations inutiles.
-  - Nouvelle icône : la tasse de café dont la vapeur dessine les deux sommets, sur le sol de la Black Lodge.
+  - Nouvelle icône : la tasse rouge de profil, sur fond noir et le sol à chevrons de la Black Lodge ; sa vapeur dessine
+    les deux sommets.

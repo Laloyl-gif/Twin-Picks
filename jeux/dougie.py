@@ -1,8 +1,8 @@
 """Dougie's Jackpots (Le jackpot) : au Silver Mustang Casino, Dougie Jones touche le jackpot à chaque machine
-(« Hellooo! »). Ici, la machine à sous tourne : ses cinq rouleaux font défiler chacun l'affiche d'un film, très vite
-puis de plus en plus lentement. Il faut retrouver les cinq films pendant que la machine tourne : chaque film trouvé
-rapporte des points (plus tôt = plus), les cinq : un bonus. Indices : les années sous les rouleaux, puis les
-initiales. À la réponse : les cinq affiches.
+(« Hellooo! »). Ici, la machine à sous tourne : ses trois rouleaux font défiler les affiches de cinq films (les cinq
+sur chaque rouleau, dans un ordre différent), très vite puis de plus en plus lentement. Il faut retrouver les cinq
+films pendant que la machine tourne : chaque film trouvé rapporte des points (plus tôt = plus), les cinq : un bonus.
+Indices : les années, puis les initiales. À la réponse : les cinq affiches.
 """
 import random
 
@@ -42,17 +42,20 @@ def construire(api, cfg, pool, deja):
     for k, p in enumerate(posters):
         tous.paste(p, (10 + k * (L + 10), 10))
     titres = [reponse_affichee(cfg, f, d) for f, d in choisis]
-    etat = {"rouleaux": [{"img": k} for k in range(NB)], "vitesse": 0, "legendes": [""] * NB, "indices": []}
-
-    def legendes(fn):
-        etat["legendes"] = [fn(k) for k in range(NB)]
+    bandes = []
+    for _ in range(3):                                   # les cinq films sur chaque rouleau, dans un autre ordre
+        b = random.sample(range(NB), NB)
+        while any(b == x or b[0] == x[0] for x in bandes):
+            random.shuffle(b)
+        bandes.append(b)
+    etat = {"bandes": bandes, "vitesse": 0, "indices": []}
     evts = [(round(duree * 0.75 * k / ETAPES, 2), lambda k=k: etat.update(vitesse=k)) for k in range(1, ETAPES + 1)]
     if cfg.get("dougie_indices", True):
-        evts.append((duree * 0.45, lambda: legendes(lambda k: choisis[k][1]["annee"] or "")))
-        evts.append((duree * 0.72, lambda: legendes(lambda k: (choisis[k][1]["annee"] or "") + " · " +
-                                                     " ".join(m[0].upper() + "…" for m in titres[k].split()[:3]))))
-    etapes = chronologie(evts, lambda: {**etat, "rouleaux": [dict(r) for r in etat["rouleaux"]],
-                                        "legendes": list(etat["legendes"]), "indices": list(etat["indices"])})
+        evts.append((duree * 0.45, lambda: etat["indices"].append(
+            "Années : " + ", ".join(sorted(d["annee"] or "?" for _, d in choisis)))))
+        evts.append((duree * 0.72, lambda: etat["indices"].append(
+            "Initiales : " + "  ".join(sorted("".join(m[0].upper() for m in t.split()[:4]) for t in titres)))))
+    etapes = chronologie(evts, lambda: {**etat, "indices": list(etat["indices"])})
     return dict(jeu="dougie", vue="jackpot", duree=duree, etapes=etapes, images=images, revelation=en_jpeg(tous, 380),
                 reponse="plusieurs", suggestions=True,
                 films_cles=[cles_reponses(f["title"], f.get("original_title"), *d["noms"]) for f, d in choisis],
