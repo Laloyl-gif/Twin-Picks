@@ -485,6 +485,7 @@ function choixHTML(v, src, opt = {}) {
     return tete + echarpesHTML(e) + `<div class="cgrille choix annie-grille" data-k="grille" style="--cols:${opt.colsChoix || 8}">${cases}</div>`;
   }
   if (v.jeu === 'sarah' && !items.length && !rev) {            // Sarah : la vision (les affiches défilent très vite)
+    caleVision(v);
     return visionHTML(e, src);
   }
   if (v.jeu === 'hank') {                 // Hank : les dominos debout ; ceux qui ne collent pas aux indices tombent

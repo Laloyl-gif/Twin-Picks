@@ -64,7 +64,7 @@ Les jeux
   Windom Earle's Chessboard                   Le cavalier        le titre caché sur l'échiquier, en déplacements de pièces
   Harold's Orchids                            Les pétales        des détails d'images du film vus à la loupe
   Jacques Renault's Card Table                Le brelan          cinq affiches : les trois qui ont quelqu'un en commun
-  Sarah Palmer's Visions                      La vision          six affiches en un éclair : laquelle n'y était pas ?
+  Sarah Palmer's Visions                      La vision          des affiches en un éclair : laquelle n'y était pas ?
   Jean Renault's Ransom                       La rançon          on mise, puis on achète des preuves en secret
   The Woodsman's Light                        Got a light?       dans le noir, chacun éclaire l'écran avec son téléphone
   The Mitchum Brothers' Contract              Le contrat         patate chaude : citez un film pour passer le contrat
@@ -338,8 +338,10 @@ Autres jeux
     même personne au générique (acteur, réalisateur, compositeur, scénariste, directeur de la photo). Touchez les
     trois puis « Miser ». Brelan exact : tous les points ; deux sur trois : une partie. Indice : le métier commun.
     Jamais de film d'une saga dans le brelan.
-  La vision (Sarah Palmer) : six affiches passent en un éclair dans le vieux téléviseur des Palmer, deux fois, le
-    cheval blanc entre deux. Puis six affiches reviennent : laquelle n'était pas dans la vision ? (mémoire)
+  La vision (Sarah Palmer) : des affiches (6 par défaut, de 3 à 16) passent en un éclair dans le vieux téléviseur des
+    Palmer, deux fois, le cheval blanc avant et après. Puis autant d'affiches reviennent : laquelle n'était pas dans la
+    vision ? (mémoire) Durée de chaque affiche réglable de 0,1 s à 3 s : chaque écran joue la vision lui-même, aucune
+    affiche n'est sautée même très vite.
   La rançon (Jean Renault) : on ne connaît que deux infos tirées au hasard ; on mise de 0 à 2 500 points. Puis le
     marché noir : chacun achète en secret, sur son téléphone, des preuves (la décennie, le pays, l'année, un second
     rôle, une image, le compositeur, la tête d'affiche, le réalisateur, les initiales, le titre à moitié), d'autant
@@ -473,3 +475,4 @@ Version 10
   - Rébus : plus de mots en images, plus de titres différents. Carl et Dougie : le nom de la saga suffit.
   - L'absente : écharpes droites, texte plus grand. Le brelan : plus de films de saga.
   - Logo et icône : la tasse rouge de profil, fond noir, sol de la Black Lodge.
+  - Réglages à virgule : ils suivent maintenant leur propre pas (avant, tout était arrondi au demi : 0,3 devenait 0,5).

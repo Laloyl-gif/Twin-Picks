@@ -402,7 +402,7 @@ function gainTel() {
 function choixTel() {
   const rev = S.phase === 'reponse', m = S.moi, actif = !rev && !m.repondu && !S.pause;
   const n = ((S.etat || {}).items || []).length;
-  const grille = (S.jeu === 'josie' ? josieHTML : choixHTML)(S, i => `/img/${S.seq}/${i}`, {colsChoix: S.jeu === 'maddy' || S.jeu === 'mike' ? n : S.jeu === 'annie' || S.jeu === 'hank' ? 4 : n > 4 && !(S.etat || {}).paire ? 3 : 2, sansVotes: true, sansSolution: true, cellule: i =>
+  const grille = (S.jeu === 'josie' ? josieHTML : choixHTML)(S, i => `/img/${S.seq}/${i}`, {colsChoix: S.jeu === 'maddy' || S.jeu === 'mike' ? n : S.jeu === 'annie' || S.jeu === 'hank' || (S.jeu === 'sarah' && n > 6) ? 4 : n > 4 && !(S.etat || {}).paire ? 3 : 2, sansVotes: true, sansSolution: true, cellule: i =>
     actif ? {cls: 'actif'} : m.reponse === i ? {cls: 'verrou', badge: 'Ma réponse'} : {cls: rev ? '' : 'terne'}});
   if (!rev) return grille + (m.repondu ? message('<span class="doux">Réponse envoyée</span>') : '');
   const bon = m.reponse === (S.choix || {}).bonne;

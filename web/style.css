@@ -2340,7 +2340,8 @@ body.joueur .fo-joueur{font-size:.8em;padding:5px 10px 6px}
   background:linear-gradient(#5a3a22,#3a2414);box-shadow:inset 0 0 0 4px #7a5434,0 22px 44px #000c}
 .vi-ecran{position:relative;width:clamp(240px,min(34vw,58vh),480px);aspect-ratio:4/3;border-radius:22px/30px;overflow:hidden;background:#0b0b0c;
   box-shadow:inset 0 0 40px #000}
-.vi-flash{position:absolute;inset:0;margin:auto;height:100%;aspect-ratio:2/3;object-fit:cover;animation:vi-flash .25s ease-out both}
+.vi-flash{position:absolute;inset:0;margin:auto;height:100%;aspect-ratio:2/3;object-fit:cover}
+.vi-flash[hidden],.vi-cheval[hidden]{display:none}
 @keyframes vi-flash{from{filter:brightness(3) blur(3px);transform:scale(1.06)}}
 .vi-cheval{position:absolute;inset:12% 10%;display:grid;place-items:center;animation:vi-respire 2.4s ease-in-out infinite}
 .vi-cheval svg{width:100%;height:auto;filter:drop-shadow(0 0 18px #fff8)}

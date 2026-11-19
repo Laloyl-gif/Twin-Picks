@@ -59,8 +59,7 @@ def images_de(etat):
     for c in etat.get("complices", []):                        # Phillip : le portrait, la petite affiche du film
         ids.update(x for x in (c.get("img"), c.get("img_f")) if x is not None)
     ids.update(etat.get("petales", []))                        # Harold : les pétales de l'orchidée
-    if isinstance(etat.get("flash"), int):                     # Sarah : l'affiche de la vision
-        ids.add(etat["flash"])
+    ids.update(etat.get("sequence", []))                       # Sarah : les affiches de la vision
     ids.update(etat.get("cachees", []))                        # images propres à chaque joueur (Hank, Mitchum…)
     ids.update(etat.get("photos", []))                         # Jean Renault : les photos de l'otage
     for b in etat.get("bandes", []):                           # Dougie : les affiches de chaque rouleau

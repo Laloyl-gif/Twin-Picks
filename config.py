@@ -146,7 +146,7 @@ JEUX = {
     "jacques": _jeu("Jacques Renault's Card Table", "Le brelan", "Jacques Renault",
                     "Cinq cartes, cinq affiches : trouvez les trois qui ont quelqu'un en commun.", "jacques", "brelan"),
     "sarah": _jeu("Sarah Palmer's Visions", "La vision", "Sarah Palmer",
-                  "Six affiches passent très vite, comme une vision. Laquelle n'en faisait pas partie ?", "sarah", "choix"),
+                  "Des affiches passent très vite, comme une vision. Laquelle n'en faisait pas partie ?", "sarah", "choix"),
     "jean": _jeu("Jean Renault's Ransom", "La rançon", "Jean Renault",
                  "On mise sur deux infos, puis on achète en secret des preuves au marché noir.", "jean", "rancon"),
     "woodsman": _jeu("The Woodsman's Light", "Got a light?", "Le Woodsman",
@@ -524,7 +524,8 @@ PARAMS = [
     _p("dur_jacques", "jacques", "Durée d'une manche (s)", 40, 10, 120, 5),
     _p("jacques_indice", "jacques", "Indice : le métier de la personne commune", True),
     _p("jacques_pts", "jacques", "Points pour le brelan exact", 1000, 0, 3000, 50),
-    _p("sarah_flash", "sarah", "Durée de chaque affiche de la vision (s)", 0.8, 0.3, 3, 0.1),
+    _p("sarah_flash", "sarah", "Durée de chaque affiche de la vision (s)", 0.8, 0.1, 3, 0.05),
+    _p("sarah_nb", "sarah", "Nombre de films dans la vision", 6, 3, 16),
     _p("dur_sarah", "sarah", "Temps pour répondre après la vision (s)", 15, 5, 60, 5),
     _p("jean_dur_mise", "jean", "Temps pour miser (s)", 15, 5, 60, 5),
     _p("dur_jean", "jean", "Durée du marché noir (s)", 60, 15, 180, 5),
@@ -595,7 +596,10 @@ def _valeur(p, v):
         if t == "texte":
             return str(v or "").strip().strip('"')[:500]
         x = max(p["min"], min(p["max"], float(v)))
-        return int(round(x)) if t == "int" else round(x * 2) / 2
+        if t == "int":
+            return int(round(x))
+        pas = p.get("pas") if p.get("pas") and p["pas"] < 1 else 0.5      # réglages à virgule : au pas du réglage
+        return round(round(x / pas) * pas, 3)
     except (TypeError, ValueError):
         return p["defaut"]
 

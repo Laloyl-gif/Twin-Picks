@@ -562,15 +562,36 @@ function focusHTML(v, src, opt = {}) {
     `<div class="fo-grille" style="--cols:${cols}">${grille}</div></div>`;
 }
 
-/* Sarah Palmer's Visions : la vision passe dans le vieux téléviseur du salon des Palmer ; entre deux, le cheval blanc. */
-function visionHTML(e, src) {
-  const f = e.flash;
-  return `<div class="vision" data-k="vision"><div class="vi-tele"><div class="vi-ecran">` +
-    (f !== null && f !== undefined ? `<img class="vi-flash" src="${src(f)}" alt="" data-k="f${f}">`
-      : `<span class="vi-cheval">${OBJ.cheval_blanc}</span>`) +
-    `<span class="vi-neige"></span></div><span class="vi-boutons"><i></i><i></i></span></div>` +
-    `<p class="frise-aide">${e.cheval ? 'Regardez bien…' : 'La vision'}</p></div>`;
+/* Sarah Palmer's Visions : la vision passe dans le vieux téléviseur du salon des Palmer ; avant et après, le cheval
+   blanc. Chaque écran joue la vision lui-même (horloge locale calée sur le chrono de la manche), si bien qu'aucune
+   affiche n'est sautée, même à 0,1 s. */
+const VISION = {seq: null, base: 0};
+function caleVision(v) {                       // appelée à chaque état reçu (hôte et téléphones)
+  if (!v || v.jeu !== 'sarah' || v.phase !== 'manche') return;
+  const base = performance.now() - (v.ecoule || 0) * 1000;
+  if (VISION.seq !== v.seq) { VISION.seq = v.seq; VISION.base = base; } else VISION.base = Math.min(VISION.base, base);
 }
+function visionHTML(e, src) {
+  const seq = e.sequence || [];
+  const imgs = [...new Set(seq)].map(i => `<img class="vi-flash" data-i="${i}" src="${src(i)}" alt="" hidden>`).join('');
+  return `<div class="vision" data-k="vision"><div class="vi-tele"><div class="vi-ecran" data-sequence="${seq.join(',')}" ` +
+    `data-t0="${e.t0 || 0}" data-pas="${e.pas || 0.8}">${imgs}<span class="vi-cheval">${OBJ.cheval_blanc}</span>` +
+    `<span class="vi-neige"></span></div><span class="vi-boutons"><i></i><i></i></span></div>` +
+    `<p class="frise-aide">${seq.length ? 'Regardez bien…' : 'La vision s\'efface…'}</p></div>`;
+}
+(function animerVision() {
+  for (const ecran of document.querySelectorAll('.vi-ecran')) {
+    const seq = (ecran.dataset.sequence || '').split(',').filter(x => x !== ''), pas = Number(ecran.dataset.pas) || 0.8;
+    const t = (performance.now() - VISION.base) / 1000 - Number(ecran.dataset.t0 || 0);
+    const k = seq.length && t >= 0 ? Math.floor(t / pas) : -1;
+    const cur = k >= 0 && k < seq.length ? seq[k] : null;
+    if (ecran.dataset.cur === String(cur)) continue;
+    ecran.dataset.cur = String(cur);
+    ecran.querySelectorAll('.vi-flash').forEach(im => { im.hidden = im.dataset.i !== cur; });
+    ecran.querySelector('.vi-cheval').hidden = cur !== null;
+  }
+  requestAnimationFrame(animerVision);
+})();
 
 /* Jean Renault's Ransom : la lettre de rançon en lettres découpées, puis les photos de l'otage (images du film). */
 function lettresDecoupees(t) {
