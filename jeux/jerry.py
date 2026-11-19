@@ -89,9 +89,12 @@ def construire(api, cfg, pool, deja):
             notes.append((part, f))
     if not notes:
         raise RuntimeError("Le rébus : aucun titre des listes ne se dessine.")
-    meilleurs = ([f for p, f in notes if p >= 0.85] or [f for p, f in notes if p >= 0.6] or
-                 [f for _, f in notes])
-    film = tirer(meilleurs, deja)
+    # plus de variété : tous les titres qui se dessinent bien (au moins 55 % des sons en images), les mieux
+    # dessinés un peu plus souvent ; jamais le même deux fois de suite (tirer garde la mémoire de la partie)
+    bons = [(p, f) for p, f in notes if p >= 0.55] or notes
+    neufs = [(p, f) for p, f in bons if cle_film(f) not in deja] or bons
+    film = random.choices([f for _, f in neufs], weights=[0.4 + p for p, _ in neufs])[0]
+    deja.add(cle_film(film))
     r, _ = rebus(film["title"], rng)
     d = details_film(api, film)
     etat = {"rebus": r, "mots": False, "indices": [], "trous": ""}

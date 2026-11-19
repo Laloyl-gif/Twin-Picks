@@ -57,13 +57,19 @@ Les jeux
   Carl's Fat Trout Trailers                   Les deux films     derrière le store, deux films mêlés : trouvez les deux
   Phillip's Associates                        Les complices      qui est-ce ? ceux avec qui il a le plus tourné
   Jerry's Trip                                Le rébus           le titre du film en rébus phonétique
-  Hank's Dominoes                             L'effet domino     douze affiches debout ; à chaque indice, des dominos tombent
+  Hank's Dominoes                             Les dominos        chacun un film secret ; on retire un film proche du sien
   Annie's Miss Twin Peaks                     L'absente          sept écharpes, huit affiches : laquelle n'a pas d'écharpe ?
   Dougie's Jackpots                           Le jackpot         trois rouleaux, cinq films : trouvez-les pendant qu'ils tournent
   Mike's Shoe Samples                         Les paires         quatre personnages, quatre films : faites les paires
-  Windom Earle's Chessboard                   L'échiquier        chaque pièce est un membre de l'équipe du film
+  Windom Earle's Chessboard                   Le cavalier        le titre caché sur l'échiquier, en déplacements de pièces
   Harold's Orchids                            Les pétales        des détails d'images du film vus à la loupe
   Jacques Renault's Card Table                Le brelan          cinq affiches : les trois qui ont quelqu'un en commun
+  Sarah Palmer's Visions                      La vision          six affiches en un éclair : laquelle n'y était pas ?
+  Jean Renault's Ransom                       La rançon          on mise, puis on achète des preuves en secret
+  The Woodsman's Light                        Got a light?       dans le noir, chacun éclaire l'écran avec son téléphone
+  The Mitchum Brothers' Contract              Le contrat         patate chaude : citez un film pour passer le contrat
+  Mr. C's Doppelganger                        Le double          l'affiche et son double : trois différences
+  Desmond's Code                              Le code            un mot pour faire deviner des films (façon Codenames)
 
 Décors
   Jamais de fond qui dénote : des objets (web/objets.js, web/decor.js). Les objets ne sont jamais cachés derrière
@@ -86,7 +92,7 @@ Décors
     Denise : porte-carte de la DEA, le nom en cases.   Carl : la caravane, son store, l'enseigne du Fat Trout.
     James : la jaquette de la cassette, la moto devant (à gauche, les roues tournent ; la pochette reste visible).
     Albert : un point bleu lumineux.   Phillip : le réseau relié par l'électricité, le téléphone.
-    Jerry : les cartes du rébus, la baguette.   Hank : les dominos qui tombent, sa liste d'indices.   Annie : la couronne, les écharpes.
+    Jerry : les cartes du rébus, la baguette.   Hank : la grille de dominos.   Annie : la couronne, les écharpes.
     Dougie : la machine à sous à trois rouleaux (« Hellooo! »).   Mike : la valise d'échantillons, les boîtes.
     Windom Earle : l'échiquier et la feuille de partie.   Harold : l'orchidée, son carnet « Living Novel ».
     Jacques Renault : les cartes du One Eyed Jack's, les jetons.
@@ -306,10 +312,11 @@ Autres jeux
     peut avoir plusieurs images, tirées au sort. Ce qui ne se dessine pas est écrit. Indices : genre et année, puis
     les mots sous les images, puis le titre à trous. Les titres qui se dessinent le mieux passent en priorité.
   Les complices (Phillip) : quand un complice dit un film fait ensemble, sa petite affiche est épinglée à côté.
-  L'effet domino (Hank Jennings) : douze affiches debout comme des dominos ; une seule est le film de Hank. Ses
-    indices arrivent un par un (langue, durée, genre, époque, note, pays, puis un acteur ou le réalisateur) et, à
-    chaque indice, les films qui ne collent pas basculent et tombent. On répond quand on veut en touchant une
-    affiche : plus tôt, plus de points, mais plus de dominos encore debout.
+  Les dominos (Hank Jennings), façon Focus : une grille de films sur des dominos (cinq par joueur, dix à deux,
+    jamais deux films d'une même saga). Chacun reçoit en secret un film de la grille. À son tour (20 s), on retire un
+    film proche du sien : c'est un indice pour les autres. À tout moment, on peut deviner le film d'un autre joueur
+    (une fois par joueur) : moins il a donné d'indices, plus ça rapporte, et lui aussi marque. Retirer sans le savoir
+    le film d'un autre joueur coûte des points. Deux joueurs minimum.
   L'absente (Annie Blackburn) : Annie concourt pour Miss Twin Peaks. Sept candidates portent une écharpe avec deux
     mots qui évoquent un film (mots-clés TMDB traduits en français) ; huit affiches : laquelle n'a pas d'écharpe ?
     Indice : deux affiches qui ont leur écharpe sont barrées à mi-temps.
@@ -320,15 +327,39 @@ Autres jeux
   Les paires (Mike) : Mike, le manchot, est représentant en chaussures : il ouvre sa valise d'échantillons. Quatre
     boîtes portent le nom d'un personnage, quatre affiches : rendez à chaque personnage son film (toucher une boîte,
     puis l'affiche). Points par paire juste, bonus pour les quatre. Indice : l'acteur de chaque personnage.
-  L'échiquier (Windom Earle) : chaque pièce avancée est quelqu'un de l'équipe du film : les pions (seconds rôles),
-    le cavalier (directeur de la photo), la tour (compositeur), le fou (scénariste), la dame (tête d'affiche), le
-    roi (réalisateur). La feuille de partie dit qui elles sont. Indices : l'année, puis le titre à trous.
+  Le cavalier (Windom Earle) : 64 cases, une lettre par case (elles reviennent : il n'y en a que 26). Le titre est
+    caché lettre après lettre ; on passe d'une lettre à la suivante par un déplacement de pièce : cavalier (en L),
+    tour (en ligne), fou (en diagonale), roi (une case), dame. La pièce qui va jouer est posée sur la dernière case
+    lue : on peut devancer Windom. La fin du titre reste à deviner. Indice : l'année.
   Les pétales (Harold Smith) : chaque pétale de l'orchidée montre, vu à la loupe, un détail d'une image différente du
     film : l'affiche (sans texte si TMDB en a une), des plans du film, le visage d'acteurs (une étiquette dit ce que
-    c'est). Les pétales s'ouvrent, puis le détail s'élargit. Indices : le genre, puis le titre à trous.
+    c'est). Le zoom part de quelques pixels et recule en huit étapes. Indices : le genre, puis le titre à trous.
   Le brelan (Jacques Renault) : le croupier du One Eyed Jack's distribue cinq cartes (cinq affiches) ; trois ont une
     même personne au générique (acteur, réalisateur, compositeur, scénariste, directeur de la photo). Touchez les
     trois puis « Miser ». Brelan exact : tous les points ; deux sur trois : une partie. Indice : le métier commun.
+    Jamais de film d'une saga dans le brelan.
+  La vision (Sarah Palmer) : six affiches passent en un éclair dans le vieux téléviseur des Palmer, deux fois, le
+    cheval blanc entre deux. Puis six affiches reviennent : laquelle n'était pas dans la vision ? (mémoire)
+  La rançon (Jean Renault) : on ne connaît que deux infos tirées au hasard ; on mise de 0 à 2 500 points. Puis le
+    marché noir : chacun achète en secret, sur son téléphone, des preuves (la décennie, le pays, l'année, un second
+    rôle, une image, le compositeur, la tête d'affiche, le réalisateur, les initiales, le titre à moitié), d'autant
+    plus chères qu'elles en disent et qu'on a misé gros. Trouvé : la mise doublée (et un peu plus) moins les achats.
+    Raté : la mise et les achats sont perdus.
+  Got a light? (le Woodsman) : l'écran dans le noir, une quarantaine d'affiches et quatre indices écrits cachés.
+    Chacun promène sa lumière en glissant le doigt sur son téléphone ; tout le monde profite de la lumière des
+    autres, et un indice éclairé reste allumé. « C'est lui ! » quand votre lumière est sur le bon film : un seul
+    essai (raté : hors jeu pour la manche). Le premier a un bonus.
+  Le contrat (les frères Mitchum) : une patate chaude. Le contrat passe de joueur en joueur, toujours dans le même
+    sens ; la minuterie est visible par tous (durée au hasard). Pour s'en débarrasser, citer un film qui respecte la
+    condition (genre, décennie, « avec A, B ou C », réalisateurs, pays…). Changer de condition : un film de plus à
+    citer (trois au plus). Quand ça éclate, celui qui tient le contrat perd 30 % de ses points (réglable).
+  Le double (Mr. C) : l'affiche et son double, trafiqué à trois endroits (un objet effacé, une zone retournée, une
+    couleur changée). On touche les différences sur son téléphone ; une touche à côté coûte un peu ; bonus si l'on
+    trouve le film.
+  Le code (Chet Desmond), façon Codenames : chacun son tour est le donneur. Grille de 16 affiches ; le donneur voit le
+    code (en or : à faire deviner ; trois rouges ; un noir ; des neutres) et tape un seul mot. Les autres touchent
+    autant de films qu'il y en a en or. Bon film : points pour le devineur et le donneur ; rouge : malus du donneur ;
+    noir : gros malus pour le donneur et celui qui l'a touché.
   Images du menu : chaque carte du menu a un petit bouton « image » (en haut à gauche, au survol). On choisit une
     image, on la cadre (glisser, zoom) et l'aperçu montre aussitôt la carte choisie et non choisie, l'en-tête de la
     partie et la photo de profil. Les images ajoutées sont gardées dans donnees/images_menu/ ; « Remettre l'image
@@ -430,3 +461,15 @@ Version 9
   - Menu sur téléphone : boutons Profils / Listes / Réglages bien distincts, moins d'informations inutiles.
   - Nouvelle icône : la tasse rouge de profil, sur fond noir et le sol à chevrons de la Black Lodge ; sa vapeur dessine
     les deux sommets.
+
+Version 10
+  - Sept nouveaux jeux ou jeux refaits (voir plus haut) : Sarah, Jean Renault, le Woodsman, les frères Mitchum,
+    Mr. C, Desmond, et Hank (façon Focus) ; Windom avec plusieurs pièces d'échecs ; Harold zoome bien plus fort.
+  - Bouton « Manches : Par jeu / Au hasard » sur le menu : au hasard, on choisit juste un nombre de manches, les jeux
+    sont tirés au hasard parmi ceux choisis (jamais deux fois le même de suite).
+  - Téléphone : écran d'arrivée épuré, bouton « Rejoindre avec un code » bien visible (aussi dans l'attente et le
+    profil) ; la musique d'ambiance joue sur le téléphone administrateur quand aucun écran de partie n'est ouvert,
+    sans afficher le morceau.
+  - Rébus : plus de mots en images, plus de titres différents. Carl et Dougie : le nom de la saga suffit.
+  - L'absente : écharpes droites, texte plus grand. Le brelan : plus de films de saga.
+  - Logo et icône : la tasse rouge de profil, fond noir, sol de la Black Lodge.

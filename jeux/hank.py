@@ -1,144 +1,173 @@
-"""Hank's Dominoes (L'effet domino) : Hank Jennings aligne ses dominos. Douze affiches sont debout comme des dominos ;
-un seul est le film mystère. Hank donne ses indices un par un (le genre, l'époque, la durée, la note, le pays, puis un
-acteur ou le réalisateur) : à chaque indice, les films qui ne collent pas tombent. Répondez quand vous voulez en
-touchant une affiche : plus tôt on répond, plus ça rapporte (mais il reste plus de dominos debout).
+"""Hank's Dominoes (Les dominos de Hank), façon Focus. Une grille de films sur des dominos (cinq par joueur : dix à
+deux, quinze à trois…, jamais deux films d'une même saga). Chaque joueur reçoit en secret un film de la grille.
+À tour de rôle, le joueur actif retire de la grille un film proche du sien : c'est son indice. À tout moment, chacun
+peut deviner le film d'un autre joueur (une fois par joueur) : moins le joueur visé a donné d'indices, plus ça
+rapporte, et celui dont le film est trouvé marque aussi. Retirer sans le savoir le film d'un autre joueur coûte des
+points (et son film est dévoilé).
 """
 import random
+import time
 
 from PIL import ImageOps
 
 import sagas
-from tmdb import cle_film, fiche
+from tmdb import cle_film
 from visuels import en_jpeg
-from .commun import affiche, chronologie, tirer
+from .commun import affiche
 
-NB = 12
-
-
-def _criteres(fi, an):
-    """Les indices vrais pour le film mystère : [(texte, test(fiche, année) -> bool, finesse)]."""
-    out = []
-    for g in fi.get("genres", [])[:3]:
-        out.append((f"Genre : {g.lower()}", lambda x, a, g=g: g in x.get("genres", []), 1))
-    if an:
-        dec = an // 10 * 10
-        out.append((f"Sorti dans les années {dec % 100:02d}" if dec >= 1930 else f"Sorti dans les années {dec}",
-                    lambda x, a, dec=dec: a and a // 10 * 10 == dec, 2))
-        out.append(("Sorti après l'an 2000" if an > 2000 else "Sorti avant l'an 2000",
-                    lambda x, a, apres=an > 2000: a and (a > 2000) == apres, 1))
-    d = fi.get("duree") or 0
-    if d:
-        if d >= 120:
-            out.append(("Dure plus de 2 h", lambda x, a: (x.get("duree") or 0) >= 120, 1))
-        elif d < 100:
-            out.append(("Dure moins de 1 h 40", lambda x, a: 0 < (x.get("duree") or 0) < 100, 1))
-        else:
-            out.append(("Dure entre 1 h 40 et 2 h", lambda x, a: 100 <= (x.get("duree") or 0) < 120, 1))
-    n = fi.get("note") or 0
-    if n:
-        s = 7.5 if n >= 7.5 else 6.5 if n >= 6.5 else 0
-        if s:
-            out.append((f"Noté au moins {str(s).replace('.', ',')}/10 sur TMDB", lambda x, a, s=s: (x.get("note") or 0) >= s, 1))
-        else:
-            out.append(("Noté moins de 6,5/10 sur TMDB", lambda x, a: 0 < (x.get("note") or 0) < 6.5, 1))
-    if fi.get("pays"):
-        p = fi["pays"][0]
-        out.append((f"Produit en partie par : {p}", lambda x, a, p=p: p in x.get("pays", []), 2))
-    if fi.get("langue"):
-        lg = fi["langue"]
-        out.append(("Tourné en anglais" if lg == "en" else "Pas tourné en anglais",
-                    lambda x, a, en=lg == "en": (x.get("langue") == "en") == en, 1))
-    for a in fi.get("acteurs", [])[:3]:
-        out.append((f"Avec {a['nom']}", lambda x, an_, i=a["id"]: any(b["id"] == i for b in x.get("acteurs", [])[:12]), 4))
-    for r in fi.get("realisateurs", [])[:1]:
-        out.append((f"Réalisé par {r['nom']}", lambda x, a, i=r["id"]: any(b["id"] == i for b in x.get("realisateurs", [])), 5))
-    return out
-
-
-def _annee(f):
-    try:
-        return int((f.get("release_date") or "")[:4])
-    except ValueError:
-        return 0
-
-
-def sequence(cible, autres):
-    """Les indices dans l'ordre : chacun fait tomber au moins un domino, les plus vagues d'abord ; à la fin, il ne
-    reste que le film mystère. [(texte, [indices des autres qui tombent])] ou None."""
-    fc, ac = cible
-    crit = [c for c in _criteres(fc, ac) if c[1](fc, ac)]
-    debout = set(range(len(autres)))
-    seq = []
-    while debout and crit and len(seq) < 7:
-        options = []
-        for c in crit:
-            tombe = {i for i in debout if not c[1](*autres[i])}
-            if tombe:
-                options.append((c, tombe))
-        if not options:
-            return None
-        reste = 7 - len(seq)
-        # assez fin pour finir à temps, sinon le plus doux (un à trois dominos) et le plus vague
-        if len(debout) > 3 * reste:
-            c, tombe = max(options, key=lambda o: (len(o[1]), -o[0][2]))
-        else:
-            doux = [o for o in options if len(o[1]) <= max(1, len(debout) // 2)]
-            c, tombe = min(doux or options, key=lambda o: (o[0][2], -len(o[1]), random.random()))
-        seq.append((c[0], sorted(tombe)))
-        debout -= tombe
-        crit.remove(c)
-    return seq if not debout and len(seq) >= 3 else None
+NMAX = 24
 
 
 def construire(api, cfg, pool, deja):
-    duree = float(cfg["dur_hank"])
     films = [f for f in pool if f.get("poster_path")]
-    for _ in range(12):
-        cible = tirer(films, deja)
-        autres = [f for f in films if f["id"] != cible["id"] and not sagas.meme_univers(f, cible)]
-        random.shuffle(autres)
-        fiches = []
-        for f in autres[:40]:
-            try:
-                fiches.append((f, fiche(api, f)))
-            except Exception:  # noqa: BLE001
-                continue
-            if len(fiches) == NB - 1:
-                break
-        try:
-            fcible = fiche(api, cible)
-        except Exception:  # noqa: BLE001
-            continue
-        if len(fiches) < NB - 1:
-            continue
-        seq = sequence((fcible, _annee(cible)), [(fi, _annee(f)) for f, fi in fiches])
-        if seq:
+    random.shuffle(films)
+    films = sorted(films, key=lambda f: cle_film(f) in deja)
+    choisis = []
+    for f in films:
+        if not any(f["id"] == g["id"] or sagas.meme_univers(f, g) for g in choisis):
+            choisis.append(f)
+        if len(choisis) == NMAX:
             break
-    else:
-        raise RuntimeError("L'effet domino : impossible de trouver des indices qui départagent les films des listes.")
-    films_m = [f for f, _ in fiches] + [cible]
-    ordre = random.sample(range(NB), NB)                       # position à l'écran -> film
-    films_m = [films_m[i] for i in ordre]
-    bonne = ordre.index(NB - 1)
-    pos = {ordre.index(k): k for k in range(NB)}               # position -> indice dans « fiches » (ou la cible)
-    images = [en_jpeg(ImageOps.fit(affiche(api, f, "w342"), (240, 360)), 360) for f in films_m]
-    etat = {"items": [{"img": i, "txt": f["title"]} for i, f in enumerate(films_m)], "regles": [],
-            "question": "Quel est le film de Hank ?", "indices": []}
-    n = len(seq)
-    evts = []
-    for k, (txt, tombe) in enumerate(seq):
-        t = round(duree * (0.04 + 0.78 * k / max(1, n - 1)), 2)
-        cases = [p for p, i in pos.items() if i in tombe]
+    if len(choisis) < 10:
+        raise RuntimeError("Les dominos de Hank : pas assez de films (hors sagas) dans les listes choisies.")
+    images = [en_jpeg(ImageOps.fit(affiche(api, f, "w342"), (240, 360)), 360) for f in choisis]
+    titres = [f["title"] for f in choisis]
+    etat = {"cachees": list(range(len(choisis)))}
+    return dict(jeu="hank", vue="focus", duree=float(cfg["dur_hank"]), reponse="focus", etapes=[(0.0, etat)],
+                images=images, revelation=None, cles=[], bonne="", titres=titres,
+                solution="Les films de chacun", detail="", films=[cle_film(f) for f in choisis])
 
-        def jouer(txt=txt, cases=cases):
-            etat["regles"].append(txt)
-            for p in cases:
-                etat["items"][p]["tombe"] = True
-        evts.append((t, jouer))
-    etapes = chronologie(evts, lambda: {**etat, "items": [dict(i) for i in etat["items"]], "regles": list(etat["regles"]),
-                                        "indices": list(etat["indices"])})
-    for f in films_m:
-        deja.add(cle_film(f))
-    return dict(jeu="hank", vue="choix", duree=duree, reponse="choix", etapes=etapes, images=images, revelation=None,
-                cles=[], bonne="", bonne_i=bonne, infos=[""] * NB, solution=f"Le film de Hank : {cible['title']}",
-                detail=" · ".join(t for t, _ in seq), films=[cle_film(f) for f in films_m])
+
+class Moteur:
+    suggestions = False
+
+    def __init__(self, partie, cfg, m):
+        self.p, self.cfg, self.m = partie, cfg, m
+        self.ordre = list(partie.joueurs)
+        random.shuffle(self.ordre)
+        n = min(len(m["titres"]), max(10, 5 * len(self.ordre)))
+        self.grille = list(range(n))
+        secrets = random.sample(self.grille, min(n, len(self.ordre)))
+        self.secret = dict(zip(self.ordre, secrets))
+        self.retires = []                       # [(film, pid)]
+        self.devines = {}                       # (devin, cible) -> (film proposé, juste, points)
+        self.devoiles = set()                   # cibles dont le film a été retiré par un autre
+        self.tour, self.debut_tour = 0, 0.0
+        self.gains = {}
+
+    def ok(self):
+        if len(self.p.joueurs) < 2:
+            return "Les dominos de Hank se jouent à 2 joueurs minimum."
+        return ""
+
+    # ---- tour de jeu
+    def _actif(self):
+        if not self.ordre:
+            return None
+        return self.ordre[self.tour % len(self.ordre)]
+
+    def _reste_tour(self):
+        return float(self.cfg["hank_tour"]) - (self.p.ecoule - self.debut_tour)
+
+    def _avancer(self):
+        self.tour += 1
+        self.debut_tour = self.p.ecoule
+
+    def _maj(self):
+        if self.ordre and self._reste_tour() <= 0:          # temps écoulé : au suivant
+            self._avancer()
+
+    def _retirables(self):
+        pris = {f for f, _ in self.retires}
+        return [f for f in self.grille if f not in pris]
+
+    def _indices(self, pid):
+        return sum(1 for _, q in self.retires if q == pid)
+
+    def _gagner(self, pid, n):
+        j = self.p.joueurs.get(pid)
+        if j:
+            j.gain += n
+            j.score += n
+            self.gains[pid] = self.gains.get(pid, 0) + n
+
+    def action(self, pid, d, frac, info=None):
+        self._maj()
+        if "retirer" in d:
+            if pid != self._actif():
+                return {"ok": False, "msg": "Ce n'est pas votre tour"}
+            f = d.get("retirer")
+            if type(f) is not int or f not in self._retirables():
+                return {"ok": False, "msg": "Choisissez un film de la grille"}
+            if f == self.secret.get(pid):
+                return {"ok": False, "msg": "C'est votre film ! Retirez-en un autre, proche du vôtre"}
+            self.retires.append((f, pid))
+            victime = next((q for q, s in self.secret.items() if s == f), None)
+            self._avancer()
+            if victime:
+                self.devoiles.add(victime)
+                self._gagner(pid, -int(self.cfg["hank_retire"]))
+                return {"ok": True, "msg": "Aïe : c'était le film d'un autre joueur !"}
+            return {"ok": True, "msg": "Domino retiré"}
+        cible, f = d.get("cible"), d.get("i")
+        if cible not in self.secret or cible == pid or type(f) is not int or f not in self.grille:
+            return {"ok": False, "msg": "Choisissez un joueur, puis un film"}
+        if (pid, cible) in self.devines:
+            return {"ok": False, "msg": "Vous avez déjà deviné ce joueur"}
+        if cible in self.devoiles:
+            return {"ok": False, "msg": "Son film est déjà dévoilé"}
+        juste = self.secret[cible] == f
+        if juste:
+            pts = max(int(self.cfg["hank_mini"]), int(self.cfg["hank_pts"]) - int(self.cfg["hank_pas"]) * self._indices(cible))
+            self._gagner(pid, pts)
+            self._gagner(cible, int(self.cfg["hank_cible"]))
+        else:
+            pts = -int(self.cfg["hank_erreur"])
+            self._gagner(pid, pts)
+        self.devines[(pid, cible)] = (f, juste, pts)
+        nom = self.p.joueurs[cible].nom if cible in self.p.joueurs else "?"
+        return {"ok": True, "correct": juste, "msg": f"Bien vu : c'est le film de {nom} ! +{pts}" if juste else f"Raté ({pts})"}
+
+    def _resolu(self, pid):
+        return all((pid, c) in self.devines or c in self.devoiles for c in self.secret if c != pid)
+
+    def fini(self):
+        self._maj()
+        J = self.p.joueurs
+        secrets = set(self.secret.values())
+        plus_rien = not [f for f in self._retirables() if f not in secrets]
+        return bool(J) and (all(self._resolu(p) for p in J if p in self.secret) or (plus_rien and self._reste_tour() < 0))
+
+    def clore(self):
+        for pid, j in self.p.joueurs.items():
+            g = self.gains.get(pid, 0)
+            j.trouve = any(ok for (a, _), (_, ok, _) in self.devines.items() if a == pid)
+            j.serie = j.serie + 1 if j.trouve else 0
+            self.gains[pid] = g
+
+    def statut(self, pid):
+        n = sum(1 for (a, _), (_, ok, _) in self.devines.items() if a == pid and ok)
+        return {"t": f"{n} trouvé{'s' if n > 1 else ''}", "c": "ok"} if n else {"t": "", "c": ""}
+
+    def avancement(self):
+        a = self.p.joueurs.get(self._actif())
+        return f"Au tour de {a.nom}" if a else ""
+
+    def vue(self, pid, revele):
+        self._maj()
+        J = self.p.joueurs
+        retires = {f: q for f, q in self.retires}
+        cases = [{"img": f, "txt": self.m["titres"][f], "retire": f in retires,
+                  "par": J[retires[f]].public() if f in retires and retires[f] in J else None} for f in self.grille]
+        joueurs = [dict(J[q].public(), indices=self._indices(q), devoile=q in self.devoiles,
+                        actif=q == self._actif(), film=self.secret[q] if revele or q in self.devoiles else None)
+                   for q in self.ordre if q in J]
+        v = {"cases": cases, "joueurs": joueurs, "reste_tour": max(0, round(self._reste_tour(), 1)),
+             "dur_tour": float(self.cfg["hank_tour"])}
+        if pid:
+            v.update(mon_film=self.secret.get(pid), mon_tour=pid == self._actif() and not revele,
+                     mes_devines={c: {"i": f, "ok": ok} for (a, c), (f, ok, _) in self.devines.items() if a == pid},
+                     actif=not revele and not self.p.pause)
+        if revele:
+            v["resultats"] = sorted([dict(J[q].public(), gain=self.gains.get(q, 0)) for q in J], key=lambda x: -x["gain"])
+        return v

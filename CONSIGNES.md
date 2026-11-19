@@ -51,13 +51,19 @@ arrête le programme.
 | carl        | Carl's Fat Trout Trailers                    | Les deux films           |
 | phillip     | Phillip's Associates                         | Les complices            |
 | jerry       | Jerry's Trip                                 | Le rébus                 |
-| hank        | Hank's Dominoes                              | L'effet domino           |
+| hank        | Hank's Dominoes                              | Les dominos              |
 | annie       | Annie's Miss Twin Peaks                      | L'absente                |
 | dougie      | Dougie's Jackpots                            | Le jackpot               |
 | mike        | Mike's Shoe Samples                          | Les paires               |
-| windom      | Windom Earle's Chessboard                    | L'échiquier              |
+| windom      | Windom Earle's Chessboard                    | Le cavalier              |
 | harold      | Harold's Orchids                             | Les pétales              |
 | jacques     | Jacques Renault's Card Table                 | Le brelan                |
+| sarah       | Sarah Palmer's Visions                       | La vision                |
+| jean        | Jean Renault's Ransom                        | La rançon                |
+| woodsman    | The Woodsman's Light                         | Got a light?             |
+| mitchum     | The Mitchum Brothers' Contract               | Le contrat               |
+| mrc         | Mr. C's Doppelganger                         | Le double                |
+| desmond     | Desmond's Code                               | Le code                  |
 
 Version 9 (novembre 2026, à la demande d'Etienne) : Mr. C retiré ; Annie remplace Lil ; Mike, Dougie et Hank
 changent de jeu (Mike's Missing Arm devient Mike's Shoe Samples) ; Windom Earle, Harold Smith, Jacques Renault arrivent.
@@ -106,3 +112,12 @@ Tout le reste (règles, réglages, apparence des manches, nouveaux jeux) peut é
 - Les images ont exactement les sons du titre (pas de « lait » pour « le ») ; ce qui n'a pas d'image s'écrit.
 - Une image montre directement le mot (jamais une girafe pour « zoo »). Quand il faut plusieurs images, elles sont
   dans un cadre (« zoo » = girafe, lion, tigre ; « ferme » = vache, cochon, poule).
+
+## Version 10 (novembre 2026)
+
+Jeux validés par Etienne (pitchs en oui / non) : Sarah (la vision), Jean Renault (la rançon et le marché noir),
+le Woodsman (got a light?), les frères Mitchum (le contrat), Mr. C (le double), Hank (les dominos, façon Focus),
+Desmond (le code, façon Codenames), Windom (le cavalier, plusieurs pièces). Les nouveaux jeux exploitent des
+dimensions qui n'existaient pas : mémoire, mise de ses points et achat d'indices secrets, exploration à plusieurs
+(le téléphone devient une lampe), patate chaude entre joueurs, jeu des différences, jeux de déduction et de code entre
+joueurs.

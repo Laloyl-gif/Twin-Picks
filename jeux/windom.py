@@ -1,78 +1,102 @@
-"""Windom Earle's Chessboard (L'échiquier) : Windom Earle joue sa partie d'échecs, et chaque pièce qu'il avance est un
-membre de l'équipe d'un film. D'abord les pions (des seconds rôles), puis le cavalier (le directeur de la photo), la
-tour (le compositeur), le fou (le scénariste), la dame (la tête d'affiche) et enfin le roi (le réalisateur).
-Trouvez le film. Indices (réglables) : l'année, puis le titre à trous.
+"""Windom Earle's Chessboard (Le cavalier) : Windom Earle joue aux échecs avec des lettres. Sur l'échiquier, 64 cases,
+une lettre par case (les lettres reviennent : il n'y en a que 26). Le titre du film y est caché, lettre après lettre :
+on passe d'une lettre à la suivante par un déplacement de pièce d'échecs (cavalier en « L », tour en ligne, fou en
+diagonale, roi d'une case, dame). La pièce qui va jouer est posée sur la dernière case lue : les plus malins devancent
+Windom (la lettre suivante est forcément à portée de cette pièce). La fin du titre reste à deviner.
+Indice (réglable) : l'année.
 """
 import random
+import re
 
 from texte import normaliser
-from tmdb import details_film, fiche
+from tmdb import details_film
 from visuels import en_jpeg
-from .commun import affiche, chronologie, manche_titre, reponse_affichee, tirer, trous
+from .commun import affiche, chronologie, manche_titre, reponse_affichee, tirer
 
-# (pièce, symbole, métier) dans l'ordre où Windom les avance
-PIECES = [("Pion", "♟", "Second rôle"), ("Pion", "♟", "Second rôle"), ("Pion", "♟", "Second rôle"),
-          ("Cavalier", "♞", "Directeur de la photo"), ("Tour", "♜", "Compositeur"), ("Fou", "♝", "Scénariste"),
-          ("Dame", "♛", "Tête d'affiche"), ("Roi", "♚", "Réalisateur")]
-CASES = ["c2", "e2", "g2", "b1", "h1", "f1", "d1", "e1"]          # où se pose chaque pièce sur l'échiquier
+SAUTS = [(1, 2), (2, 1), (2, -1), (1, -2), (-1, -2), (-2, -1), (-2, 1), (-1, 2)]
+# lettres de remplissage, à la fréquence du français (les cases vides ne doivent pas se repérer)
+FREQ = "EEEEEEEEEEEEAAAAAAAAIIIIIIISSSSSSSNNNNNNNRRRRRRRTTTTTTTOOOOOOLLLLLUUUUUDDDCCCMMMPPGBVHFQYXJKWZ"
 
 
-def equipe(fi):
-    """[(pièce, symbole, métier, nom, rôle)] ; les pièces sans personne connue sont retirées."""
-    acteurs = [a for a in fi.get("acteurs", []) if a.get("nom")]
-    reals = [r["nom"] for r in fi.get("realisateurs", [])]
-    pris = set(reals)
+def lettres(titre):
+    return re.sub(r"[^A-Z0-9]", "", normaliser(titre).upper())
+
+
+PIECES = {"cavalier": "♞", "tour": "♜", "fou": "♝", "roi": "♚", "dame": "♛"}
+POIDS = {"cavalier": 5, "tour": 2, "fou": 2, "roi": 2, "dame": 1}
+
+
+def portee(piece, case, libres):
+    """Les cases libres qu'atteint la pièce depuis case (portée limitée à 3 cases pour la tour, le fou et la dame)."""
+    x, y = case % 8, case // 8
+    if piece == "cavalier":
+        dirs, loin = SAUTS, 1
+    elif piece == "roi":
+        dirs, loin = [(a, b) for a in (-1, 0, 1) for b in (-1, 0, 1) if a or b], 1
+    else:
+        droites, diag = [(1, 0), (-1, 0), (0, 1), (0, -1)], [(1, 1), (1, -1), (-1, 1), (-1, -1)]
+        dirs = droites if piece == "tour" else diag if piece == "fou" else droites + diag
+        loin = 3
     out = []
-
-    def poser(k, nom, role=""):
-        if nom and nom not in pris:
-            pris.add(nom)
-            p, sym, metier = PIECES[k]
-            out.append(dict(piece=p, sym=sym, metier=metier, nom=nom, role=role, case=CASES[k]))
-    seconds = acteurs[3:9]
-    random.shuffle(seconds)
-    for k in range(3):
-        if k < len(seconds):
-            poser(k, seconds[k]["nom"], seconds[k].get("role", ""))
-    poser(3, next(iter(c["nom"] for c in fi.get("chefs_op", [])), ""))
-    poser(4, next(iter(c["nom"] for c in fi.get("compositeurs", [])), ""))
-    poser(5, next(iter(c["nom"] for c in fi.get("scenaristes", []) if c["nom"] not in reals), ""))
-    if acteurs:
-        poser(6, acteurs[0]["nom"], acteurs[0].get("role", ""))
-    if reals:
-        p, sym, metier = PIECES[7]
-        out.append(dict(piece=p, sym=sym, metier=metier, nom=" & ".join(reals[:2]), role="", case=CASES[7]))
+    for dx, dy in dirs:
+        for k in range(1, loin + 1):
+            a, b = x + dx * k, y + dy * k
+            if not (0 <= a < 8 and 0 <= b < 8):
+                break
+            if (b * 8 + a) in libres:
+                out.append(b * 8 + a)
     return out
+
+
+def chemin(n, essais=300):
+    """[(case, pièce qui part de cette case vers la suivante)] : n cases sans repasser."""
+    noms = list(POIDS)
+    for _ in range(essais):
+        c = random.randrange(64)
+        libres = set(range(64)) - {c}
+        cases, pieces = [c], []
+        while len(cases) < n:
+            essai = random.choices(noms, [POIDS[x] for x in noms], k=len(noms))
+            for p in essai + noms:
+                vs = portee(p, cases[-1], libres)
+                if vs:
+                    break
+            else:
+                break
+            nxt = random.choice(vs)
+            pieces.append(p)
+            cases.append(nxt)
+            libres.discard(nxt)
+        if len(cases) == n:
+            return cases, pieces + [random.choice(noms)]
+    return None
 
 
 def construire(api, cfg, pool, deja):
     duree = float(cfg["dur_windom"])
     for _ in range(25):
         film = tirer(pool, deja)
-        try:
-            fi = fiche(api, film)
-        except Exception:  # noqa: BLE001
-            continue
-        pieces = equipe(fi)
-        if len(pieces) >= 6 and any(p["piece"] == "Roi" for p in pieces):
-            break
-    else:
-        raise RuntimeError("L'échiquier : pas assez d'équipes de films connues dans les listes choisies.")
-    d = details_film(api, film)
-    titres = {normaliser(t) for t in d["noms"]}
-    for p in pieces:                      # un personnage qui porte le titre du film (« Rocky ») ne s'affiche pas
-        if p["role"] and normaliser(p["role"].split("/")[0]) in titres | {normaliser(w) for t in titres for w in t.split()}:
-            p["role"] = ""
-    n = len(pieces)
-    etat = {"pieces": [], "total": n, "indices": [], "trous": ""}
-    fin = 0.78
-    evts = [(round(duree * fin * k / max(1, n - 1), 2) if k else 0.0,
-             lambda p=p: etat["pieces"].append(p)) for k, p in enumerate(pieces)]
-    if cfg.get("windom_indices", True):
+        d = details_film(api, film)
         rep = reponse_affichee(cfg, film, d)
-        if d.get("annee"):
-            evts.append((duree * 0.5, lambda: etat["indices"].append(d["annee"])))
-        evts.append((duree * 0.86, lambda: etat.update(trous=trous(rep, 0.25))))
-    etapes = chronologie(evts, lambda: {**etat, "pieces": [dict(p) for p in etat["pieces"]],
-                                        "indices": list(etat["indices"])})
-    return manche_titre("windom", "echiquier", duree, film, d, etapes, [], en_jpeg(affiche(api, film, "w500")), cfg)
+        lt = lettres(rep)
+        if 4 <= len(lt) <= 24:
+            r = chemin(len(lt))
+            if r:
+                ch, pieces = r
+                break
+    else:
+        raise RuntimeError("Le cavalier : aucun titre de la bonne longueur dans les listes choisies.")
+    grille = [random.choice(FREQ) for _ in range(64)]
+    for c, l in zip(ch, lt):
+        grille[c] = l
+    n = len(lt)
+    montrees = max(2, round(n * 0.7))                 # le cavalier ne montre pas tout : la fin reste à deviner
+    etat = {"grille": grille, "chemin": [], "piece": "", "indices": [], "n": n}
+    evts = [(round(duree * 0.8 * k / max(1, montrees - 1), 2), lambda k=k: etat.update(chemin=ch[:k + 1], piece=PIECES[pieces[k]]))
+            for k in range(montrees)]
+    if cfg.get("windom_indices", True) and d.get("annee"):
+        evts.append((duree * 0.45, lambda: etat["indices"].append(d["annee"])))
+    etapes = chronologie(evts, lambda: {**etat, "chemin": list(etat["chemin"]), "indices": list(etat["indices"])})
+    m = manche_titre("windom", "cavalier", duree, film, d, etapes, [], en_jpeg(affiche(api, film, "w500")), cfg)
+    m["detail"] = "Le parcours : " + " → ".join(lt)
+    return m

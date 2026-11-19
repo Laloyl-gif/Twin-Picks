@@ -68,7 +68,8 @@ function dessinerJeux() {
     const on = jeux[g].on, n = jeux[g].n;
     if (on) { total += n; nbOn++; }
     const source = sourceJeu(g, d);
-    const bas = on ? `<div class="jeu-bas"><span class="jeu-source${TEL && !source.includes('alerte') ? ' discrete' : ''}">${source}` +
+    const bas = on && R().hasard ? `<div class="jeu-bas"><span class="jeu-source${TEL && !source.includes('alerte') ? ' discrete' : ''}">${source}</span></div>`
+      : on ? `<div class="jeu-bas"><span class="jeu-source${TEL && !source.includes('alerte') ? ' discrete' : ''}">${source}` +
         `${g === 'pete' ? '<button class="lien prep" id="prep-pete" data-affiches="1"></button>' : ''}</span>` +
         `<div class="pas"><button data-pas="-1" title="Moins de manches">−</button><span>${n}</span>` +
         `<button data-pas="1" title="Plus de manches">+</button></div></div>` : '';
@@ -77,7 +78,8 @@ function dessinerJeux() {
       <button class="jeu-image" data-image="1" title="Changer l'image de la carte">${OBJ_IMAGE}</button>
       <div class="jeu-txt"><small>${esc(d.nom)}</small><b>${esc(d.titre || d.nom)}</b></div>${bas}</div>`;
   }).join('');
-  $('#b-lancer').innerHTML = `Lancer <small>${total} manche${total > 1 ? 's' : ''}</small>`;
+  if (R().hasard) total = nbOn ? R().hasard_n : 0;
+  $('#b-lancer').innerHTML = `Lancer <small>${total} manche${total > 1 ? 's' : ''}${R().hasard && nbOn ? ' au hasard' : ''}</small>`;
   $('#jeux-compte').textContent = `${nbOn} / ${Object.keys(CFG.jeux).length}`;
   paginerJeux();
   afficherPrep(true);
@@ -204,7 +206,16 @@ $('#jeux').onclick = ev => {
 function dessinerModes() {
   $('#modes').innerHTML = Object.entries(CFG.modes)
     .map(([m, t]) => `<button class="${R().reponse === m ? 'actif' : ''}" data-m="${m}">${t}</button>`).join('');
+  // Manches : le nombre de chaque jeu, ou des jeux au hasard parmi ceux choisis (juste un nombre de manches)
+  const h = R().hasard;
+  $('#tirage').innerHTML = `<button class="${h ? '' : 'actif'}" data-h="0">Par jeu</button><button class="${h ? 'actif' : ''}" data-h="1">Au hasard</button>` +
+    (h ? `<span class="pas hasard-n"><button data-hn="-1" title="Moins de manches">−</button><span>${R().hasard_n}</span><button data-hn="1" title="Plus de manches">+</button></span>` : '');
 }
+$('#tirage').onclick = ev => {
+  const b = ev.target.closest('[data-h]'), n = ev.target.closest('[data-hn]');
+  if (b) regler({hasard: b.dataset.h === '1'});
+  if (n) regler({hasard_n: Math.max(1, Math.min(200, R().hasard_n + Number(n.dataset.hn) * (ev.shiftKey ? 5 : 1)))});
+};
 $('#modes').onclick = ev => { const b = ev.target.closest('[data-m]'); if (b) regler({reponse: b.dataset.m}); };
 
 /* ---------- réglages ---------- */
@@ -616,7 +627,7 @@ function bandeau(e) {
   }
   if (e.phase === 'reponse' && ['note', 'chrono', 'bingo'].includes(e.type)) return '';
   if (e.phase === 'reponse' && e.type === 'ordre') return `<div class="detail">${esc(e.detail || '')}</div>`;
-  if (e.phase === 'reponse' && ['plusieurs', 'paire', 'brelan', 'paires', 'duels', 'double', 'duree'].includes(e.type)) {
+  if (e.phase === 'reponse' && ['plusieurs', 'paire', 'brelan', 'paires', 'focus', 'rancon', 'lumiere', 'contrat', 'differences', 'code', 'duels', 'double', 'duree'].includes(e.type)) {
     // les résultats de chacun sont déjà sous le jeu : ici, la solution seule
     return `<div class="solution">${esc(e.solution)}</div>` + (e.detail ? `<div class="detail">${esc(e.detail)}</div>` : '');
   }
@@ -714,6 +725,36 @@ function moteurHote(e) {
     if (!rev) return d;
     return d + `<div class="frise-res">${(mo.resultats || []).map(r => puce(r, ` ${r.justes}/${mo.n}` + (r.gain ? ` <em>+${r.gain}</em>` : ''),
       r.justes === mo.n ? 'juste' : r.justes ? '' : 'faux')).join('')}</div>`;
+  }
+  if (e.type === 'rancon') {                             // Jean Renault : la rançon
+    const v = visuelHTML(e, {q: Q, hote: true});
+    if (!rev) return v;
+    return v + `<div class="frise-res">${(mo.resultats || []).map(r => puce(r, ` mise ${r.mise} · preuves ${r.depense}` + (r.gain ? ` <em>${r.gain > 0 ? '+' : ''}${r.gain}</em>` : ''),
+      r.trouve ? 'juste' : 'faux')).join('')}</div>`;
+  }
+  if (e.type === 'contrat') return contratHTML(e);         // Mitchum : le contrat
+  if (e.type === 'code') {                               // Desmond : le code
+    const d = codeHTML(e, src);
+    if (!rev) return d;
+    return d + `<div class="frise-res">${(mo.resultats || []).map(r => puce(r, (r.donneur ? ' (donneur)' : '') + (r.gain ? ` <em>${r.gain > 0 ? '+' : ''}${r.gain}</em>` : ''),
+      r.gain > 0 ? 'juste' : 'faux')).join('')}</div>`;
+  }
+  if (e.type === 'differences') {                        // Mr. C : le double
+    const d = jumeauxHTML(e, src);
+    if (!rev) return d;
+    return d + `<div class="frise-res">${(mo.resultats || []).map(r => puce(r, ` ${r.n}/3` + (r.gain ? ` <em>${r.gain > 0 ? '+' : ''}${r.gain}</em>` : ''),
+      r.n === 3 ? 'juste' : r.n ? '' : 'faux')).join('')}</div>`;
+  }
+  if (e.type === 'lumiere') {                            // Woodsman : got a light?
+    const d = lumiereHTML(e, src);
+    if (!rev) return d;
+    return d + `<div class="frise-res">${(mo.trouves || []).map(r => puce(r, '', 'juste')).join('') || '<span class="doux">Personne</span>'}</div>`;
+  }
+  if (e.type === 'focus') {                              // Hank : les dominos (façon Focus)
+    const d = focusHTML(e, src);
+    if (!rev) return d;
+    return d + `<div class="frise-res">${(mo.resultats || []).map(r => puce(r, r.gain ? ` <em>${r.gain > 0 ? '+' : ''}${r.gain}</em>` : '',
+      r.gain > 0 ? 'juste' : 'faux')).join('')}</div>`;
   }
   if (e.type === 'paires') {                             // Mike : les paires
     const pr = pairesHTML(e, src);
@@ -834,7 +875,7 @@ function rendre() {
 async function boucle() {
   if (arret) return;
   try {
-    const e = await get('/api/hote/etat' + Q);
+    const e = await get('/api/hote/etat' + Q + (TEL ? '&tel=1' : ''));
     if (e.interdit) return interdit();
     E = e;
     if (CFG) rendre();

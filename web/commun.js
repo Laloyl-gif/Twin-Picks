@@ -107,6 +107,12 @@ const TRAITS = {
           '<path d="M32 32c-4-10 0-20 0-20s4 10 0 20z"/><circle cx="32" cy="32" r="3"/>',
   jacques: '<rect x="12" y="12" width="26" height="38" rx="3" transform="rotate(-8 25 31)"/><rect x="26" y="14" width="26" height="38" rx="3" transform="rotate(8 39 33)"/>' +
            '<path d="M39 26c-3 3-6 5-6 8 0 2 2 3 4 2l2-1-1 5h4l-1-5 2 1c2 1 4 0 4-2 0-3-3-5-6-8z"/>',
+  desmond: '<rect x="12" y="10" width="40" height="44" rx="4"/><path d="M20 22h24M20 30h24M20 38h14"/><circle cx="44" cy="44" r="8"/><path d="M50 50l6 6"/>',
+  sarah: '<path d="M14 40c4-10 14-14 24-12 4-6 10-10 14-8l2-6 2 8c4 4 4 10 2 14l-6-2-4 16h-4l-2-14-12 2-2 12h-4l-2-14c-6-2-8-4-8-6z"/>',
+  jean: '<rect x="12" y="12" width="40" height="40" rx="2"/><path d="M18 20h6v8h-6zM28 20h8v6h-8zM40 22h6v8h-6zM18 34h10v6H18zM32 34h6v8h-6zM42 36h4v6h-4z"/>',
+  woodsman: '<path d="M22 16c4-6 16-6 20 0v6H22z"/><path d="M20 22h24"/><path d="M24 26c0 10 4 18 8 18s8-8 8-18"/><path d="M36 38l14-4"/><circle cx="51" cy="33" r="2"/>',
+  mitchum: '<rect x="10" y="16" width="44" height="30" rx="3"/><path d="M10 18l22 16 22-16"/><circle cx="32" cy="36" r="5"/>',
+  mrc: '<circle cx="22" cy="28" r="10"/><circle cx="42" cy="28" r="10"/><path d="M22 38v12M42 38v12M14 54h16M34 54h16"/>',
   pics: '<path d="M4 50 22 19l10 16 10-19 18 34"/><path d="m17 27 5 4 4-3M37 25l5 4 4-3"/><path d="M2 50h60"/>',
   cooper: '<path d="M14 28h30v9a14 14 0 0 1-14 14h-2a14 14 0 0 1-14-14z"/><path d="M44 31h3a5 5 0 0 1 0 10h-4"/>' +
           '<path d="M9 56h40"/><path d="M22 22c-2-3 2-5 0-8M29 22c-2-3 2-5 0-8M36 22c-2-3 2-5 0-8"/>',
@@ -220,6 +226,11 @@ function visuelHTML(v, opt = {}) {
   if (v.vue === 'noeud') return noeudHTML(v, src) + (v.phase === 'reponse' ? '' : trousHTML(e) + indicesHTML(e));
   if (v.vue === 'brelan') return brelanHTML(v, src, opt);
   if (v.vue === 'paires') return pairesHTML(v, src, opt);
+  if (v.vue === 'focus') return focusHTML(v, src, opt);
+  if (v.vue === 'lumiere') return lumiereHTML(v, src);
+  if (v.vue === 'contrat') return contratHTML(v, opt);
+  if (v.vue === 'double') return jumeauxHTML(v, src, opt);
+  if (v.vue === 'code') return codeHTML(v, src, opt);
   if (v.phase === 'reponse') return v.revelation ? `<img class="scene-img" src="${src('r')}" alt="">` : '';
   if (v.vue === 'image') {
     const img = `<img class="scene-img" src="${src(e.img)}" alt="">`;
@@ -236,7 +247,8 @@ function visuelHTML(v, opt = {}) {
   if (v.vue === 'complices') return complicesHTML(e, src) + trousHTML(e);
   if (v.vue === 'rebus') return rebusHTML(e) + trousHTML(e) + indicesHTML(e);
   if (v.vue === 'jackpot') return jackpotHTML(e, src, {arret: v.phase === 'reponse'}) + (v.phase === 'reponse' ? '' : indicesHTML(e));
-  if (v.vue === 'echiquier') return echiquierHTML(e) + trousHTML(e) + indicesHTML(e);
+  if (v.vue === 'rancon') return ranconHTML(v, src);
+  if (v.vue === 'cavalier') return cavalierHTML(e) + indicesHTML(e);
   if (v.vue === 'orchidee') return orchideeHTML(e, src) + trousHTML(e) + indicesHTML(e);
   if (v.vue === 'caravane') return caravaneHTML(e, src) + trousHTML(e) + indicesHTML(e);
   if (v.vue === 'briggs') return briggsHTML(e) + trousHTML(e) + indicesHTML(e);
@@ -471,6 +483,9 @@ function choixHTML(v, src, opt = {}) {
     (e.film.sous ? `<small>${esc(e.film.sous)}</small>` : '') + '</div></div>' : '';
   if (e.echarpes) {                                                    // Annie : les écharpes, puis les huit affiches
     return tete + echarpesHTML(e) + `<div class="cgrille choix annie-grille" data-k="grille" style="--cols:${opt.colsChoix || 8}">${cases}</div>`;
+  }
+  if (v.jeu === 'sarah' && !items.length && !rev) {            // Sarah : la vision (les affiches défilent très vite)
+    return visionHTML(e, src);
   }
   if (v.jeu === 'hank') {                 // Hank : les dominos debout ; ceux qui ne collent pas aux indices tombent
     const regles = rev && v.detail ? v.detail.split(' · ') : e.regles || [];

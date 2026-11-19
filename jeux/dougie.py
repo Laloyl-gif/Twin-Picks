@@ -11,7 +11,7 @@ from PIL import Image, ImageOps
 import sagas
 from tmdb import cle_film, details_film
 from visuels import en_jpeg
-from .commun import affiche, chronologie, cles_reponses, reponse_affichee
+from .commun import affiche, chronologie, cles_reponses, reponse_affichee, saga_de
 
 NB, ETAPES = 5, 6
 L, H = 240, 360
@@ -58,6 +58,7 @@ def construire(api, cfg, pool, deja):
     etapes = chronologie(evts, lambda: {**etat, "indices": list(etat["indices"])})
     return dict(jeu="dougie", vue="jackpot", duree=duree, etapes=etapes, images=images, revelation=en_jpeg(tous, 380),
                 reponse="plusieurs", suggestions=True,
-                films_cles=[cles_reponses(f["title"], f.get("original_title"), *d["noms"]) for f, d in choisis],
+                films_cles=[cles_reponses(f["title"], f.get("original_title"), *d["noms"],
+                                          *([saga_de(cfg, d)] if saga_de(cfg, d) else [])) for f, d in choisis],
                 films_titres=titres, cles=[], bonne="", solution=" · ".join(titres),
                 detail="« Hellooo! » — Dougie Jones", films=[cle_film(f) for f, _ in choisis])

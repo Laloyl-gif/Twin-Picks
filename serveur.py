@@ -5,6 +5,7 @@ import os
 import re
 import secrets
 import threading
+import time
 from http.server import BaseHTTPRequestHandler
 from urllib.parse import parse_qs, unquote, urlparse
 
@@ -94,6 +95,7 @@ class App:
         self.verrou = threading.Lock()
         self.tunnel, self.tunnel_etat, self.url_locale = Tunnel(config.PORT), "", ""
         self.code = self._code_salle()                     # le code de la partie (le même d'un lancement à l'autre)
+        self.vu_ecran = 0.0                                # dernier passage d'un écran de partie (pas un téléphone)
         self.salle_publiee = False
         self._qr = (None, None)
         self._sig_affiches = None                         # dernière préparation automatique lancée
@@ -460,7 +462,9 @@ def fabriquer_handler(app):
                 if not self._hote(q):
                     return self._envoyer({"interdit": True}, code=403)
                 if c == "/api/hote/etat":
-                    return self._envoyer(app.etat_hote())
+                    if "tel" not in q:
+                        app.vu_ecran = time.monotonic()
+                    return self._envoyer(dict(app.etat_hote(), ecran_actif=time.monotonic() - app.vu_ecran < 6))
                 if c == "/api/hote/config":
                     return self._envoyer(app.config_hote())
                 if c == "/api/hote/musique":

@@ -59,6 +59,10 @@ def images_de(etat):
     for c in etat.get("complices", []):                        # Phillip : le portrait, la petite affiche du film
         ids.update(x for x in (c.get("img"), c.get("img_f")) if x is not None)
     ids.update(etat.get("petales", []))                        # Harold : les pétales de l'orchidée
+    if isinstance(etat.get("flash"), int):                     # Sarah : l'affiche de la vision
+        ids.add(etat["flash"])
+    ids.update(etat.get("cachees", []))                        # images propres à chaque joueur (Hank, Mitchum…)
+    ids.update(etat.get("photos", []))                         # Jean Renault : les photos de l'otage
     for b in etat.get("bandes", []):                           # Dougie : les affiches de chaque rouleau
         ids.update(b)
     return ids
@@ -217,8 +221,14 @@ class Partie:
                 return "Mode « Meneur fixe » : choisissez un joueur connecté (Réglages › Complicité)."
             cfg["_profils"] = presents
             self.cfg, self.profils_partie = cfg, presents
-            self.plan = [g for g in jeux for _ in range(cfg["jeux"][g]["n"])]
-            random.shuffle(self.plan)
+            if cfg.get("hasard"):                    # jeux au hasard parmi ceux choisis : juste un nombre de manches
+                self.plan = []
+                for _ in range(int(cfg.get("hasard_n", 15))):
+                    choix = [g for g in jeux if not self.plan or g != self.plan[-1]] or jeux
+                    self.plan.append(random.choice(choix))
+            else:
+                self.plan = [g for g in jeux for _ in range(cfg["jeux"][g]["n"])]
+                random.shuffle(self.plan)
             self.api = TMDB(cfg["api_key"], cfg["session_id"], cfg["account_id"])
             self.futurs, self.deja, self.info = {}, {}, ""
             self.signatures = set()
@@ -681,7 +691,7 @@ class Partie:
                 return self.complice.jouer(pid, i, self._frac())
             m = self.manche
             if m["reponse"] == "choix":
-                if not 0 <= i < len(m["etapes"][0][1]["items"]):
+                if not 0 <= i < len(m["etapes"][max(0, self.etape)][1].get("items", [])):
                     return {"ok": False, "msg": "Réponse refusée"}
                 if j.essais:
                     return {"ok": False, "msg": "Une seule réponse"}

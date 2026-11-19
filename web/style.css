@@ -2146,33 +2146,30 @@ body.joueur .echarpes{gap:6px}
 .jackpot.trois.arrete .jp-bande{animation-play-state:paused;filter:none}
 .jp-voix small{display:block;margin-top:2px;font-size:.62em;color:#e8d9b8;text-shadow:none;letter-spacing:.02em;font-weight:500}
 
-/* Windom Earle : l'échiquier et la feuille de partie */
-.echiquier{display:flex;align-items:flex-start;justify-content:center;gap:clamp(16px,3vw,44px);width:min(1180px,100%);flex-wrap:wrap}
-.ec-plateau{position:relative;width:clamp(240px,min(34vw,52vh),460px);aspect-ratio:1;rotate:-1.5deg;
-  border:clamp(8px,1vw,14px) solid #5a3a1e;border-radius:6px;box-shadow:0 18px 40px #000c;container-type:inline-size}
-.ec-cases{display:grid;grid-template-columns:repeat(8,1fr);width:100%;height:100%}
-.ec-cases i.b{background:#e9dcc0}.ec-cases i.n{background:#7b5a3a}
-.ec-piece{position:absolute;left:calc(var(--c) * 12.5%);top:calc(var(--l) * 12.5%);width:12.5%;height:12.5%;display:grid;place-content:center;
-  font-size:9cqw;line-height:1;color:#151515;text-shadow:0 0 2px #fff,0 3px 4px #0008;animation:ec-pose .7s cubic-bezier(.3,1.4,.5,1) both}
-.ec-piece small{position:absolute;right:2%;bottom:2%;font:800 2.2cqw var(--sans);color:#b3121f;text-shadow:none}
-.ec-piece.derniere{animation:ec-pose .7s cubic-bezier(.3,1.4,.5,1) both,ec-luit 1.6s .7s ease-in-out 2}
-@keyframes ec-pose{from{transform:translateY(-160%) scale(1.4);opacity:0}}
-@keyframes ec-luit{50%{text-shadow:0 0 2px #fff,0 0 16px #ffd24a}}
-.ec-feuille{list-style:none;margin:0;padding:clamp(12px,1.4vw,20px) clamp(14px,1.8vw,24px);width:clamp(260px,34vw,440px);
-  background:#f4efe2;color:#222;rotate:1.5deg;box-shadow:0 14px 30px #000b;
-  background-image:repeating-linear-gradient(#f4efe2 0 calc(2.1em - 1px),#c9d6e8 calc(2.1em - 1px) 2.1em)}
-.ec-tete{display:flex;align-items:baseline;justify-content:space-between;gap:8px;padding-bottom:6px;margin-bottom:4px;border-bottom:2px solid #b3121f}
-.ec-tete b{font:italic 700 1.05em Georgia,serif;color:#8a1d1d}.ec-tete small{color:#555;font-size:.8em}
-.ec-feuille li:not(.ec-tete){display:flex;align-items:center;gap:10px;min-height:2.1em;padding:2px 0}
-.ec-sym{flex:none;width:1.3em;text-align:center;font-size:1.5em;line-height:1}
-.ec-qui{display:flex;flex-direction:column;min-width:0;line-height:1.15}
-.ec-qui small{font:600 .7em var(--sans);color:#8a1d1d;text-transform:uppercase;letter-spacing:.06em}
-.ec-qui b{font:700 1em "Segoe Print","Bradley Hand","Comic Sans MS",cursive;color:#1b2a6b}
-.ec-qui em{font-size:.78em;color:#555}
-.ec-feuille li.vide{opacity:.35}
-body.joueur .ec-plateau{width:min(52vw,190px)}
-body.joueur .ec-feuille{width:100%;font-size:.78em;rotate:0deg}
-body.joueur .echiquier{gap:10px}
+/* Windom Earle : le cavalier sur l'échiquier de lettres */
+.cavalier{display:flex;align-items:center;justify-content:center;gap:clamp(16px,3vw,48px);width:min(1180px,100%);flex-wrap:wrap}
+.cv-plateau{position:relative;width:clamp(260px,min(40vw,60vh),560px);aspect-ratio:1;border:clamp(8px,1vw,14px) solid #4a2f18;border-radius:6px;
+  box-shadow:0 18px 40px #000c;container-type:inline-size}
+.cv-cases{display:grid;grid-template-columns:repeat(8,1fr);width:100%;height:100%}
+.cv-case{position:relative;display:grid;place-content:center;font:700 5.6cqw/1 Georgia,serif;color:#2a1b10}
+.cv-case.b{background:#ecdfc4}.cv-case.n{background:#b08a5e}
+.cv-case.lu{background:#b3121f;color:#fff3dc;box-shadow:inset 0 0 0 .5cqw #ffd24a;animation:colle-pose .45s both}
+.cv-case.der{background:#e0303c}
+.cv-case small{position:absolute;left:.7cqw;top:.4cqw;font:800 1.7cqw var(--sans);opacity:.85}
+.cv-cheval{position:absolute;right:.2cqw;bottom:-.6cqw;font-size:4cqw;font-style:normal;color:#111;text-shadow:0 0 2px #fff,0 0 6px #fff}
+.cv-trace{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
+.cv-trace polyline{fill:none;stroke:#ffd24a;stroke-width:.6;stroke-linejoin:round;stroke-dasharray:1.4 1;opacity:.85}
+.cv-droite{display:flex;flex-direction:column;align-items:center;gap:14px;max-width:440px}
+.cv-citation{margin:0;font:italic 1.3em Georgia,serif;color:#e8d9b8;text-align:center}
+.cv-citation small{display:block;font-size:.6em;color:var(--doux);font-style:normal}
+.cv-bande{display:flex;flex-wrap:wrap;justify-content:center;gap:5px}
+.cv-bande b,.cv-bande i{display:grid;place-content:center;width:1.7em;height:2.1em;border-radius:4px;font:700 1.25em Georgia,serif}
+.cv-bande b{background:#f4efe2;color:#1d1b1a;box-shadow:0 4px 8px #0008}
+.cv-bande i{border-bottom:3px solid #ffffff55}
+body.joueur .cv-plateau{width:min(88vw,330px)}
+body.joueur .cavalier{gap:10px}
+body.joueur .cv-citation{display:none}
+body.joueur .cv-bande b,body.joueur .cv-bande i{font-size:.95em}
 
 /* Harold Smith : l'orchidée et ses pétales-loupes */
 .orchidee{position:relative;width:clamp(300px,min(52vw,62vh),620px);aspect-ratio:1;margin:0 auto;container-type:inline-size}
@@ -2303,3 +2300,224 @@ body.joueur .mk-boite figcaption b{font-size:.8em}
 body.joueur .mk-affiches{gap:8px}
 body.joueur .mk-affiche-p figcaption{font-size:.62em}
 body.joueur .mk-poignee{width:80px;top:-18px;height:20px;border-width:5px}
+/* Annie : des écharpes bien lisibles (presque droites, texte plus grand, ombre portée) */
+.echarpe{font:700 1.12em/1.25 var(--sans);letter-spacing:.01em;text-shadow:0 1px 2px #0009;padding:10px 22px 10px 12px}
+.echarpe i{font-size:.75em}
+body.joueur .echarpe{font-size:.82em;padding:6px 14px 6px 8px}
+
+/* Hank : les dominos (façon Focus) */
+.focus{display:flex;flex-direction:column;align-items:center;gap:14px;width:min(1250px,100%)}
+.fo-joueurs{display:flex;flex-wrap:wrap;justify-content:center;gap:8px}
+.fo-joueur{position:relative;display:flex;flex-direction:column;align-items:center;padding:6px 14px 8px;border-radius:12px;border:0;
+  background:#ffffff0c;box-shadow:inset 0 0 0 2px var(--c);color:var(--txt);font:700 .95em var(--sans);overflow:hidden}
+.fo-joueur small{font-weight:500;font-size:.72em;color:var(--doux)}
+.fo-joueur.tour{background:color-mix(in srgb,var(--c) 30%,transparent)}
+.fo-joueur.sel{box-shadow:inset 0 0 0 4px var(--c),0 0 14px var(--c)}
+.fo-joueur.devoile{opacity:.45}
+.fo-joueur b{position:absolute;right:4px;top:2px;font-size:.8em}.fo-joueur b.ok{color:var(--ok)}.fo-joueur b.ko{color:var(--err)}
+.fo-temps{position:absolute;left:0;bottom:0;height:3px;width:calc(var(--p) * 100%);background:var(--c);transition:width .4s linear}
+.fo-grille{display:grid;grid-template-columns:repeat(var(--cols),1fr);gap:clamp(6px,1vw,14px);width:100%}
+.fo-domino{position:relative;margin:0;padding:5px 5px 0;border-radius:8px;background:#f4efe2;box-shadow:0 3px 0 #c9c1ad,0 10px 18px #000a;
+  transition:transform .5s,opacity .5s,filter .5s}
+.fo-domino img{display:block;width:100%;aspect-ratio:2/3;max-height:min(24vh,230px);object-fit:cover;border-radius:4px}
+.fo-domino figcaption{padding:3px 2px 5px;font:600 .7em/1.15 var(--sans);color:#1d1b1a;text-align:center;overflow-wrap:anywhere}
+.fo-domino.retire{opacity:.35;filter:grayscale(1);transform:rotate(-4deg) scale(.94)}
+.fo-domino.actif{cursor:pointer}
+.fo-domino.mien{box-shadow:0 0 0 4px var(--moi),0 10px 18px #000a}
+.fo-par{position:absolute;left:50%;top:40%;translate:-50% -50%;padding:3px 8px;border-radius:10px;background:var(--c);color:#111;font:800 .7em var(--sans);filter:none}
+.fo-mien,.fo-proprio{position:absolute;left:4px;top:4px;padding:2px 6px;border-radius:8px;background:var(--moi);color:#fff;font:800 .62em var(--sans)}
+.fo-proprio{background:var(--c);color:#111}
+.fo-marque{position:absolute;right:3px;bottom:22px;padding:1px 5px;border-radius:6px;font:800 .58em var(--sans);color:#fff}
+.fo-marque.ok{background:var(--ok)}.fo-marque.ko{background:var(--err)}
+.fo-aide{margin:6px 0;text-align:center;color:var(--doux)}.fo-aide.tour{color:#ffd24a}
+body.joueur .fo-grille{gap:6px}
+body.joueur .fo-domino figcaption{font-size:.55em}
+body.joueur .fo-joueur{font-size:.8em;padding:5px 10px 6px}
+
+/* Sarah : la vision dans le vieux téléviseur, le cheval blanc */
+.vision{display:flex;flex-direction:column;align-items:center;gap:12px}
+.vi-tele{position:relative;display:flex;align-items:center;gap:16px;padding:22px 26px;border-radius:26px;
+  background:linear-gradient(#5a3a22,#3a2414);box-shadow:inset 0 0 0 4px #7a5434,0 22px 44px #000c}
+.vi-ecran{position:relative;width:clamp(240px,min(34vw,58vh),480px);aspect-ratio:4/3;border-radius:22px/30px;overflow:hidden;background:#0b0b0c;
+  box-shadow:inset 0 0 40px #000}
+.vi-flash{position:absolute;inset:0;margin:auto;height:100%;aspect-ratio:2/3;object-fit:cover;animation:vi-flash .25s ease-out both}
+@keyframes vi-flash{from{filter:brightness(3) blur(3px);transform:scale(1.06)}}
+.vi-cheval{position:absolute;inset:12% 10%;display:grid;place-items:center;animation:vi-respire 2.4s ease-in-out infinite}
+.vi-cheval svg{width:100%;height:auto;filter:drop-shadow(0 0 18px #fff8)}
+@keyframes vi-respire{50%{opacity:.55;transform:scale(1.03)}}
+.vi-neige{position:absolute;inset:0;pointer-events:none;opacity:.16;mix-blend-mode:screen;
+  background:repeating-radial-gradient(circle at 30% 40%,#fff 0 1px,transparent 1px 3px);animation:vi-neige .2s steps(3) infinite}
+@keyframes vi-neige{50%{background-position:7px 3px}}
+.vi-boutons{display:flex;flex-direction:column;gap:14px}
+.vi-boutons i{width:28px;height:28px;border-radius:50%;background:radial-gradient(circle at 35% 35%,#d9c7a0,#7a6440);box-shadow:0 3px 5px #000a}
+body.joueur .vi-ecran{width:min(70vw,300px)}
+body.joueur .vi-tele{padding:12px 14px;gap:8px}
+body.joueur .vi-boutons i{width:16px;height:16px}
+
+/* Jean Renault : la lettre de rançon (lettres découpées), les photos de l'otage */
+.rancon{display:flex;flex-direction:column;align-items:center;gap:14px;width:min(1150px,100%)}
+.rc-lettre{display:flex;flex-direction:column;align-items:center;gap:14px;padding:26px 34px;background:#f1ead8;color:#1d1b1a;rotate:-1.5deg;
+  box-shadow:0 18px 40px #000c;max-width:640px;text-align:center}
+.rc-titre{display:flex;flex-wrap:wrap;justify-content:center;gap:4px;margin:0}
+.rc-titre b{display:inline-grid;place-content:center;min-width:1.1em;padding:.08em .18em;font-size:clamp(1.6em,3.6vw,3em);line-height:1;rotate:var(--r);
+  box-shadow:0 3px 5px #0006}
+.rc-espace{width:.6em}
+.rc-otage{margin:0;font:600 1.1em/1.4 "Courier New",monospace}
+.rc-otage b{font-size:1.25em;color:#8a1d1d}
+.rc-otage.petit{color:#e8d9b8}.rc-otage.petit b{color:#ffd24a}
+.rc-consigne{margin:0;font:italic 1em Georgia,serif;color:#5a4a3a}
+.rc-mises{display:flex;flex-wrap:wrap;justify-content:center;gap:8px}
+.rc-mise{padding:5px 12px;border-radius:20px;background:#ffffff10;box-shadow:inset 0 0 0 2px var(--c);font:600 .9em var(--sans)}
+.rc-mise b{color:#ffd24a;margin-left:4px}
+.rc-photos{display:flex;flex-wrap:wrap;justify-content:center;gap:clamp(12px,2vw,26px)}
+.rc-photo{margin:0;width:clamp(170px,19vw,300px);padding:10px 10px 30px;background:#fbfaf6;rotate:var(--r);box-shadow:0 14px 28px #000b;
+  animation:colle-pose .5s both;position:relative}
+.rc-photo img,.rc-photo span{display:block;width:100%;aspect-ratio:16/9;object-fit:cover;background:#2a2a30}
+.rc-photo figcaption{position:absolute;left:0;right:0;bottom:6px;text-align:center;font:italic .85em "Segoe Print","Comic Sans MS",cursive;color:#555}
+.rc-photo.vide{opacity:.25;animation:none}
+.trous-rc{min-height:2.4em}.trous-rc b{font-size:clamp(1.1em,2.2vw,1.8em)}
+.rc-boutons{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:10px 0}
+.mise-b{padding:18px 8px;border-radius:12px;font:800 1.3em var(--sans);background:#2a1f2a;color:#ffd24a;box-shadow:inset 0 0 0 2px #ffd24a66}
+.mise-b:first-child{color:var(--doux)}
+body.joueur .rc-lettre{padding:14px 16px;rotate:0deg}
+body.joueur .rc-photo{width:calc(50% - 10px);padding:5px 5px 18px}
+body.joueur .rc-photo figcaption{font-size:.6em;bottom:2px}
+body.joueur .rc-titre b{font-size:1.4em}
+.rc-infos{display:flex;flex-wrap:wrap;justify-content:center;gap:10px}
+.rc-info{display:flex;flex-direction:column;padding:6px 14px;border:2px dashed #8a1d1d;background:#fff8}
+.rc-info small{font:600 .7em var(--sans);text-transform:uppercase;letter-spacing:.1em;color:#8a1d1d}
+.rc-info b{font:700 1.25em "Courier New",monospace}
+.rc-mise small{display:block;font-size:.72em;color:var(--doux);font-weight:500}
+.rc-mise.libere{box-shadow:inset 0 0 0 2px var(--ok);background:#68c08f22}
+.rc-boutons{grid-template-columns:repeat(3,1fr)}
+.marche{display:flex;flex-direction:column;gap:6px;margin:8px 0}
+.mk-tete{display:flex;justify-content:space-between;align-items:baseline;margin:0 0 2px;font:700 .95em var(--sans);color:#ffd24a}
+.mk-tete span{font-weight:500;font-size:.8em;color:var(--doux)}
+.mk-preuve{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:8px 10px;border-radius:10px;background:#ffffff08}
+.mk-preuve.achete{background:#ffd24a14;box-shadow:inset 0 0 0 1px #ffd24a55}
+.mk-nom{font-size:.88em;color:var(--doux)}
+.mk-val{font:700 1em Georgia,serif;color:#f1e3c4;text-align:right}
+.mk-preuve img{width:56%;border-radius:6px}
+.mk-acheter{min-width:70px;padding:8px 10px;border-radius:8px;border:0;background:#2a1f2a;color:#ffd24a;font:800 .95em var(--sans);
+  box-shadow:inset 0 0 0 2px #ffd24a77}
+.mk-prix{color:var(--doux);font-weight:700}
+
+/* Woodsman : got a light? L'écran dans le noir, les lumières des joueurs */
+.lumiere{display:flex;flex-direction:column;align-items:center;gap:8px;width:100%}
+.lu-plateau{position:relative;width:min(100%,calc(66vh * 16 / 9));aspect-ratio:16/9;background:#040405;border-radius:10px;overflow:hidden;
+  container-type:inline-size;box-shadow:inset 0 0 80px #000,0 0 0 1px #ffffff10}
+.lu-scene{position:absolute;inset:0}
+.lu-aff{position:absolute;object-fit:cover;rotate:var(--r);border-radius:3px;box-shadow:0 .4cqw 1cqw #000c}
+.lu-aff.bon{outline:.5cqw solid var(--ok);z-index:3;scale:1.25}
+.lu-aff.faux{outline:.4cqw solid var(--err)}
+.lu-note{position:absolute;translate:-50% -50%;rotate:var(--r);max-width:15cqw;padding:.8cqw 1.1cqw;background:#efe6cf;color:#1d1b1a;
+  font:700 1.55cqw/1.2 "Segoe Print","Bradley Hand","Comic Sans MS",cursive;text-align:center;box-shadow:0 .5cqw 1.2cqw #000c;z-index:2}
+.lu-note.fixe{z-index:4;box-shadow:0 0 0 .25cqw #ffd24a,0 0 2cqw #ffd24a66}
+.lu-halo{position:absolute;width:var(--d);height:var(--d);translate:-50% -50%;border-radius:50%;pointer-events:none;
+  box-shadow:0 0 0 .25cqw var(--c),0 0 3cqw var(--c);opacity:.7;transition:left .35s linear,top .35s linear;z-index:5}
+.lu-halo b{position:absolute;left:50%;top:-1.6cqw;translate:-50% 0;font:700 1.1cqw var(--sans);color:var(--c);white-space:nowrap}
+.lu-pad{position:relative;width:100%;aspect-ratio:16/9;border-radius:14px;background:radial-gradient(circle at 50% 50%,#1a1820,#060608);
+  box-shadow:inset 0 0 0 1px #ffffff1a;touch-action:none;overflow:hidden;display:grid;place-items:end center}
+.lu-pad span{padding:8px;font-size:.8em;color:#ffffff55;pointer-events:none}
+.lu-moi{position:absolute;width:44px;height:44px;translate:-50% -50%;border-radius:50%;pointer-events:none;
+  background:radial-gradient(circle,#fff9 0,var(--moi) 40%,transparent 72%)}
+#b-cest-lui{margin:10px 0}
+.lu-notes{margin:6px 0 0;padding-left:18px;color:#f1e3c4;font:600 .95em/1.4 var(--sans)}
+
+/* Mitchum : le contrat qui fait le tour de la table */
+.contrat{display:flex;align-items:center;justify-content:center;gap:24px;width:min(1200px,100%)}
+.ct-table{position:relative;width:clamp(300px,min(52vw,62vh),620px);aspect-ratio:1;border-radius:50%;
+  background:radial-gradient(circle,#2a0f14 0,#170a0d 60%,transparent 71%);container-type:inline-size}
+.ct-sens{position:absolute;left:50%;top:50%;translate:-50% -50%;font-size:58cqw;color:#ffffff07;line-height:1}
+.ct-centre{position:absolute;left:50%;top:50%;translate:-50% -50%;width:56cqw;text-align:center;display:flex;flex-direction:column;gap:1cqw}
+.ct-centre small{color:var(--doux);text-transform:uppercase;letter-spacing:.12em;font-size:2.4cqw}
+.ct-cond{margin:0;font:700 5cqw/1.15 Georgia,serif;color:#f1e3c4}
+.ct-besoin{margin:0;font:600 2.8cqw var(--sans);color:#ffd24a}
+.ct-boum{margin:0;font:900 12cqw/1 Impact,var(--sans);color:#e0303c;text-shadow:0 0 4cqw #e0303c;animation:colle-pose .4s both}
+.ct-joueur{position:absolute;translate:-50% -50%;display:flex;flex-direction:column;align-items:center;min-width:14cqw;padding:1.4cqw 2.4cqw;
+  border-radius:3cqw;background:#ffffff0c;box-shadow:inset 0 0 0 .4cqw var(--c);font:700 3cqw var(--sans);transition:transform .4s}
+.ct-joueur small{font-weight:500;font-size:.7em;color:var(--doux)}
+.ct-joueur.porteur{background:color-mix(in srgb,var(--c) 35%,#000);transform:scale(1.18);animation:ct-tremble .35s infinite}
+@keyframes ct-tremble{25%{rotate:-2deg}75%{rotate:2deg}}
+.ct-joueur.victime{background:#e0303c;color:#fff;transform:scale(1.25)}
+.ct-joueur.victime small{color:#fff}
+.ct-enveloppe{position:absolute;top:-7cqw;width:11cqw}.ct-enveloppe svg{display:block;width:100%;height:auto}
+.ct-journal{list-style:none;margin:0;padding:12px 16px;background:#f4efe2;color:#1d1b1a;font:600 .9em/1.6 var(--sans);rotate:1.5deg;
+  box-shadow:0 12px 26px #000b;min-width:220px}
+.ct-journal b{color:#8a1d1d;margin-right:6px}
+.ct-alerte{padding:16px;border-radius:14px;background:#3a0a10;box-shadow:inset 0 0 0 2px #e0303c;text-align:center;animation:ct-tremble .5s infinite}
+.ct-alerte b{display:block;font-size:1.2em;color:#ff6b73}.ct-alerte p{margin:8px 0 4px;font:700 1.15em Georgia,serif;color:#f1e3c4}
+.ct-alerte small{color:#ffd24a}
+#b-ct-changer{width:100%;margin-top:8px}
+.contrat.tel .ct-table{width:min(84vw,300px)}
+
+/* Mr. C : l'affiche et son double */
+.jumeaux{display:flex;flex-direction:column;align-items:center;gap:12px;width:min(1100px,100%)}
+.jm-paire{display:flex;justify-content:center;gap:clamp(14px,3vw,48px)}
+.jm-face{margin:0;display:flex;flex-direction:column;align-items:center;gap:6px}
+.jm-cadre{position:relative;height:min(62vh,640px);aspect-ratio:2/3;box-shadow:0 16px 36px #000c;border-radius:4px;overflow:hidden}
+.jm-cadre img{display:block;width:100%;height:100%;object-fit:cover;user-select:none;-webkit-user-select:none}
+.jm-face:nth-child(2) .jm-cadre{box-shadow:0 0 0 3px #b3121f,0 16px 36px #000c}
+.jm-face figcaption{font:italic 700 1.1em Georgia,serif;color:#e8d9b8}
+.jm-cercle{position:absolute;aspect-ratio:1;translate:-50% -50%;border-radius:50%;border:3px solid #ffd24a;box-shadow:0 0 0 2px #000a,0 0 14px #ffd24a;
+  animation:colle-pose .4s both;pointer-events:none}
+.jumeaux.tel .jm-paire{gap:8px;width:100%}
+.jumeaux.tel .jm-face{flex:1}
+.jumeaux.tel .jm-cadre{height:auto;width:100%}
+.jumeaux.tel .jm-face figcaption{font-size:.8em}
+
+/* Desmond : le code (grille de 16 affiches) */
+.code-desmond{display:flex;flex-direction:column;align-items:center;gap:10px;width:min(1000px,100%)}
+.cd-donneur{margin:0;color:var(--doux);font-size:.9em}
+.cd-indice{display:flex;align-items:center;gap:14px;margin:0;padding:8px 22px;background:#f4efe2;color:#1d1b1a;box-shadow:0 10px 22px #000b;rotate:-1deg}
+.cd-indice b{font:800 2em/1 "Courier New",monospace;letter-spacing:.08em;text-transform:uppercase}
+.cd-indice span{display:grid;place-content:center;width:1.8em;height:1.8em;border-radius:50%;background:#1d1b1a;color:#ffd24a;font:800 1.2em var(--sans)}
+.cd-attente{margin:0;font:italic 1.2em Georgia,serif;color:#e8d9b8}
+.cd-grille{display:grid;grid-template-columns:repeat(4,1fr);gap:clamp(6px,1vw,12px);width:min(100%,calc(58vh * .9))}
+.cd-case{position:relative;margin:0;padding:4px 4px 0;border-radius:6px;background:#2a2730;box-shadow:0 6px 12px #0009}
+.cd-case img{display:block;width:100%;aspect-ratio:2/3;object-fit:cover;border-radius:3px}
+.cd-case figcaption{padding:2px 1px 4px;font:600 .62em/1.15 var(--sans);text-align:center;color:#e8d9b8;overflow-wrap:anywhere}
+.cd-case.or{background:#d9a826}.cd-case.or figcaption{color:#1d1b1a}
+.cd-case.rouge{background:#c8102e}
+.cd-case.noir{background:#000;box-shadow:0 0 0 2px #fff,0 6px 12px #0009}
+.cd-case.neutre{background:#8a8070}
+.cd-case.touche img{opacity:.55}
+.cd-case.actif{cursor:pointer}
+.cd-qui{position:absolute;right:2px;top:2px;display:flex;gap:1px}
+body.joueur .cd-grille{width:100%;gap:5px}
+body.joueur .cd-case figcaption{font-size:.5em}
+body.joueur .cd-indice b{font-size:1.4em}
+
+/* Téléphone (v10) : écran d'arrivée épuré, bouton « Rejoindre avec un code » bien visible */
+.identite-tel{display:flex;align-items:center;gap:12px}
+.identite-tel .avatar-grand{width:60px;height:60px;margin:0;flex:none}
+.identite-tel .avatar-grand i{font-size:26px}
+.identite-tel #pseudo{flex:1;margin:0}
+#v-rejoindre{gap:14px}
+#v-rejoindre .palette,#d-profil .palette{grid-template-columns:repeat(8,1fr);gap:7px}
+#v-rejoindre .palette button,#d-profil .palette button{width:100%;aspect-ratio:1;height:auto}
+#v-rejoindre .photos,#d-profil .photos{display:flex;flex-wrap:nowrap;gap:8px;max-height:none;overflow-x:auto;overflow-y:hidden;padding:4px 2px;
+  scrollbar-width:none;scroll-snap-type:x proximity;mask-image:linear-gradient(90deg,#000 85%,transparent)}
+#v-rejoindre .photos::-webkit-scrollbar,#d-profil .photos::-webkit-scrollbar{display:none}
+#v-rejoindre .photos>*,#d-profil .photos>*{flex:none;width:46px;height:46px;scroll-snap-align:start}
+.secondaire{display:flex;align-items:center;justify-content:center;gap:8px;padding:13px 16px;border-radius:12px;border:0;
+  background:#ffffff0d;box-shadow:inset 0 0 0 1.5px var(--violet);color:var(--violet-clair);font:700 1em var(--sans);cursor:pointer}
+.secondaire.large{width:100%}
+.secondaire b{display:grid;place-content:center;width:1.5em;height:1.5em;border-radius:6px;background:var(--violet);color:#fff;font-size:.9em}
+.code-autre{margin-top:2px;font-size:.95em}
+.attente-tel p{margin:10px 0 0;text-align:center;color:var(--doux);font-size:.9em}
+/* Téléphone : la musique d'ambiance joue, sans afficher le morceau */
+body.tel #m-texte{display:none}
+body.tel .musique{opacity:.6}
+.code-desmond.tel .cd-case img{aspect-ratio:3/4}
+.code-desmond.tel{gap:6px}
+.code-desmond.tel .cd-attente{font-size:.95em;text-align:center}
+.cv-cheval{right:auto;left:50%;bottom:auto;top:-55%;translate:-50% 0;font-size:7.5cqw;z-index:3;
+  text-shadow:0 0 3px #fff,0 0 8px #fff,0 4px 6px #000a}
+.cv-case{overflow:visible}
+/* téléphone administrateur : la barre du bas sur plusieurs lignes, « Lancer » sur toute la largeur */
+body.tel .depart{flex-wrap:wrap;row-gap:8px}
+body.tel .depart .mode-rep{flex:1 1 auto}
+body.tel .depart #b-lancer{flex:1 1 100%;width:100%}
+.hasard-n{display:inline-flex;align-items:center;margin-left:6px}
+body.tel .lobby-corps{padding-bottom:180px!important}

@@ -5,7 +5,11 @@
      - playlist YouTube : morceaux complets, lus au hasard par le lecteur YouTube intégré (caché) ;
      - Deezer : extraits de 30 s enchaînés en fondu.
    Le morceau en cours s'affiche discrètement en bas de l'écran (clic sur l'égaliseur : couper / remettre). */
-const AMB = {lecteurs: [new Audio(), new Audio()], actif: 0, genre: null, piste: null, recents: [],
+/* Téléphone administrateur : le menu est dans un cadre (iframe) de la page du joueur. Le navigateur n'autorise le son
+   qu'après un geste de l'utilisateur sur la page : les lecteurs sont donc créés dans la page du joueur (le parent),
+   qui reçoit les gestes, et non dans le cadre. */
+const HOTE_WIN = (() => { try { return window.parent !== window && window.parent.document ? window.parent : window; } catch (e) { return window; } })();
+const AMB = {lecteurs: [new HOTE_WIN.Audio(), new HOTE_WIN.Audio()], actif: 0, genre: null, piste: null, recents: [],
              bloque: false, jeton: 0, essai: 0, source: null};
 const FONDU = 2500;
 AMB.lecteurs.forEach(a => {
@@ -30,6 +34,7 @@ AMB.lecteurs.forEach(a => {
 function genreMusique(e) {
   if (!CFG || !R().musique || !(R().musique_volume > 0)) return null;
   if (e.audio) return null;                                   // blind test en cours
+  if (typeof TEL !== 'undefined' && TEL && e.ecran_actif) return null;   // un écran de partie joue déjà la musique
   return e.phase === 'lobby' || e.phase === 'fin' ? 'menu' : 'jeu';
 }
 const volumeMusique = g => Math.min(1, (R().musique_volume / 100) * (g === 'menu' ? 0.8 : 0.45));
@@ -50,23 +55,27 @@ const YT_AMB = {player: null, pret: null, playlist: '', melange: false, suite: f
 function chargerYouTube() {
   if (YT_AMB.pret) return YT_AMB.pret;
   YT_AMB.pret = new Promise((ok, ko) => {
-    const boite = document.createElement('div');
+    const D = HOTE_WIN.document;
+    const boite = D.createElement('div');
     boite.id = 'yt-ambiance';
     boite.style.cssText = 'position:fixed;left:-10000px;top:0;width:320px;height:180px;pointer-events:none;opacity:0';
     boite.innerHTML = '<div id="yt-lecteur"></div>';
-    document.body.appendChild(boite);
-    window.onYouTubeIframeAPIReady = () => {
-      YT_AMB.player = new YT.Player('yt-lecteur', {
+    D.body.appendChild(boite);
+    const pret = () => {
+      window.YT = HOTE_WIN.YT;
+      YT_AMB.player = new HOTE_WIN.YT.Player(D.getElementById('yt-lecteur'), {
         width: 320, height: 180,
         playerVars: {autoplay: 0, controls: 0, disablekb: 1, fs: 0, rel: 0, iv_load_policy: 3, playsinline: 1,
                      origin: location.origin},
         events: {onReady: () => ok(YT_AMB.player), onStateChange: ytEtat, onError: ytErreur},
       });
     };
-    const s = document.createElement('script');
+    if (HOTE_WIN.YT && HOTE_WIN.YT.Player) return pret();
+    HOTE_WIN.onYouTubeIframeAPIReady = pret;
+    const s = D.createElement('script');
     s.src = 'https://www.youtube.com/iframe_api';
     s.onerror = () => { YT_AMB.pret = null; ko(new Error('YouTube injoignable')); };
-    document.head.appendChild(s);
+    D.head.appendChild(s);
   });
   return YT_AMB.pret;
 }
@@ -254,5 +263,9 @@ function debloquerMusique(ev) {
 }
 document.addEventListener('pointerdown', debloquerMusique);
 document.addEventListener('keydown', debloquerMusique);
+if (HOTE_WIN !== window) {                      // téléphone administrateur : les gestes sur la page du joueur comptent
+  HOTE_WIN.document.addEventListener('pointerdown', debloquerMusique);
+  HOTE_WIN.document.addEventListener('keydown', debloquerMusique);
+}
 $('#m-bascule').onclick = ev => { ev.stopPropagation(); regler({musique: !R().musique}); };
 $('#m-texte').onclick = debloquerMusique;

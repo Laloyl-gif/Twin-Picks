@@ -33,7 +33,7 @@
 
   async function verifier() {
     try {
-      const r = await fetch('/api/hote/etat?k=' + encodeURIComponent(CLE));
+      const r = await fetch('/api/hote/etat?k=' + encodeURIComponent(CLE) + '&tel=1');
       if (r.status === 403) { localStorage.removeItem('cleAdmin'); bouton.remove(); panneau.remove(); return; }
       const e = await r.json();
       valide = true;

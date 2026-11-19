@@ -719,3 +719,17 @@ Object.assign(OBJ, {
     <ellipse cx="88" cy="74" rx="26" ry="9" fill="#1d1d24"/><rect x="62" y="58" width="52" height="16" fill="#1d1d24"/><ellipse cx="88" cy="58" rx="26" ry="9" fill="#3a3a46"/></g>
     <g fill="none" stroke="#fff" stroke-width="3" stroke-dasharray="6 7"><ellipse cx="40" cy="44" rx="22" ry="7"/><ellipse cx="88" cy="58" rx="19" ry="6"/></g>`),
 });
+/* Sarah Palmer : le cheval blanc de ses visions */
+Object.assign(OBJ, {
+  cheval_blanc: SVG('0 0 200 160', `<defs><radialGradient id="chb" cx=".5" cy=".4"><stop offset="0" stop-color="#fff"/><stop offset="1" stop-color="#d8d4cc"/></radialGradient></defs>
+    <path d="M44 62c10-18 34-26 58-22 12-14 28-22 40-20l6-12 6 14c10 6 16 16 16 26l14 18c4 6-2 12-8 10l-16-6c-6 10-14 16-14 30l2 34h-10l-6-32-10 4-4 30h-10l-2-30c-16 2-30-2-40-10l-8 40h-10l2-44c-8-6-12-10-16-14l-10 30H18l12-40c-2-12 2-24 14-34z" fill="url(#chb)" stroke="#bfb8ab" stroke-width="2"/>
+    <path d="M140 34c-6 10-8 22-4 34M150 30c-4 12-2 24 4 32" fill="none" stroke="#e8e4dc" stroke-width="5" stroke-linecap="round"/>
+    <circle cx="160" cy="44" r="2.4" fill="#222"/>`),
+});
+/* Les frères Mitchum : l'enveloppe du contrat (cachet rouge) */
+Object.assign(OBJ, {
+  enveloppe_contrat: SVG('0 0 120 80', `<rect x="4" y="6" width="112" height="70" rx="5" fill="#efe6cf" stroke="#b8a780" stroke-width="2"/>
+    <path d="M4 10l56 38 56-38" fill="none" stroke="#b8a780" stroke-width="3"/>
+    <circle cx="60" cy="46" r="13" fill="#b3121f"/><path d="M53 46h14M60 39v14" stroke="#7a0d16" stroke-width="3"/>
+    <text x="60" y="72" text-anchor="middle" font-family="Georgia,serif" font-size="9" fill="#5a4a3a">CONTRACT</text>`),
+});

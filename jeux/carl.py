@@ -10,7 +10,7 @@ from PIL import Image, ImageOps
 import images_film as imf
 from tmdb import cle_film, details_film
 from visuels import en_jpeg
-from .commun import affiche, chronologie, cles_reponses, reponse_affichee, tirer, trous
+from .commun import affiche, chronologie, cles_reponses, reponse_affichee, saga_de, tirer, trous
 
 LAMES = 12
 L, H = 1024, 576
@@ -71,8 +71,10 @@ def construire(api, cfg, pool, deja):
     titres = [reponse_affichee(cfg, fa, da), reponse_affichee(cfg, fb, db)]
     return dict(jeu="carl", vue="caravane", duree=duree, etapes=etapes, images=[en_jpeg(melange, 900)],
                 revelation=en_jpeg(duo), reponse="plusieurs", suggestions=True,
-                films_cles=[cles_reponses(fa["title"], fa.get("original_title"), *da["noms"]),
-                            cles_reponses(fb["title"], fb.get("original_title"), *db["noms"])],
+                films_cles=[cles_reponses(fa["title"], fa.get("original_title"), *da["noms"],
+                                          *([saga_de(cfg, da)] if saga_de(cfg, da) else [])),
+                            cles_reponses(fb["title"], fb.get("original_title"), *db["noms"],
+                                          *([saga_de(cfg, db)] if saga_de(cfg, db) else []))],
                 films_titres=titres, cles=[], bonne="", solution=" + ".join(titres),
                 detail="Une lame sur deux : " + " · ".join(titres), films=[cle_film(fa), cle_film(fb)])
 

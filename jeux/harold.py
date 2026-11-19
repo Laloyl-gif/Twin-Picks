@@ -13,7 +13,7 @@ from visuels import en_jpeg
 from .commun import affiche, chronologie, manche_titre, reponse_affichee, tirer, trous
 
 NB = 5                                   # pétales
-ZOOMS = (0.13, 0.21, 0.33, 0.5)          # taille du détail (part de la largeur de l'affiche), du plus serré au plus large
+ZOOMS = (0.03, 0.05, 0.08, 0.125, 0.19, 0.28, 0.4, 0.58)   # taille du détail (part de la largeur), très serré puis de plus en plus large
 COTE = 260
 
 
@@ -22,10 +22,10 @@ def _affiche(api, film):
     try:
         for p in affiches_film(api, film)[:6]:
             if p["langue"] is None:
-                return api.image(p["chemin"], "w780").convert("RGB"), True
+                return api.image(p["chemin"], "original").convert("RGB"), True
     except Exception:  # noqa: BLE001
         pass
-    return affiche(api, film, "w780").convert("RGB"), False
+    return affiche(api, film, "original").convert("RGB"), False
 
 
 def centres(im, sans_texte, n=NB):
@@ -73,7 +73,7 @@ def sources(api, film, d):
     plans = []
     for chemin in (d.get("fonds_neutres") or [])[:6]:
         try:
-            plans.append(api.image(chemin, "w780").convert("RGB"))
+            plans.append(api.image(chemin, "w1280").convert("RGB"))
         except Exception:  # noqa: BLE001
             pass
         if len(plans) == 2:
@@ -113,7 +113,7 @@ def construire(api, cfg, pool, deja):
         # une même image (l'affiche) peut servir deux fois : deux détails différents
         lst = deja_pris.setdefault(id(img), centres(img, sans_texte, NB))
         pts.append(lst.pop(0))
-    images = [en_jpeg(detail(img, x, y, z if not c else min(0.95, z * 1.6)), COTE)
+    images = [en_jpeg(detail(img, x, y, z if not c else min(0.95, z * 1.7 + 0.03)), COTE)
               for z in ZOOMS for (_, img, c, _), (x, y) in zip(srcs, pts)]
     im = srcs[0][1]
     etat = {"petales": [], "ouverts": 0, "zoom": 0, "sources": [x[0] for x in srcs], "indices": [], "trous": ""}
@@ -125,8 +125,9 @@ def construire(api, cfg, pool, deja):
     def zoomer(z):
         etat["zoom"] = z
         etat["petales"] = [z * NB + i for i in range(etat["ouverts"])]
-    evts = [(round(duree * 0.07 * k, 2), lambda k=k: ouvrir(k)) for k in range(NB)]
-    evts += [(round(duree * t, 2), lambda z=z: zoomer(z)) for z, t in ((1, 0.38), (2, 0.58), (3, 0.76))]
+    evts = [(round(duree * 0.05 * k, 2), lambda k=k: ouvrir(k)) for k in range(NB)]
+    nz = len(ZOOMS)
+    evts += [(round(duree * (0.24 + 0.56 * (z - 1) / (nz - 2)), 2), lambda z=z: zoomer(z)) for z in range(1, nz)]
     if cfg.get("harold_indices", True):
         rep = reponse_affichee(cfg, film, d)
         if d.get("genres"):

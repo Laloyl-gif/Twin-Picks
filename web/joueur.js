@@ -250,6 +250,27 @@ $('#zone').onclick = ev => {
     if (k >= 0) ordreTel.splice(k, 1); else ordreTel.push(i);
     return rendre();
   }
+  const cd = ev.target.closest('.cd-case.actif');
+  if (cd) return action('/api/jouer', {pid, i: Number(cd.dataset.cd)});
+  const jf = ev.target.closest('.jumeaux.tel .jm-cadre');
+  if (jf && (S.moteur || {}).actif) {
+    const b = jf.getBoundingClientRect();
+    return action('/api/jouer', {pid, pos: [(ev.clientX - b.left) / b.width, (ev.clientY - b.top) / b.height]});
+  }
+  if (ev.target.closest('#b-ct-changer')) return action('/api/jouer', {pid, type: 'changer'});
+  if (ev.target.closest('#b-cest-lui')) return action('/api/jouer', {pid, cest_lui: 1});
+  const ach = ev.target.closest('[data-acheter]');
+  if (ach) return action('/api/jouer', {pid, acheter: ach.dataset.acheter});
+  const mi = ev.target.closest('[data-mise]');
+  if (mi) return action('/api/jouer', {pid, mise: Number(mi.dataset.mise)});
+  const fj = ev.target.closest('.fo-joueur.cible-ok');
+  if (fj) { focusCible = focusCible === fj.dataset.cible ? null : fj.dataset.cible; return rendre(); }
+  const fd = ev.target.closest('.fo-domino.actif');
+  if (fd) {
+    const f = Number(fd.dataset.f), mo = S.moteur || {};
+    if (mo.mon_tour && !focusCible) return action('/api/jouer', {pid, retirer: f});
+    if (focusCible) { const c = focusCible; focusCible = null; return action('/api/jouer', {pid, cible: c, i: f}); }
+  }
   const mb = ev.target.closest('.mk-boite.actif');
   if (mb) { const k = Number(mb.dataset.b); pairesSel = pairesSel === k ? -1 : k; return rendre(); }
   const mf = ev.target.closest('.mk-affiche-p.actif');
@@ -495,9 +516,20 @@ function friseTel() {
     `<button id="b-frise-ok" class="primaire" ${complet ? '' : 'disabled'}>Accrocher</button></div>`;
 }
 
+/* Jean Renault : le marché noir des preuves (sur le téléphone de chacun, en secret). */
+function marcheHTML(mo, fige) {
+  const src = i => `/img/${S.seq}/${i}`;
+  return `<div class="marche"><p class="mk-tete">Le marché noir de Jean <span>dépensé : <b>${mo.depense || 0}</b> · rançon ${mo.ma_mise || 0}</span></p>` +
+    (mo.marche || []).map(c => `<div class="mk-preuve${c.achete ? ' achete' : ''}"><span class="mk-nom">${esc(c.nom)}</span>` +
+      (c.achete || c.texte !== undefined || c.img !== undefined
+        ? (c.img !== undefined ? `<img src="${src(c.img)}" alt="">` : `<b class="mk-val">${esc(c.texte || '')}</b>`)
+        : fige ? `<span class="mk-prix">${c.prix}</span>` : `<button class="mk-acheter" data-acheter="${esc(c.id)}">${c.prix}</button>`) + '</div>').join('') +
+    '</div>';
+}
+
 /* Mike's Shoe Samples : toucher une boîte (un personnage), puis l'affiche de son film ; « Envoyer » quand les quatre
    boîtes ont leur film. Une affiche déjà donnée à une autre boîte change de boîte. */
-let pairesTel_ = [], pairesSel = -1, pairesSeq = -1;
+let pairesTel_ = [], pairesSel = -1, pairesSeq = -1, focusCible = null, focusSeq = -1;
 function pairesTel() {
   const mo = S.moteur || {}, rev = S.phase === 'reponse', src = i => `/img/${S.seq}/${i}`;
   if (pairesSeq !== S.seq) { pairesSeq = S.seq; pairesTel_ = []; pairesSel = 0; }
@@ -558,8 +590,9 @@ function vueZone() {
   const m = S.moi;
   if (S.phase === 'lobby') {
     return ['lobby' + JSON.stringify(S.classement.map(j => [j.nom, j.couleur])),
-      `<div class="attente-tel">${embleme('pics')}</div>` +
-      `<div class="presents">${S.classement.map(j => puce(j)).join('')}</div>`];
+      `<div class="attente-tel">${embleme('pics')}<p>En attente du lancement…</p></div>` +
+      `<div class="presents">${S.classement.map(j => puce(j)).join('')}</div>` +
+      `<button class="secondaire large code-autre" data-code="1"><b>#</b> Rejoindre une autre partie avec un code</button>`];
   }
   if (S.phase === 'chargement') return ['charg', message('<div class="spinner"></div>')];
   if (S.phase === 'fin') return ['fin' + JSON.stringify(S.classement), '<h2 class="fin-titre">Classement final</h2>' + miniClassement(true)];
@@ -573,6 +606,86 @@ function vueZone() {
   if (S.type === 'duels') return ['de' + JSON.stringify([S.phase, S.seq, S.etat, S.moteur, S.classement]), duelsTel()];
   if (S.type === 'double') return ['do' + JSON.stringify([S.phase, S.seq, S.etat, S.moteur, S.classement]), benTel()];
   if (S.type === 'ordre') return ['or' + JSON.stringify([S.phase, S.seq, S.etat, S.moteur, ordreTel, S.classement]), friseTel()];
+  if (S.type === 'rancon') {                        // Jean Renault : la rançon et le marché noir
+    const mo = S.moteur || {};
+    if (S.phase === 'reponse') {
+      const r = (mo.resultats || []).find(x => x.id === m.id) || {};
+      return ['rc' + S.seq + JSON.stringify(S.classement), banniere(r.trouve ? 'ok' : 'ko', r.trouve ? 'Otage libéré !' : 'Rançon perdue',
+        `<b>${esc(S.solution)}</b>`) + marcheHTML(mo, true) + gainTel()];
+    }
+    if (mo.etape === 'mise') {
+      if (!mo.actif) return ['rc-m' + S.seq + mo.ma_mise, message(`<span class="doux">Rançon misée : <b>${mo.ma_mise ?? 0}</b></span>`)];
+      return ['rc-mm' + S.seq, `<p class="centre doux">Votre rançon ? Trouvé : vous la doublez. Raté : vous la perdez.</p>` +
+        `<div class="rc-boutons">${(mo.mises || []).map(x => `<button class="mise-b" data-mise="${x}">${x ? x : 'Rien'}</button>`).join('')}</div>`];
+    }
+    if (mo.trouve) return ['rc-ok' + S.seq, message(cooper(true, 'grand') + '<span class="ok">Otage libéré !</span>') + marcheHTML(mo, true)];
+    return ['rc-mk' + JSON.stringify([S.seq, mo.marche, mo.actif, mo.depense]), marcheHTML(mo, !mo.actif)];
+  }
+  if (S.type === 'code') {                          // Desmond : le code
+    const mo = S.moteur || {}, src = i => `/img/${S.seq}/${i}`;
+    if (S.phase === 'reponse') {
+      const r = (mo.resultats || []).find(x => x.id === m.id) || {};
+      return ['cd' + S.seq + JSON.stringify(S.classement), banniere(r.gain > 0 ? 'ok' : 'ko', r.gain > 0 ? `+${r.gain}` : r.gain < 0 ? `${r.gain}` : 'Pas de points', '') +
+        codeHTML(S, src, {joueur: true}) + gainTel()];
+    }
+    const n = (mo.mes || []).length;
+    const aide = mo.donneur_moi ? (mo.indice ? 'Les autres cherchent…' : '')
+      : mo.indice ? (n < mo.x ? `Touchez ${mo.x - n} film${mo.x - n > 1 ? 's' : ''}` : 'Vous avez fini') : 'Attendez l\'indice…';
+    return ['cd' + JSON.stringify([S.seq, mo.indice, mo.mes, mo.actif]), (aide ? `<p class="fo-aide">${aide}</p>` : '') + codeHTML(S, src, {joueur: true})];
+  }
+  if (S.type === 'differences') {                   // Mr. C : le double
+    const mo = S.moteur || {}, src = i => `/img/${S.seq}/${i}`;
+    if (S.phase === 'reponse') {
+      const r = (mo.resultats || []).find(x => x.id === m.id) || {};
+      return ['jm' + S.seq + JSON.stringify(S.classement), banniere(r.n === 3 ? 'ok' : r.n ? '' : 'ko', `${r.n || 0} différence${r.n > 1 ? 's' : ''} sur 3`,
+        `<b>${esc(S.solution)}</b>`) + jumeauxHTML(S, src, {joueur: true}) + gainTel()];
+    }
+    const n = (mo.mes || []).length;
+    return ['jm' + JSON.stringify([S.seq, mo.mes, mo.erreurs, mo.actif]), jumeauxHTML(S, src, {joueur: true, mes: mo.mes}) +
+      `<p class="centre doux">${mo.actif ? `Touchez les différences (${n}/3) · erreurs ${mo.erreurs}/${mo.max_erreurs}` : n === 3 ? 'Les trois !' : 'Plus de touches'}` +
+      `${mo.titre_donne ? '' : '<br>Et le film ? (bonus)'}</p>`];
+  }
+  if (S.type === 'contrat') {                       // Mitchum : la patate chaude
+    const mo = S.moteur || {};
+    if (S.phase === 'reponse') {
+      const vic = mo.victime && mo.victime.id === m.id;
+      return ['ct' + S.seq + JSON.stringify(S.classement), banniere(vic ? 'ko' : 'ok', vic ? `Le contrat a éclaté sur vous (−${mo.perte})` : 'Vous vous en sortez',
+        mo.victime ? `${esc(mo.victime.nom)} tenait le contrat` : '') + gainTel()];
+    }
+    const reste = Math.max(0, mo.besoin - (mo.donnes || []).length);
+    if (mo.a_moi) {
+      return ['ct-moi' + JSON.stringify([S.seq, mo.condition, mo.besoin, mo.donnes]), `<div class="ct-alerte"><b>Vous avez le contrat !</b>` +
+        `<p>${esc(mo.condition)}</p><small>${reste} film${reste > 1 ? 's' : ''} à citer</small></div>` +
+        (mo.peut_changer ? `<button id="b-ct-changer" class="discret">Changer de condition (un film de plus)</button>` : '')];
+    }
+    const p = (mo.joueurs || []).find(j => j.porteur);
+    return ['ct' + JSON.stringify([S.seq, mo.condition, p && p.id]), contratHTML(S, {joueur: true}) +
+      `<p class="centre doux">${p ? esc(p.nom) + ' tient le contrat. Préparez-vous…' : ''}</p>`];
+  }
+  if (S.type === 'lumiere') {                       // Woodsman : la lumière au bout du doigt
+    const mo = S.moteur || {};
+    if (S.phase === 'reponse') return ['lu' + S.seq + JSON.stringify(S.classement), banniere(mo.trouve ? 'ok' : 'ko',
+      mo.trouve ? 'C\'était lui !' : 'Raté', `<b>${esc(S.solution)}</b>`) + gainTel()];
+    const notes = (mo.notes || []).map(n => `<li>${esc(n.texte)}</li>`).join('');
+    if (mo.fini) return ['lu-f' + S.seq + mo.trouve, message(mo.trouve ? cooper(true, 'grand') + '<span class="ok">Trouvé !</span>'
+      : '<span class="doux">Hors jeu pour cette manche</span>')];
+    return ['lu' + JSON.stringify([S.seq, mo.actif, notes]), padLumiereHTML(mo) +
+      `<button id="b-cest-lui" class="primaire large">C'est lui !</button>` +
+      (notes ? `<ul class="lu-notes">${notes}</ul>` : '<p class="centre doux">Cherchez les indices avec votre lumière</p>')];
+  }
+  if (S.type === 'focus') {                         // Hank : les dominos (façon Focus)
+    const mo = S.moteur || {}, src = i => `/img/${S.seq}/${i}`;
+    if (focusSeq !== S.seq) { focusSeq = S.seq; focusCible = null; }
+    if (S.phase === 'reponse') {
+      const g = (mo.resultats || []).find(x => x.id === m.id) || {};
+      return ['fo' + S.seq + JSON.stringify(S.classement), banniere(g.gain > 0 ? 'ok' : 'ko', g.gain > 0 ? `+${g.gain}` : 'Pas de points', '') +
+        focusHTML(S, src, {joueur: true, moi: m.id}) + gainTel()];
+    }
+    const aide = mo.mon_tour ? `<b>À vous :</b> retirez un film proche du vôtre (${Math.ceil(mo.reste_tour || 0)} s)`
+      : focusCible ? 'Touchez le film que vous lui prêtez' : 'Pour deviner : touchez un joueur, puis son film';
+    return ['fo' + JSON.stringify([S.seq, mo, focusCible]), `<p class="fo-aide${mo.mon_tour ? ' tour' : ''}">${aide}</p>` +
+      focusHTML(S, src, {joueur: true, moi: m.id, cible: focusCible})];
+  }
   if (S.type === 'paires') return ['pr' + JSON.stringify([S.phase, S.seq, S.etat, S.moteur, pairesTel_, pairesSel, S.classement]), pairesTel()];
   if (S.type === 'brelan') return ['bj' + JSON.stringify([S.phase, S.seq, S.etat, S.moteur, ordreTel, S.classement]), brelanTel()];
   if (S.type === 'plusieurs' || S.type === 'paire') {     // Carl : les deux films ; Dougie : le jackpot
@@ -627,11 +740,11 @@ function rendre() {
   }
   document.body.dataset.jeu = enManche ? (S.jeu || '') : '';                      // décor du jeu (style.css)
   GRAINE_DECOR = S.seq || 0;
-  const vis = $('#visuel'), avecVisuel = enManche && !['complice', 'choix', 'bingo', 'ordre', 'double', 'duels', 'brelan', 'paires'].includes(S.type);
+  const vis = $('#visuel'), avecVisuel = enManche && !['complice', 'choix', 'bingo', 'ordre', 'double', 'duels', 'brelan', 'paires', 'focus', 'lumiere', 'contrat', 'differences', 'code'].includes(S.type);
   vis.hidden = !avecVisuel;
   if (avecVisuel) {
-    maj(vis, `${S.phase}|${S.seq}|${S.revelation}|${JSON.stringify(S.etat)}|${S.vue === 'cassette' ? S.pause || !!S.main : ''}|${(S.moteur || {}).contrainte || ''}|${S.type === 'duree' || S.type === 'plusieurs' ? JSON.stringify(S.moteur) : ''}`,
-        enveloppe(() => visuelHTML(S, {largeur: vis.clientWidth || 340, tuile: 44, cols: 4})), S.seq);
+    maj(vis, `${S.phase}|${S.seq}|${S.revelation}|${JSON.stringify(S.etat)}|${S.vue === 'cassette' ? S.pause || !!S.main : ''}|${(S.moteur || {}).contrainte || ''}|${S.type === 'duree' || S.type === 'plusieurs' || S.type === 'rancon' ? JSON.stringify(S.moteur) : ''}`,
+        enveloppe(() => visuelHTML(S, {largeur: vis.clientWidth || 340, tuile: 44, cols: 4, joueur: true, moi: S.moi.id})), S.seq);
     ajuster(vis, Math.round(window.innerHeight * 0.5));
   }
   let [cle, html] = vueZone();
@@ -642,17 +755,21 @@ function rendre() {
   }
   // saisie : réponse texte classique (html null), ou en plus de la zone pour Lucy (chrono) et Donna (bingo)
   const saisie = html === null || (S.phase === 'manche' && ((S.type === 'chrono' && mo.actif) ||
-                                                              (S.type === 'bingo' && mo.actif && selCase >= 0)));
+                                                              (S.type === 'bingo' && mo.actif && selCase >= 0) ||
+                                                              (S.type === 'rancon' && mo.etape === 'marche' && mo.actif) ||
+                                                              (S.type === 'contrat' && mo.a_moi && mo.actif) ||
+                                                              (S.type === 'differences' && !mo.titre_donne) ||
+                                                              (S.type === 'code' && mo.donneur_moi && !mo.indice && mo.actif)));
   zt.hidden = !saisie;
   z.hidden = html === null;
   if (saisie) {
     const annee = S.type === 'nombre' || S.type === 'duree';
-    $('#saisie').placeholder = S.type === 'duree' ? 'Durée : 140 = 1 h 40' : annee ? 'Année' : (S.jeu === 'filmo' || (S.etat || {}).acteur) ? 'Acteur' : S.type === 'chrono' ? 'Un film…'
+    $('#saisie').placeholder = S.type === 'contrat' ? 'Un film…' : S.type === 'code' ? 'Un mot (puis le nombre de films)' : S.type === 'duree' ? 'Durée : 140 = 1 h 40' : annee ? 'Année' : (S.jeu === 'filmo' || (S.etat || {}).acteur) ? 'Acteur' : S.type === 'chrono' ? 'Un film…'
       : S.type === 'bingo' ? (((mo.cases || [])[selCase] || {}).txt ? `Film : ${mo.cases[selCase].txt}` : 'Un film pour cette case…')
       : 'Titre';
     $('#saisie').inputMode = S.type === 'nombre' ? 'numeric' : S.type === 'duree' ? 'decimal' : 'text';
     $('#aide-saisie').textContent = annee || S.type === 'chrono' || S.type === 'bingo' ? ''
-      : S.type === 'paire' || S.type === 'plusieurs' ? '' : S.mode === 'buzzer' ? 'À vous' : `${m.essais} essai${m.essais > 1 ? 's' : ''}`;
+      : ['paire', 'plusieurs', 'rancon', 'contrat', 'code', 'differences'].includes(S.type) ? '' : S.mode === 'buzzer' ? 'À vous' : `${m.essais} essai${m.essais > 1 ? 's' : ''}`;
     if (S.type === 'duree') apercuDuree();
     if (S.type === 'paire' || S.type === 'plusieurs') {
       const miens = mo.mes_films || [], n = mo.n || 2;
@@ -678,3 +795,20 @@ async function boucle() {
   minuteur = setTimeout(boucle, S && S.phase === 'manche' && S.mode === 'buzzer' ? 300 : 600);
 }
 boucle();
+
+/* Woodsman : le pavé. La position part au serveur au plus toutes les 120 ms (sans attendre la réponse). */
+let luEnvoi = 0, luAttente = null;
+document.addEventListener('pointerdown', ev => { if (ev.target.closest('#lu-pad')) { ev.target.closest('#lu-pad').setPointerCapture(ev.pointerId); luBouge(ev); } });
+document.addEventListener('pointermove', ev => { if (ev.buttons && ev.target.closest && ev.target.closest('#lu-pad')) luBouge(ev); });
+function luBouge(ev) {
+  const pad = $('#lu-pad');
+  if (!pad) return;
+  ev.preventDefault();
+  const b = pad.getBoundingClientRect();
+  const x = Math.min(1, Math.max(0, (ev.clientX - b.left) / b.width)), y = Math.min(1, Math.max(0, (ev.clientY - b.top) / b.height));
+  const moi = pad.querySelector('.lu-moi');
+  if (moi) { moi.style.left = x * 100 + '%'; moi.style.top = y * 100 + '%'; }
+  const envoyer = () => { luEnvoi = Date.now(); luAttente = null; post('/api/jouer', {pid, pos: [x, y]}).catch(() => {}); };
+  clearTimeout(luAttente);
+  if (Date.now() - luEnvoi > 120) envoyer(); else luAttente = setTimeout(envoyer, 120);
+}

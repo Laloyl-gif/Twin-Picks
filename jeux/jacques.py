@@ -33,15 +33,19 @@ def personnes(fi):
 
 def construire(api, cfg, pool, deja):
     duree = float(cfg["dur_jacques"])
-    films = [f for f in pool if not f.get("tv") and f.get("poster_path")]
+    # pas de film d'une saga : trois épisodes ont toujours quelqu'un en commun, ce serait trop facile
+    films = [f for f in pool if not f.get("tv") and f.get("poster_path") and not sagas.saga(f)]
     random.shuffle(films)
     films = sorted(films, key=lambda f: cle_film(f) in deja)[:70]
     gens, fiches = {}, {}
     for f in films:
         try:
-            fiches[f["id"]] = personnes(fiche(api, f))
+            fi = fiche(api, f)
         except Exception:  # noqa: BLE001
             continue
+        if sagas.saga(f) or fi.get("collection_id"):       # la fiche a révélé une saga : on l'écarte
+            continue
+        fiches[f["id"]] = personnes(fi)
         for k in fiches[f["id"]]:
             gens.setdefault(k, []).append(f)
     cands = [(k, fs) for k, fs in gens.items() if len(fs) >= 3]

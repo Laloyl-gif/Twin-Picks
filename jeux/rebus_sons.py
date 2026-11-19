@@ -9,7 +9,7 @@ roi=🤴 reine=👸 rat=🐀 riz=🍚 roue=🛞 rose=🌹 robe=👗 rire=😂 ro
 lait=🥛 lit=🛏️ loup=🐺 lune=🌙 lion=🦁 lapin=🐇 loupe=🔍 lettre=✉️ livre=📖 langue=👅 laine=🧶 lézard=🦎 loutre=🦦
 lama=🦙 lèvres=👄 lunettes=👓 lacet=👟
 mur=🧱 mer=🌊 main=✋ miel=🍯 mouche=🪰 mouton=🐑 moto=🏍️ masque=🎭 marteau=🔨 maïs=🌽 melon=🍈 micro=🎤 montre=⌚
-mont=⛰️ momie=🧟 manteau=🧥 mangue=🥭 mains=🙌
+mont=⛰️ manteau=🧥 mangue=🥭 mains=🙌
 pain=🍞 pied=🦶 pomme=🍎 pont=🌉 porc=🐖 poule=🐔 paon=🦚 sapin=🎄 pinceau=🖌️ piano=🎹 pile=🔋 papillon=🦋 poire=🍐
 poisson=🐟 pizza=🍕 pouce=👍 poing=👊 panda=🐼 pingouin=🐧 pieuvre=🐙 pois=🫛 poêle=🍳 pêche=🍑 pastèque=🍉
 pirate=🏴‍☠️ parapluie=☂️ pomme=🍏 pain=🥖 patin=⛸️ panier=🧺 piment=🌶️ poulet=🍗 prune=🫐 pelle=🪏
@@ -39,6 +39,21 @@ escargot=🐌 étoile=⭐ éléphant=🐘 enfant=🧒 hérisson=🦔 avocat=🥑
 yoyo=🪀 wagon=🚃 kangourou=🦘 rhinocéros=🦏 citrouille=🎃 pluie=🌧️ arc-en-ciel=🌈 noël=🎄 famille=👪 musique=🎶
 fête=🎉 danse=💃 couple=💑 jeux=[🎲🃏🎮] hiver=[⛄❄️] pique=♠️ roche=🪨 caillou=🪨
 lampe=🪔 tige=🌱 feux=🚦 bougies=🕯️ rideau=🎭 sous=🪙 clou=📌 punaise=📌 scène=🎭 roc=🪨
+baleine=🐋 crocodile=🐊 dinosaure=🦕 flamant=🦩 hamster=🐹 hippopotame=🦛 léopard=🐆 licorne=🦄 mammouth=🦣
+perroquet=🦜 phoque=🦭 poulpe=🐙 scorpion=🦂 taureau=🐂 chauve-souris=🦇 crevette=🦐 homard=🦞 coccinelle=🐞
+moustique=🦟 grillon=🦗 dodo=🦤 zombie=🧟 ninja=🥷 police=👮 pompier=🧑‍🚒 prince=🤴 père-noël=🎅 sapin=🎄
+burger=🍔 brocoli=🥦 châtaigne=🌰 concombre=🥒 crêpe=🥞 hot-dog=🌭 popcorn=🍿 salade=🥗 sandwich=🥪 sushi=🍣
+taco=🌮 bretzel=🥨 beignet=🍩 biscuit=🍪 sucette=🍭 tarte=🥧 cocktail=🍸 lard=🥓 champagne=🍾 pain=🍞
+crayon=✏️ ciseaux=✂️ cadenas=🔒 boomerang=🪃 échelle=🪜 horloge=🕰️ lanterne=🏮 miroir=🪞 parachute=🪂 plume=🪶
+poubelle=🗑️ valise=🧳 cravate=👔 bikini=👙 casquette=🧢 kimono=👘 coupe=🏆 médaille=🏅 trophée=🏆 tournesol=🌻
+montagne=🏔️ plage=🏖️ désert=🏜️ éclair=⚡ tornade=🌪️ maison=🏠 église=⛪ usine=🏭 hôpital=🏥 école=🏫 banque=🏦
+cirque=🎪 stade=🏟️ hélicoptère=🚁 ambulance=🚑 métro=🚇 traîneau=🛷 roller=🛼 saxophone=🎷 golf=⛳ tennis=🎾
+boxe=🥊 pion=♟️ bougie=🕯️ bouée=🛟 aimant=🧲 ampoule=💡 savon=🧼 fusée=🚀 éponge=🧽 brosse=🪥
+seringue=💉 pilule=💊 loupe=🔍 lune=🌙 comète=☄️ planète=🪐 satellite=🛰️ soucoupe=🛸 extraterrestre=👽 robot=🤖
+diable=😈  bisou=😘 larme=😢 sommeil=😴 cri=😱 colère=😡 rire=😂 sourire=🙂
+baiser=💋 squelette=💀 fantôme=👻 citrouille=🎃 sorcière=🧙‍♀️ magicien=🧙 génie=🧞 elfe=🧝 sirène=🧜‍♀️ vampire=🧛
+chevalier=🛡️ bouclier=🛡️ arbalète=🏹 hache=🪓 pioche=⛏️ marteau=🔨 clé=🔑 pelle=🪏 chaîne=⛓️
+dollar=💵 pièce=🪙 cible=🎯 dés=🎲 cartes=🃏 domino=🁫 billard=🎱 bowling=🎳 kayak=🛶 voile=⛵
 a=🅰️ b=🅱️ o=🅾️ i=ℹ️ m=Ⓜ️ p=🅿️
 """.split()
 
