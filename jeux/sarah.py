@@ -1,7 +1,8 @@
 """Sarah Palmer's Visions (La vision) : Sarah Palmer a des visions (le cheval blanc…). Des affiches (six par défaut,
 réglable) défilent très vite sur l'écran, comme une vision, deux fois. Puis la vision s'efface et autant d'affiches
 reviennent : toutes sauf une étaient dans la vision. Laquelle n'y était pas ? (Un jeu de mémoire : on ne peut
-répondre qu'après la vision.) Durée de chaque affiche réglable, jusqu'à 0,1 s.
+répondre qu'après la vision.) Durée de chaque affiche réglable, jusqu'à 0,1 s. Pour corser, certaines affiches passent
+retouchées : couleurs inversées, à l'envers, en miroir, en noir et blanc ou teinte changée.
 """
 import random
 
@@ -11,6 +12,9 @@ import sagas
 from tmdb import cle_film
 from visuels import en_jpeg
 from .commun import affiche, chronologie
+
+MODIFS = ("inv", "env", "mir", "nb", "teinte")       # couleurs inversées, à l'envers, miroir, noir et blanc, teinte
+
 
 def construire(api, cfg, pool, deja):
     flash = float(cfg["sarah_flash"])
@@ -39,14 +43,16 @@ def construire(api, cfg, pool, deja):
     sequence = ordre + random.sample(ordre, NB)                  # deux passages, dans un autre ordre
     # La vision est jouée par chaque écran à son rythme (horloge locale calée sur le chrono de la manche) : même à
     # 0,1 s par affiche, aucune n'est sautée.
+    proba = float(cfg.get("sarah_modifs", 35)) / 100
+    mods = [random.choice(MODIFS) if random.random() < proba else "" for _ in sequence]
     t0 = 1.2
     fin_vision = t0 + flash * len(sequence)
-    etat = {"sequence": sequence, "t0": t0, "pas": flash, "items": [], "question": "", "indices": [], "nb": NB}
-    evts = [(round(fin_vision, 2), lambda: etat.update(sequence=[])),
+    etat = {"sequence": sequence, "mods": mods, "t0": t0, "pas": flash, "items": [], "question": "", "indices": [], "nb": NB}
+    evts = [(round(fin_vision, 2), lambda: etat.update(sequence=[], mods=[])),
             (round(fin_vision + 1.2, 2), lambda: etat.update(
                 question="Lequel n'était pas dans la vision ?",
                 items=[{"img": i, "txt": choisis[i]["title"]} for i in grille]))]
-    etapes = chronologie(evts, lambda: {**etat, "sequence": list(etat["sequence"]), "items": [dict(x) for x in etat["items"]],
+    etapes = chronologie(evts, lambda: {**etat, "sequence": list(etat["sequence"]), "mods": list(etat["mods"]), "items": [dict(x) for x in etat["items"]],
                                         "indices": list(etat["indices"])})
     duree = fin_vision + 1.2 + float(cfg["dur_sarah"])
     return dict(jeu="sarah", vue="choix", duree=round(duree, 1), reponse="choix", etapes=etapes, images=images,

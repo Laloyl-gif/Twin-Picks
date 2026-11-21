@@ -138,8 +138,9 @@ JEUX = {
     "mike": _jeu("Mike's Shoe Samples", "Les paires", "Mike",
                  "Quatre personnages, quatre films : rendez à chacun son film (les chaussures vont par paires).", "mike",
                  "paires"),
-    "windom": _jeu("Windom Earle's Chessboard", "Le cavalier", "Windom Earle",
-                   "Le titre est caché sur l'échiquier, lettre après lettre, de déplacement en déplacement de pièces d'échecs.", "windom", "titre"),
+    "windom": _jeu("Windom Earle's Chess Clock", "La pendule", "Windom Earle",
+                   "Chacun son tour, un film lié au précédent (acteur, réalisateur, compositeur, année…), pendule d'échecs en marche.",
+                   "windom", "pendule"),
     "harold": _jeu("Harold's Orchids", "Les pétales", "Harold Smith",
                    "Chaque pétale montre un détail de l'affiche, vu à la loupe, puis de plus en plus large.", "harold",
                    "titre"),
@@ -147,19 +148,25 @@ JEUX = {
                     "Cinq cartes, cinq affiches : trouvez les trois qui ont quelqu'un en commun.", "jacques", "brelan"),
     "sarah": _jeu("Sarah Palmer's Visions", "La vision", "Sarah Palmer",
                   "Des affiches passent très vite, comme une vision. Laquelle n'en faisait pas partie ?", "sarah", "choix"),
-    "jean": _jeu("Jean Renault's Ransom", "La rançon", "Jean Renault",
-                 "On mise sur deux infos, puis on achète en secret des preuves au marché noir.", "jean", "rancon"),
+    "jean": _jeu("Jean Renault's Blackjack", "Le blackjack", "Jean Renault",
+                 "Les cartes sont des films, leur valeur est leur note TMDB : approchez-vous de 21 sans dépasser.",
+                 "jean", "blackjack"),
     "woodsman": _jeu("The Woodsman's Light", "Got a light?", "Le Woodsman",
                      "Dans le noir, chacun éclaire l'écran avec son téléphone : trouvez les indices, puis le film.",
                      "woodsman", "lumiere"),
     "mitchum": _jeu("The Mitchum Brothers' Contract", "Le contrat", "Les frères Mitchum",
-                    "Le contrat passe de main en main : citez un film qui colle pour vous en débarrasser avant qu'il éclate.",
-                    "mitchum", "contrat", listes=True),
+                    "Des contrats passent de main en main : répondez juste pour refiler le vôtre avant que ça éclate.",
+                    "mitchum", "contrat"),
     "mrc": _jeu("Mr. C's Doppelganger", "Le double", "Mr. C",
-                "L'affiche et son double trafiqué : trouvez les trois différences.", "mrc", "differences"),
+                "L'affiche et son double, retouché en douce : trouvez les différences.", "mrc", "differences"),
     "desmond": _jeu("Desmond's Code", "Le code", "Chet Desmond",
-                    "Un joueur donne un mot pour faire deviner des films de la grille, sans toucher le film noir.",
+                    "Comme Codenames : un indice et un nombre ; on touche les films jusqu'à la première erreur, sans toucher le film noir.",
                     "desmond", "code"),
+    "dick": _jeu("Dick Tremayne's Gala", "La cérémonie", "Dick Tremayne",
+                 "Oscars, Césars, Palme d'or… : les vrais nommés s'affichent, trouvez le lauréat.", "dick", "enveloppes"),
+    "milford": _jeu("Mayor Milford's Golden Owl", "Le Hibou d'or", "Dwayne Milford",
+                    "Vous êtes l'académie : à quel film vos notes ont-elles donné le Hibou d'or ?", "milford", "enveloppes",
+                    listes=False, profils=2),
 }
 # Garde-fou : les noms du menu sont figés (CONSIGNES.md). Un nom changé par erreur arrête le jeu au lancement.
 TITRES_FIGES = {
@@ -175,10 +182,11 @@ TITRES_FIGES = {
     "james": "James' Just You", "ed": "Big Ed's Gas Farm", "loglady": "The Log Lady's Knothole",
     "leo": "Leo's New Shoes", "geant": "The Giant's Three Clues", "catherine": "Catherine's Disguise",
     "denise": "Denise's Undercover", "carl": "Carl's Fat Trout Trailers", "phillip": "Phillip's Associates", "annie": "Annie's Miss Twin Peaks",
-    "dougie": "Dougie's Jackpots", "mike": "Mike's Shoe Samples", "windom": "Windom Earle's Chessboard",
+    "dougie": "Dougie's Jackpots", "mike": "Mike's Shoe Samples", "windom": "Windom Earle's Chess Clock",
     "harold": "Harold's Orchids", "jacques": "Jacques Renault's Card Table", "sarah": "Sarah Palmer's Visions",
-    "jean": "Jean Renault's Ransom", "woodsman": "The Woodsman's Light", "mitchum": "The Mitchum Brothers' Contract",
+    "jean": "Jean Renault's Blackjack", "woodsman": "The Woodsman's Light", "mitchum": "The Mitchum Brothers' Contract",
     "mrc": "Mr. C's Doppelganger", "desmond": "Desmond's Code",
+    "dick": "Dick Tremayne's Gala", "milford": "Mayor Milford's Golden Owl",
     "jerry": "Jerry's Trip", "hank": "Hank's Dominoes",
 }
 assert all(JEUX[g]["titre"] == t for g, t in TITRES_FIGES.items() if g in JEUX), \
@@ -197,7 +205,7 @@ SOURCES_COMPTE = {
     -5: ("rated", "movies", "Films notés"),
     -6: ("rated", "tv", "Séries notées"),
 }
-VERSION_REGLAGES = 16
+VERSION_REGLAGES = 17
 
 PLAYLIST_MENU = "https://music.youtube.com/playlist?list=PLA7jHGp_FUM4"
 PLAYLIST_JEU = "https://music.youtube.com/playlist?list=OLAK5uy_mlZa8Lsr_mNkYfrYynkfQE1ZyamvGWY3A"
@@ -261,6 +269,9 @@ PARAMS = [
     _p("reveal_secs", "general", "Affichage de la réponse (s)", 6, 2, 30),
     _p("hasard", "general", "Jeux au hasard parmi ceux choisis (juste un nombre de manches)", False, menu=True),
     _p("hasard_n", "general", "Nombre de manches (jeux au hasard)", 15, 1, 200, menu=True),
+    _p("indices_recompenses", "general", "Indice « récompenses » (Oscars, Césars, Palme d'or…) dans les jeux", True),
+    _p("anti_repetition", "general", "Écarter les films joués lors des dernières parties", True),
+    _p("anti_repetition_n", "general", "… pendant combien de parties", 3, 1, 20),
     _p("max_essais", "general", "Essais par manche (Écrit)", 3, 1, 10),
     _p("qcm_choix", "general", "Propositions en mode QCM", 6, 2, 12),
     _p("blocage", "general", "Blocage après une erreur (Buzzer, s)", 3, 0, 15),
@@ -499,7 +510,7 @@ PARAMS = [
     _p("hank_mini", "hank", "Points minimum pour un film deviné", 200, 0, 1000, 10),
     _p("hank_cible", "hank", "Points pour celui dont le film est trouvé (par devin)", 150, 0, 1000, 10),
     _p("hank_erreur", "hank", "Points perdus pour une mauvaise devinette", 100, 0, 1000, 10),
-    _p("hank_retire", "hank", "Points perdus si l'on retire le film d'un autre joueur", 300, 0, 2000, 10),
+    _p("hank_retire", "hank", "Points perdus si l'on retire le film d'un autre joueur (la manche s'arrête)", 600, 0, 3000, 10),
 
     _p("dur_carl", "carl", "Durée d'une manche (s)", 45, 10, 120, 5),
     _p("carl_indices", "carl", "Indices (genres, années, titres à trous)", True),
@@ -517,39 +528,53 @@ PARAMS = [
     _p("mike_indice", "mike", "Indice : l'acteur de chaque personnage à mi-temps", True),
     _p("mike_pts", "mike", "Points par paire juste", 250, 0, 2000, 50),
     _p("mike_tous", "mike", "Bonus si les quatre paires sont justes", 400, 0, 3000, 50),
-    _p("dur_windom", "windom", "Durée d'une manche (s)", 45, 15, 120, 5),
-    _p("windom_indices", "windom", "Indice : l'année", True),
+    _p("dur_windom", "windom", "Durée maximale d'une partie de pendule (s)", 420, 60, 1200, 30),
+    _p("windom_temps", "windom", "Pendule de chaque joueur (s)", 40, 10, 180, 5),
+    _p("windom_rapide", "windom", "Répondre en moins de … s rend du temps", 10, 0, 60, 1),
+    _p("windom_bonus", "windom", "Temps rendu (s)", 5, 0, 30, 1),
+    _p("windom_max_lien", "windom", "Un même lien sert au plus … fois", 3, 1, 10),
+    _p("windom_pts", "windom", "Points du vainqueur (le 2e en a la moitié, etc.)", 1000, 0, 5000, 50),
+    _p("windom_film", "windom", "Points par film cité", 50, 0, 500, 10),
     _p("dur_harold", "harold", "Durée d'une manche (s)", 40, 15, 120, 5),
     _p("harold_indices", "harold", "Indices (genre, titre à trous)", True),
     _p("dur_jacques", "jacques", "Durée d'une manche (s)", 40, 10, 120, 5),
     _p("jacques_indice", "jacques", "Indice : le métier de la personne commune", True),
     _p("jacques_pts", "jacques", "Points pour le brelan exact", 1000, 0, 3000, 50),
-    _p("sarah_flash", "sarah", "Durée de chaque affiche de la vision (s)", 0.8, 0.1, 3, 0.05),
-    _p("sarah_nb", "sarah", "Nombre de films dans la vision", 6, 3, 16),
+    _p("sarah_flash", "sarah", "Durée de chaque affiche de la vision (s)", 0.2, 0.1, 3, 0.05),
+    _p("sarah_nb", "sarah", "Nombre de films dans la vision", 12, 3, 16),
+    _p("sarah_modifs", "sarah", "Affiches retouchées (inversées, à l'envers…) (%)", 35, 0, 100, 5),
     _p("dur_sarah", "sarah", "Temps pour répondre après la vision (s)", 15, 5, 60, 5),
-    _p("jean_dur_mise", "jean", "Temps pour miser (s)", 15, 5, 60, 5),
-    _p("dur_jean", "jean", "Durée du marché noir (s)", 60, 15, 180, 5),
-    _p("jean_pts", "jean", "Points en plus de la mise doublée quand on trouve", 200, 0, 2000, 50),
+    _p("jean_dur_mise", "jean", "Temps pour miser (s)", 12, 5, 60, 1),
+    _p("dur_jean", "jean", "Temps pour jouer sa main (s)", 45, 15, 180, 5),
+    _p("jean_pts", "jean", "Points quand on bat Jean (en plus de la mise doublée)", 200, 0, 2000, 50),
+    _p("jean_votes", "jean", "Cartes : films notés par au moins … votants TMDB", 200, 0, 5000, 50),
     _p("dur_woodsman", "woodsman", "Durée d'une manche (s)", 75, 20, 240, 5),
     _p("woodsman_pts", "woodsman", "Points pour qui trouve le film", 800, 0, 3000, 50),
     _p("woodsman_premier", "woodsman", "Bonus pour le premier", 300, 0, 2000, 50),
-    _p("mitchum_min", "mitchum", "Minuterie : au plus tôt (s)", 45, 15, 300, 5),
-    _p("mitchum_max", "mitchum", "Minuterie : au plus tard (s)", 80, 15, 300, 5),
-    _p("mitchum_pct", "mitchum", "Points perdus par celui qui tient le contrat (%)", 30, 0, 100, 5),
-    _p("mitchum_mini", "mitchum", "Perte minimum pour celui qui tient le contrat", 200, 0, 2000, 50),
-    _p("mitchum_passe", "mitchum", "Points chaque fois qu'on se débarrasse du contrat", 100, 0, 1000, 10),
-    *[_p("mitchum_" + k, "mitchum", v, True, bloc="Conditions possibles") for k, v in
-      (("genre", "Genre"), ("decennie", "Décennie"), ("periode", "Période"), ("acteur", "Acteurs"),
-       ("realisateur", "Réalisateurs"), ("compositeur", "Compositeurs"), ("langue", "Langue"), ("pays", "Pays"),
-       ("duree", "Durée"), ("note", "Note"), ("theme", "Thème"), ("titre", "Titre"))],
+    _p("mitchum_min", "mitchum", "Minuterie : au plus tôt (s)", 30, 15, 120, 5),
+    _p("mitchum_max", "mitchum", "Minuterie : au plus tard (s)", 45, 15, 120, 5),
+    _p("mitchum_pct", "mitchum", "Points perdus par contrat tenu quand ça éclate (%)", 20, 0, 100, 5),
+    _p("mitchum_mini", "mitchum", "Perte minimum par contrat tenu", 200, 0, 2000, 50),
+    _p("mitchum_passe", "mitchum", "Points chaque fois qu'on refile un contrat", 50, 0, 1000, 10),
+    _p("mitchum_penalite", "mitchum", "Pénalité après une mauvaise réponse (s)", 2.0, 0, 10, 0.5),
+    _p("mitchum_affiches", "mitchum", "Questions « Quel film ? » sur un gros plan d'affiche", True),
     _p("dur_mrc", "mrc", "Durée d'une manche (s)", 50, 15, 180, 5),
     _p("mrc_pts", "mrc", "Points par différence (plus tôt = plus)", 400, 0, 2000, 50),
     _p("mrc_malus", "mrc", "Points perdus par touche à côté", 50, 0, 500, 10),
     _p("mrc_erreurs", "mrc", "Touches à côté permises", 4, 1, 20),
-    _p("mrc_film", "mrc", "Bonus pour qui trouve le film", 300, 0, 2000, 50),
-    _p("dur_desmond", "desmond", "Durée d'une manche (s)", 120, 30, 300, 10),
-    _p("desmond_min", "desmond", "Films à faire deviner : au moins", 2, 1, 5),
-    _p("desmond_max", "desmond", "Films à faire deviner : au plus", 4, 1, 6),
+    _p("mrc_n", "mrc", "Nombre de différences", 3, 2, 6),
+    _p("dick_n", "dick", "Enveloppes par manche", 6, 2, 12),
+    _p("dick_dur", "dick", "Temps pour répondre à chaque enveloppe (s)", 15, 5, 60, 1),
+    _p("dick_pts", "dick", "Points pour le bon lauréat (plus vite = plus)", 500, 0, 3000, 50),
+    _p("dick_bonus", "dick", "Experts : bonus pour la bonne année", 300, 0, 2000, 50),
+    _p("dick_experts", "dick", "Profils experts (Oscars plus durs), séparés par des virgules", "Louison", type="texte"),
+    _p("milford_n", "milford", "Enveloppes par manche", 5, 2, 10),
+    _p("milford_dur", "milford", "Temps pour répondre à chaque enveloppe (s)", 15, 5, 60, 1),
+    _p("milford_pts", "milford", "Points pour le bon lauréat (plus vite = plus)", 500, 0, 3000, 50),
+    _p("dur_desmond", "desmond", "Durée d'une manche (s)", 180, 60, 480, 10),
+    _p("desmond_or", "desmond", "Films en or à faire deviner", 6, 2, 9),
+    _p("desmond_rouges", "desmond", "Films rouges", 4, 0, 8),
+    _p("desmond_attente", "desmond", "Le donneur peut relancer après (s), même si tous n'ont pas fini", 25, 5, 120, 5),
     _p("desmond_pts", "desmond", "Points par bon film (devineur)", 300, 0, 2000, 50),
     _p("desmond_donneur", "desmond", "Points par bon film (donneur)", 150, 0, 2000, 50),
     _p("desmond_rouge", "desmond", "Malus du donneur par film rouge touché", 150, 0, 2000, 50),
@@ -767,6 +792,20 @@ def migrer(brut):
                     listes[g] = copy.deepcopy(modele)
         for cle in ("dur_hank", "hank_indice", "hank_pts", "hank_parfait", "dur_mike", "dur_windom"):
             brut.pop(cle, None)
+    if version < 17:                         # v11 : Jean (blackjack), Windom (pendule), Mitchum, Desmond, Sarah… changent
+        listes = brut.get("listes")
+        if isinstance(listes, dict):
+            modele = listes.get("affiche") or listes.get("pete")
+            for g in ("dick",):
+                if modele and g not in listes:
+                    listes[g] = copy.deepcopy(modele)
+        for cle in ("sarah_flash", "sarah_nb", "mrc_film", "dur_jean", "jean_dur_mise", "jean_pts", "dur_windom",
+                    "windom_indices", "mitchum_min", "mitchum_max", "mitchum_pct", "mitchum_mini", "mitchum_passe",
+                    "dur_desmond", "desmond_min", "desmond_max", "hank_retire"):
+            brut.pop(cle, None)
+        for k in ("genre", "decennie", "periode", "acteur", "realisateur", "compositeur", "langue", "pays", "duree",
+                  "note", "theme", "titre"):
+            brut.pop("mitchum_" + k, None)
     brut["version"] = VERSION_REGLAGES
     return brut
 

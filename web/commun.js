@@ -167,6 +167,10 @@ const TRAITS = {
          '<path d="M27 30h10M14 20h36M18 46l4-6h20l4 6"/><path d="M44 52c4-2 8 0 10-4"/>',
   ed: '<rect x="14" y="16" width="24" height="40" rx="3"/><rect x="18" y="21" width="16" height="10" rx="1"/>' +
       '<path d="M38 26h6c4 0 6 3 6 6v14c0 3 3 4 5 2V22l-5-6"/><path d="M10 56h32"/><path d="M22 40h8"/>',
+  dick: '<path d="M14 26l14 6-14 6zM50 26l-14 6 14 6z"/><rect x="28" y="29" width="8" height="6" rx="1.5"/>' +
+        '<rect x="16" y="44" width="32" height="12" rx="1"/><path d="M16 44l16 7 16-7"/>',
+  milford: '<path d="M22 14l4 6M42 14l-4 6"/><ellipse cx="32" cy="27" rx="12" ry="11"/><circle cx="27" cy="25" r="3"/>' +
+           '<circle cx="37" cy="25" r="3"/><path d="M32 29l-2 3h4z"/><path d="M26 38l-2 10h16l-2-10"/><path d="M20 52h24"/>',
   albert: '<circle cx="32" cy="26" r="7"/><path d="M32 33v23"/><path d="M32 19c-4-6-12-6-14 0 6 0 10 2 14 7 4-5 8-7 14-7-2-6-10-6-14 0z"/>' +
           '<path d="M32 44c-5 0-9-3-10-7M32 48c5 0 9-3 10-7"/>',
 };
@@ -231,6 +235,9 @@ function visuelHTML(v, opt = {}) {
   if (v.vue === 'contrat') return contratHTML(v, opt);
   if (v.vue === 'double') return jumeauxHTML(v, src, opt);
   if (v.vue === 'code') return codeHTML(v, src, opt);
+  if (v.vue === 'blackjack') return blackjackHTML(v, src, opt);
+  if (v.vue === 'pendule') return penduleHTML(v, src, opt);
+  if (v.vue === 'ceremonie') return ceremonieHTML(v, src, opt);
   if (v.phase === 'reponse') return v.revelation ? `<img class="scene-img" src="${src('r')}" alt="">` : '';
   if (v.vue === 'image') {
     const img = `<img class="scene-img" src="${src(e.img)}" alt="">`;

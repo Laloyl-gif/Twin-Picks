@@ -153,6 +153,9 @@ def mot(m):
             out.append("j" if suivant and suivant in "aeiouéè" else "i")
         elif c == "u":
             out.append("y")
+        elif c == "i" and suivant and suivant in "aeouéèê" and out and out[-1][-1:] not in VOYELLES and i > 0 \
+                and not (suivant == "e" and (i + 2 == len(m) or m[i + 2] in "\x04")):
+            out.append("j")                               # pion, mission, piano : le i devient « y »
         elif c in "aio":
             out.append(c)
         elif c == "c":
@@ -199,3 +202,41 @@ def texte(t):
 def _nombre(n):
     return {"1": "I", "2": "d2", "3": "trwa", "4": "katr", "5": "sIk", "6": "sis", "7": "set", "8": "wit", "9": "n2f",
             "10": "dis", "12": "duz", "13": "trez", "20": "vI", "100": "sA", "1000": "mil"}.get(n, n)
+
+
+# --- Les titres qui se prononcent « à l'anglaise » : pas de rébus en phonétique française pour eux ---
+_ANGLAIS = set("""the of and in on at to for with from by my your his her our their this that these those is are was be
+of man men woman night day dark light star wars story club fight street king queen love life death dead world war
+city house home girl boy kid kids game games time road way back down up out over under black white red blue green
+gold silver iron big little last first new old good bad wild free fast furious mission impossible shining
+lord rings ring knight dawn rise fall return revenge empire strikes hope force awakens jedi galaxy guardians
+avengers spider batman superman wonder hunger games harry potter stone chamber prisoner goblet order prince blood
+hallows deathly social network wolf wall wolf jack jones indiana raiders lost ark temple doom crusade crystal
+skull pulp fiction kill bill django unchained inglourious basterds reservoir dogs hateful eight hollywood once upon
+pirates caribbean pearl chest end tides tales toy finding nemo dory monsters inc incredibles cars up inside coco
+soul luca turning frozen tangled moana brave shrek cast away forrest gump green mile saving private ryan schindler
+list jurassic park world jaws catch me if you can terminal ready player one minority report war of worlds
+avatar titanic aliens alien abyss true lies matrix reloaded revolutions john wick speed point break sweet
+heat collateral miami vice drive only god forgives neon demon blade runner gladiator hannibal american beauty psycho
+vertigo rear window north northwest birds rope fight club seven se7en zodiac gone girl social benjamin button
+interstellar inception memento prestige dunkirk tenet oppenheimer dark knight batman begins insomnia following
+joker taxi driver raging bull goodfellas casino departed irishman wolf street shutter island aviator gangs new
+york silence killers flower moon""".split())
+_FRANCAIS_OK = {"taxi", "ski", "kiwi", "titanic", "matrix", "avatar", "gladiator", "joker", "alien", "aliens", "psycho",
+                "casino", "zodiac", "coco", "luca", "moana", "shrek", "nemo", "dory", "tenet", "camping", "parking",
+                "interstellar", "inception", "memento", "insomnia", "vertigo", "brave", "abyss", "speed"}
+_MOTIFS_ANGLAIS = re.compile(r"(th|ght|sh|oo|ee|ck|wh|ing$|^w|ay$|ey$|ow$|aw|ew|ea|y[^aeiouy]|^y[aeiou]|k)")
+
+
+def francais(t):
+    """Le titre se lit-il « à la française » ? (sinon : un titre anglais, que la phonétique française massacrerait)"""
+    mots = [m.lower() for m in re.findall(r"[^\W\d_]+", t.replace("’", "'"))]
+    if not mots:
+        return False
+    anglais = 0
+    for m in mots:
+        if m in _FRANCAIS_OK or len(m) <= 1:
+            continue
+        if m in _ANGLAIS or _MOTIFS_ANGLAIS.search(_sans_accents_sauf_e(m)):
+            anglais += 1
+    return anglais == 0

@@ -61,15 +61,17 @@ Les jeux
   Annie's Miss Twin Peaks                     L'absente          sept écharpes, huit affiches : laquelle n'a pas d'écharpe ?
   Dougie's Jackpots                           Le jackpot         trois rouleaux, cinq films : trouvez-les pendant qu'ils tournent
   Mike's Shoe Samples                         Les paires         quatre personnages, quatre films : faites les paires
-  Windom Earle's Chessboard                   Le cavalier        le titre caché sur l'échiquier, en déplacements de pièces
+  Windom Earle's Chess Clock                  La pendule         chaîne de films liés, pendule d'échecs : le dernier en lice gagne
   Harold's Orchids                            Les pétales        des détails d'images du film vus à la loupe
   Jacques Renault's Card Table                Le brelan          cinq affiches : les trois qui ont quelqu'un en commun
   Sarah Palmer's Visions                      La vision          des affiches en un éclair : laquelle n'y était pas ?
-  Jean Renault's Ransom                       La rançon          on mise, puis on achète des preuves en secret
+  Jean Renault's Blackjack                    Le blackjack       cartes = films, valeur = note TMDB : 21 sans dépasser
   The Woodsman's Light                        Got a light?       dans le noir, chacun éclaire l'écran avec son téléphone
-  The Mitchum Brothers' Contract              Le contrat         patate chaude : citez un film pour passer le contrat
-  Mr. C's Doppelganger                        Le double          l'affiche et son double : trois différences
-  Desmond's Code                              Le code            un mot pour faire deviner des films (façon Codenames)
+  The Mitchum Brothers' Contract              Le contrat         des contrats en patate chaude : répondez juste pour les refiler
+  Mr. C's Doppelganger                        Le double          l'affiche et son double : des différences discrètes
+  Desmond's Code                              Le code            Codenames : un indice et un nombre, stop à la 1re erreur
+  Dick Tremayne's Gala                        La cérémonie       Oscars, Césars, Palme d'or… : trouvez le lauréat
+  Mayor Milford's Golden Owl                  Le Hibou d'or      l'« Oscar » de vos notes : quel film a gagné ?
 
 Décors
   Jamais de fond qui dénote : des objets (web/objets.js, web/decor.js). Les objets ne sont jamais cachés derrière
@@ -327,10 +329,11 @@ Autres jeux
   Les paires (Mike) : Mike, le manchot, est représentant en chaussures : il ouvre sa valise d'échantillons. Quatre
     boîtes portent le nom d'un personnage, quatre affiches : rendez à chaque personnage son film (toucher une boîte,
     puis l'affiche). Points par paire juste, bonus pour les quatre. Indice : l'acteur de chaque personnage.
-  Le cavalier (Windom Earle) : 64 cases, une lettre par case (elles reviennent : il n'y en a que 26). Le titre est
-    caché lettre après lettre ; on passe d'une lettre à la suivante par un déplacement de pièce : cavalier (en L),
-    tour (en ligne), fou (en diagonale), roi (une case), dame. La pièce qui va jouer est posée sur la dernière case
-    lue : on peut devancer Windom. La fin du titre reste à deviner. Indice : l'année.
+  La pendule (Windom Earle) : un blitz. Un film de départ ; chacun son tour cite un film lié au précédent : un acteur,
+    le réalisateur, le compositeur, le scénariste, le directeur de la photo ou la même année. Le lien doit changer à
+    chaque coup (pas deux fois de suite la même personne), un même lien sert au plus trois fois, pas de film déjà
+    cité et un seul film par saga. Chacun a sa pendule (40 s pour toute la partie), qui ne tourne que pendant son
+    tour ; répondre en moins de 10 s rend 5 s. Pendule tombée : échec et mat. Le dernier en lice gagne.
   Les pétales (Harold Smith) : chaque pétale de l'orchidée montre, vu à la loupe, un détail d'une image différente du
     film : l'affiche (sans texte si TMDB en a une), des plans du film, le visage d'acteurs (une étiquette dit ce que
     c'est). Le zoom part de quelques pixels et recule en huit étapes. Indices : le genre, puis le titre à trous.
@@ -338,30 +341,51 @@ Autres jeux
     même personne au générique (acteur, réalisateur, compositeur, scénariste, directeur de la photo). Touchez les
     trois puis « Miser ». Brelan exact : tous les points ; deux sur trois : une partie. Indice : le métier commun.
     Jamais de film d'une saga dans le brelan.
-  La vision (Sarah Palmer) : des affiches (6 par défaut, de 3 à 16) passent en un éclair dans le vieux téléviseur des
-    Palmer, deux fois, le cheval blanc avant et après. Puis autant d'affiches reviennent : laquelle n'était pas dans la
-    vision ? (mémoire) Durée de chaque affiche réglable de 0,1 s à 3 s : chaque écran joue la vision lui-même, aucune
-    affiche n'est sautée même très vite.
-  La rançon (Jean Renault) : on ne connaît que deux infos tirées au hasard ; on mise de 0 à 2 500 points. Puis le
-    marché noir : chacun achète en secret, sur son téléphone, des preuves (la décennie, le pays, l'année, un second
-    rôle, une image, le compositeur, la tête d'affiche, le réalisateur, les initiales, le titre à moitié), d'autant
-    plus chères qu'elles en disent et qu'on a misé gros. Trouvé : la mise doublée (et un peu plus) moins les achats.
-    Raté : la mise et les achats sont perdus.
+  La vision (Sarah Palmer) : des affiches (12 par défaut, de 3 à 16) passent en un éclair (0,2 s par défaut) dans le
+    vieux téléviseur des Palmer, deux fois, le cheval blanc avant et après. Certaines passent retouchées (couleurs
+    inversées, à l'envers, en miroir, en noir et blanc, teinte changée : 35 % par défaut). Puis autant d'affiches
+    reviennent : laquelle n'était pas dans la vision ? Chaque écran joue la vision lui-même : aucune n'est sautée.
+  Le blackjack (Jean Renault) : la table du One Eyed Jack's. On mise (0 à 2 000, sans jamais descendre sous 0), puis
+    chacun reçoit deux cartes : des affiches de films, dont la valeur cachée est la note TMDB. « Carte ! » ou « Je
+    reste » : approchez-vous de 21 sans dépasser, à l'estime. Jean montre une carte et tire jusqu'à 17. Battre Jean :
+    la mise doublée et un petit bonus ; égalité : mise rendue ; plus de 21 ou moins que Jean : mise perdue.
   Got a light? (le Woodsman) : l'écran dans le noir, une quarantaine d'affiches et quatre indices écrits cachés.
     Chacun promène sa lumière en glissant le doigt sur son téléphone ; tout le monde profite de la lumière des
     autres, et un indice éclairé reste allumé. « C'est lui ! » quand votre lumière est sur le bon film : un seul
     essai (raté : hors jeu pour la manche). Le premier a un bonus.
-  Le contrat (les frères Mitchum) : une patate chaude. Le contrat passe de joueur en joueur, toujours dans le même
-    sens ; la minuterie est visible par tous (durée au hasard). Pour s'en débarrasser, citer un film qui respecte la
-    condition (genre, décennie, « avec A, B ou C », réalisateurs, pays…). Changer de condition : un film de plus à
-    citer (trois au plus). Quand ça éclate, celui qui tient le contrat perd 30 % de ses points (réglable).
-  Le double (Mr. C) : l'affiche et son double, trafiqué à trois endroits (un objet effacé, une zone retournée, une
-    couleur changée). On touche les différences sur son téléphone ; une touche à côté coûte un peu ; bonus si l'on
-    trouve le film.
-  Le code (Chet Desmond), façon Codenames : chacun son tour est le donneur. Grille de 16 affiches ; le donneur voit le
-    code (en or : à faire deviner ; trois rouges ; un noir ; des neutres) et tape un seul mot. Les autres touchent
-    autant de films qu'il y en a en or. Bon film : points pour le devineur et le donneur ; rouge : malus du donneur ;
-    noir : gros malus pour le donneur et celui qui l'a touché.
+  Le contrat (les frères Mitchum) : des patates chaudes. Il circule autant de contrats que de joueurs moins un,
+    toujours dans le même sens. Qui tient un contrat reçoit une question éclair à six choix (réalisateur, acteur,
+    année, gros plan d'affiche, le plus long, le mieux noté…) : bonne réponse, il le refile au suivant (qui peut en
+    tenir deux) ; mauvaise, une autre question après 2 s de pénalité. Minuterie de 30 à 45 s visible par tous ; quand
+    ça éclate, chaque contrat tenu coûte des points.
+  Le double (Mr. C) : l'affiche et son double, retouché à trois endroits (réglable), en petit et en douce : un détail
+    effacé, retourné, décalé, grossi, éclairci ou une couleur qui tourne. On touche les différences sur son
+    téléphone ; une touche à côté coûte un peu. On ne cherche pas le film.
+  Le code (Chet Desmond), règles de Codenames : chacun son tour est le donneur. Grille de 16 affiches ; le donneur
+    voit le code (6 en or, 4 rouges, 1 noir, des neutres) et envoie un indice (1 à 4 mots) et un nombre. Chacun des
+    autres touche des films sur son téléphone, au plus le nombre + 1 : un film en or rapporte (à lui et au donneur)
+    et il peut continuer ; neutre ou rouge, son tour s'arrête (rouge : malus du donneur) ; le noir l'élimine de la
+    manche (gros malus pour lui et le donneur). Quand tous ont fini, le donneur envoie l'indice suivant.
+  Les dominos (Hank) : pour deviner, touchez le nom d'un joueur puis un film, même pendant votre tour. Retirer le
+    film d'un autre joueur, c'est perdre : gros malus et la manche s'arrête.
+  La cérémonie (Dick Tremayne) : six enveloppes ; « Et l'Oscar du meilleur film est attribué à… » (ou César, Palme
+    d'or, BAFTA, Golden Globe, Lion d'or…). Les vrais nommés de l'année s'affichent, chacun choisit le lauréat sur
+    son téléphone pendant le roulement de tambour (plus vite = plus de points). Chaque enveloppe part d'un film des
+    listes. Les profils experts (Louison par défaut, réglable) ont des Oscars plus durs : tous les nommés sans
+    l'année, ou l'intrus qui n'était pas nommé, puis un bonus pour l'année de la cérémonie. Il faut Internet
+    (Wikidata) : sans réseau, la manche est passée.
+  Le Hibou d'or (le maire Dwayne Milford) : vous êtes l'académie. Chaque enveloppe nomme cinq films notés par tous
+    les profils présents : meilleur film (meilleure moyenne), le plus clivant, le plus sous-coté ou surcoté par
+    rapport à TMDB, le Hibou de plomb. Les nommés sont proches, sans égalité en tête ; à la révélation, les notes.
+  Récompenses dans les indices : la plupart des jeux ajoutent un indice « 🏆 Oscar du meilleur film (1995) » ou
+    « Nommé : … » quand le film a une grande récompense (Wikidata ; réglage général).
+  Récap de fin : podium, et pour chacun son meilleur jeu, son plus beau coup, sa plus longue série ; les films qui
+    ont résisté à tout le monde ; bouton « Image à partager » (PNG).
+  Anti-répétition : les films joués lors des 3 dernières parties (réglable) passent après les autres.
+  Le rébus (Jerry) : phonétique française. Les titres qui se lisent à l'anglaise sont écartés ; un bout écrit en
+    lettres fait trois sons au plus (ou un petit mot entier du titre) ; au moins la moitié des sons en images.
+  Les pétales (Harold) : jamais deux fois le même plan ni le même acteur. Le croquis (Andy) : jamais d'image vide.
+  Le jackpot (Dougie) : les rouleaux ralentissent moins, la fin reste rapide.
   Images du menu : chaque carte du menu a un petit bouton « image » (en haut à gauche, au survol). On choisit une
     image, on la cadre (glisser, zoom) et l'aperçu montre aussitôt la carte choisie et non choisie, l'en-tête de la
     partie et la photo de profil. Les images ajoutées sont gardées dans donnees/images_menu/ ; « Remettre l'image

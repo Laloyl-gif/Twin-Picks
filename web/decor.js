@@ -418,8 +418,8 @@ function audreyHTML(cellules, cols) {
 }
 
 /* Dougie's Jackpots : la machine à sous du Silver Mustang. Trois rouleaux ; sur chacun défilent les affiches des cinq
-   films (dans un ordre différent), très vite puis de plus en plus lentement. opt.arret : la machine s'arrête. */
-const VITESSES = [0.9, 1.3, 1.9, 2.8, 4.2, 6.2, 9.5], FLOUS = [5, 4, 3, 2, 1.2, .5, 0];
+   films (dans un ordre différent), très vite puis un peu moins (sans jamais devenir lent). opt.arret : la machine s'arrête. */
+const VITESSES = [0.7, 0.95, 1.3, 1.7, 2.2, 2.8, 3.4], FLOUS = [5, 4, 3, 2.2, 1.6, 1.1, .7];
 function jackpotHTML(e, src, opt = {}) {
   const bs = e.bandes || [], arret = !!opt.arret, v = arret ? VITESSES.length - 1 : Math.min(VITESSES.length - 1, e.vitesse || 0);
   const rouleau = (b, k) => {
@@ -558,7 +558,9 @@ function focusHTML(v, src, opt = {}) {
       `${mien ? '<span class="fo-mien">Mon film</span>' : ''}${pr ? `<span class="fo-proprio" style="--c:${pr.couleur}">${esc(pr.nom)}</span>` : ''}${marques}</figure>`;
   }).join('');
   const n = cases.length, cols = opt.joueur ? (n <= 10 ? 4 : 5) : Math.min(8, Math.ceil(n / (n > 16 ? 3 : 2)));
-  return `<div class="focus" data-k="focus"><div class="fo-joueurs">${chips}</div>` +
+  const pd = mo.perdant && mo.perdant.qui ? `<p class="fo-perdant">${esc(mo.perdant.qui.nom)} a retiré le film de ` +
+    `${esc((mo.perdant.victime || {}).nom || '?')} : perdu, la manche s'arrête !</p>` : '';
+  return `<div class="focus" data-k="focus">${pd}<div class="fo-joueurs">${chips}</div>` +
     `<div class="fo-grille" style="--cols:${cols}">${grille}</div></div>`;
 }
 
@@ -575,7 +577,7 @@ function visionHTML(e, src) {
   const seq = e.sequence || [];
   const imgs = [...new Set(seq)].map(i => `<img class="vi-flash" data-i="${i}" src="${src(i)}" alt="" hidden>`).join('');
   return `<div class="vision" data-k="vision"><div class="vi-tele"><div class="vi-ecran" data-sequence="${seq.join(',')}" ` +
-    `data-t0="${e.t0 || 0}" data-pas="${e.pas || 0.8}">${imgs}<span class="vi-cheval">${OBJ.cheval_blanc}</span>` +
+    `data-t0="${e.t0 || 0}" data-pas="${e.pas || 0.8}" data-mods="${(e.mods || []).join(',')}">${imgs}<span class="vi-cheval">${OBJ.cheval_blanc}</span>` +
     `<span class="vi-neige"></span></div><span class="vi-boutons"><i></i><i></i></span></div>` +
     `<p class="frise-aide">${seq.length ? 'Regardez bien…' : 'La vision s\'efface…'}</p></div>`;
 }
@@ -587,7 +589,8 @@ function visionHTML(e, src) {
     const cur = k >= 0 && k < seq.length ? seq[k] : null;
     if (ecran.dataset.cur === String(cur)) continue;
     ecran.dataset.cur = String(cur);
-    ecran.querySelectorAll('.vi-flash').forEach(im => { im.hidden = im.dataset.i !== cur; });
+    const mod = cur !== null ? ((ecran.dataset.mods || '').split(',')[k] || '') : '';
+    ecran.querySelectorAll('.vi-flash').forEach(im => { im.hidden = im.dataset.i !== cur; if (!im.hidden) im.dataset.m = mod; });
     ecran.querySelector('.vi-cheval').hidden = cur !== null;
   }
   requestAnimationFrame(animerVision);
@@ -645,22 +648,22 @@ function padLumiereHTML(mo) {
     '<span>Glissez le doigt pour éclairer l\'écran</span></div>';
 }
 
-/* The Mitchum Brothers' Contract : les joueurs autour de la table du Silver Mustang, le contrat qui passe de main en
-   main (toujours dans le même sens), la condition au centre. */
+/* The Mitchum Brothers' Contract : les joueurs autour de la table du Silver Mustang ; les contrats (enveloppes) passent
+   de main en main, toujours dans le même sens ; au centre, la mèche de la minuterie. */
 function contratHTML(v, opt = {}) {
   const mo = v.moteur || {}, rev = v.phase === 'reponse', js = mo.joueurs || [], n = js.length || 1;
   const places = js.map((j, k) => {
     const a = -Math.PI / 2 + 2 * Math.PI * k / n, x = 50 + 41 * Math.cos(a), y = 50 + 38 * Math.sin(a);
-    const vic = rev && mo.victime && mo.victime.id === j.id;
-    return `<div class="ct-joueur${j.porteur && !rev ? ' porteur' : ''}${vic ? ' victime' : ''}" style="left:${x}%;top:${y}%;--c:${j.couleur}" data-k="j${esc(j.id)}">` +
-      `${j.porteur && !rev ? `<span class="ct-enveloppe">${OBJ.enveloppe_contrat}</span>` : ''}<b>${esc(j.nom)}</b>` +
-      `${vic ? `<small>−${mo.perte}</small>` : j.passes ? `<small>${j.passes} passe${j.passes > 1 ? 's' : ''}</small>` : ''}</div>`;
+    const env = `<span class="ct-enveloppe">${OBJ.enveloppe_contrat}</span>`.repeat(Math.min(3, j.contrats || 0));
+    return `<div class="ct-joueur${j.contrats && !rev ? ' porteur' : ''}${rev && j.perte ? ' victime' : ''}" style="left:${x}%;top:${y}%;--c:${j.couleur}" data-k="j${esc(j.id)}">` +
+      `${env ? `<span class="ct-envs">${env}</span>` : ''}<b>${esc(j.nom)}</b>` +
+      `${rev && j.perte ? `<small>−${j.perte}</small>` : j.passes ? `<small>${j.passes} refilé${j.passes > 1 ? 's' : ''}</small>` : ''}</div>`;
   }).join('');
-  const reste = Math.max(0, mo.besoin - (mo.donnes || []).length);
-  const centre = rev ? `<p class="ct-boum">BOUM !</p><p class="ct-cond">${mo.victime ? esc(mo.victime.nom) + ' tenait le contrat' : ''}</p>`
-    : `<small>Pour passer le contrat</small><p class="ct-cond">${esc(mo.condition || '')}</p>` +
-      `<p class="ct-besoin">${reste} film${reste > 1 ? 's' : ''} à citer${(mo.donnes || []).length ? ` · ✓ ${(mo.donnes || []).map(esc).join(', ')}` : ''}</p>`;
-  const journal = (mo.journal || []).slice().reverse().map(x => `<li><b>${esc(x.nom)}</b> ${esc(x.film)}</li>`).join('');
+  const p = Math.max(0, Math.min(1, (mo.ecoule || 0) / (mo.duree || 1)));
+  const centre = rev ? `<p class="ct-boum">BOUM !</p>`
+    : `<small>Répondez juste pour refiler votre contrat</small><div class="ct-meche" style="--p:${p.toFixed(3)}"><i></i><b>💥</b></div>` +
+      `<p class="ct-reste">${Math.max(0, Math.ceil((mo.duree || 0) - (mo.ecoule || 0)))} s</p>`;
+  const journal = (mo.journal || []).slice().reverse().map(x => `<li><b>${esc(x.de)}</b> → ${esc(x.a)}</li>`).join('');
   return `<div class="contrat${opt.joueur ? ' tel' : ''}" data-k="contrat"><div class="ct-table"><span class="ct-sens">↻</span>` +
     `<div class="ct-centre">${centre}</div>${places}</div>${journal && !opt.joueur ? `<ul class="ct-journal">${journal}</ul>` : ''}</div>`;
 }
@@ -672,19 +675,20 @@ function jumeauxHTML(v, src, opt = {}) {
   const cercles = (rev ? mo.diffs : opt.mes || []).map(d => `<i class="jm-cercle" style="left:${d.x * 100}%;top:${d.y * 100}%;width:${d.r * 200}%"></i>`).join('');
   const face = (i, nom) => `<figure class="jm-face" data-face="${i}"><div class="jm-cadre"><img src="${src(i)}" alt="" draggable="false">${cercles}</div>` +
     `<figcaption>${nom}</figcaption></figure>`;
-  const compte = opt.joueur ? '' : `<div class="rc-mises">${(mo.compte || []).map(j => `<span class="rc-mise" style="--c:${j.couleur}">${esc(j.nom)} <b>${j.n}/3</b>${j.film ? ' 🎬' : ''}</span>`).join('')}</div>`;
+  const compte = opt.joueur ? '' : `<div class="rc-mises">${(mo.compte || []).map(j => `<span class="rc-mise" style="--c:${j.couleur}">${esc(j.nom)} <b>${j.n}/${mo.n || 3}</b></span>`).join('')}</div>`;
   return `<div class="jumeaux${opt.joueur ? ' tel' : ''}" data-k="jumeaux"><div class="jm-paire">${face(0, 'Cooper')}${face(1, 'Mr. C')}</div>` +
-    (rev ? '' : `<p class="frise-aide">Trois différences : touchez-les${opt.joueur ? '' : ' sur vos téléphones'}</p>`) + compte + '</div>';
+    (rev ? '' : `<p class="frise-aide">${mo.n || 3} différences discrètes : touchez-les${opt.joueur ? '' : ' sur vos téléphones'}</p>`) + compte + '</div>';
 }
 
 /* Desmond's Code : la grille de 16 affiches. Le donneur voit le code couleur (or : à faire deviner ; rouge ; noir ;
    neutre) ; les devineurs voient la couleur des films qu'ils ont touchés ; à la réponse, tout le code. */
 function codeHTML(v, src, opt = {}) {
   const mo = v.moteur || {}, rev = v.phase === 'reponse', roles = mo.roles, mes = mo.mes || [];
-  const d = mo.donneur;
-  const tete = mo.indice ? `<p class="cd-indice"><b>${esc(mo.indice)}</b><span>${mo.x}</span></p>`
-    : `<p class="cd-attente">${opt.joueur && mo.donneur_moi ? 'À vous : un seul mot pour faire deviner les films en or' :
-      `${d ? esc(d.nom) : '?'} cherche un mot…`}</p>`;
+  const d = mo.donneur, avant = (mo.indices || []).slice(0, -1);
+  const tete = mo.indice ? `<p class="cd-indice"><b>${esc(mo.indice)}</b><span>${mo.nb}</span></p>` +
+      (avant.length ? `<p class="cd-avant">${avant.map(x => `${esc(x.mot)} <b>${x.n}</b>`).join(' · ')}</p>` : '')
+    : `<p class="cd-attente">${opt.joueur && mo.donneur_moi ? 'À vous : un indice (1 à 4 mots) et un nombre' :
+      `${d ? esc(d.nom) : '?'} cherche un indice…`}</p>`;
   const cases = (mo.cases || []).map(c => {
     const k = mes.indexOf(c.img), role = roles ? roles[c.img] : k >= 0 ? mo.mes_roles[k] : '';
     const touche = opt.joueur && mo.actif && !mo.donneur_moi && k < 0;
@@ -692,8 +696,66 @@ function codeHTML(v, src, opt = {}) {
     return `<figure class="cd-case${role ? ' ' + role : ''}${k >= 0 ? ' touche' : ''}${touche ? ' actif' : ''}" data-cd="${c.img}" data-k="c${c.img}">` +
       `<img src="${src(c.img)}" alt=""><figcaption>${esc(c.txt)}</figcaption>${qui ? `<span class="cd-qui">${qui}</span>` : ''}</figure>`;
   }).join('');
-  const av = opt.joueur ? '' : `<div class="rc-mises">${(mo.avance || []).map(j => `<span class="rc-mise" style="--c:${j.couleur}">${esc(j.nom)} <b>${j.n}/${mo.x}</b></span>`).join('')}</div>`;
+  const av = opt.joueur ? '' : `<div class="rc-mises">${(mo.avance || []).map(j => `<span class="rc-mise${j.elimine ? ' ko' : ''}" style="--c:${j.couleur}">` +
+    `${esc(j.nom)} <b>${j.elimine ? '☠' : `${j.n}/${mo.x}`}</b>${!j.elimine && j.fini && mo.indice ? ' ✓' : ''}</span>`).join('')}</div>`;
   return `<div class="code-desmond${opt.joueur ? ' tel' : ''}" data-k="code">` +
     `${opt.joueur && mo.donneur_moi ? '' : `<p class="cd-donneur">${d ? `Donneur : <b style="color:${d.couleur}">${esc(d.nom)}</b>` : ''}</p>`}${tete}` +
     `<div class="cd-grille">${cases}</div>${av}</div>`;
+}
+
+/* Jean Renault's Blackjack : la table de blackjack du One Eyed Jack's. Les cartes sont des affiches ; leur valeur
+   (la note TMDB) ne s'affiche qu'à la fin. Jean, le croupier, en haut ; les joueurs autour. */
+function carteBJ(c, src, cls = '') {
+  if (!c || c.img === null || c.img === undefined) return `<figure class="bj-c dos ${cls}"><span>J</span></figure>`;
+  return `<figure class="bj-c ${cls}"><img src="${src(c.img)}" alt=""><figcaption>${esc(c.txt)}</figcaption>` +
+    (c.v !== null && c.v !== undefined ? `<b class="bj-v">${String(c.v).replace('.', ',')}</b>` : '') + '</figure>';
+}
+function totalBJ(t) { return t === null || t === undefined ? '' : String(t).replace('.', ','); }
+function blackjackHTML(v, src, opt = {}) {
+  const mo = v.moteur || {}, rev = v.phase === 'reponse';
+  const RES = {gagne: 'Gagné', perd: 'Perdu', egal: 'Égalité', saute: 'Sauté'};
+  const jean = `<div class="bj-jean"><p class="bj-nom">Jean Renault <small>croupier</small>` +
+    (rev ? `<b class="bj-total${mo.jean_total > 21 ? ' saute' : ''}">${totalBJ(mo.jean_total)}</b>` : '') + `</p>` +
+    `<div class="bj-main">${(mo.jean || []).map(c => carteBJ(c, src)).join('')}</div></div>`;
+  if (opt.joueur) return jean;
+  const joueurs = (mo.joueurs || []).map(j => `<div class="bj-joueur${j.reste && !rev ? ' reste' : ''} ${j.res || ''}" style="--c:${j.couleur}" data-k="j${esc(j.id)}">` +
+    `<p class="bj-nom">${esc(j.nom)}${j.mise ? `<span class="bj-jeton">${j.mise}</span>` : mo.etape === 'mise' && !rev ? (j.a_mise ? ' <small>✓ a misé</small>' : ' <small>mise…</small>') : ''}` +
+    `${rev ? `<b class="bj-total">${totalBJ(j.total)}</b><small class="bj-res">${RES[j.res] || ''}</small>` : j.reste ? ' <small>reste</small>' : ''}</p>` +
+    `<div class="bj-main">${(j.cartes || []).map(c => carteBJ(c, src, 'petite')).join('')}</div></div>`).join('');
+  return `<div class="blackjack" data-k="blackjack"><div class="bj-tapis">${jean}` +
+    `<p class="bj-regle">${mo.etape === 'mise' && !rev ? 'Faites vos jeux : misez sur vos téléphones' : 'Approchez-vous de 21 sans dépasser · Jean tire jusqu\'à 17'}</p>` +
+    `<div class="bj-joueurs">${joueurs}</div></div></div>`;
+}
+
+/* Windom Earle's Chess Clock : la chaîne des films (le lien entre chaque) et les pendules d'échecs des joueurs. */
+const LIEN_ICONE = {acteur: '🎭', 'réalisateur': '🎬', compositeur: '🎼', 'scénariste': '✒️', 'directeur photo': '🎥', 'année': '📅'};
+function penduleHTML(v, src, opt = {}) {
+  const mo = v.moteur || {}, rev = v.phase === 'reponse', ch = mo.chaine || [];
+  const films = ch.map((c, k) => (c.lien ? `<span class="pd-lien"><i>${LIEN_ICONE[c.lien.type] || '↔'}</i>${esc(c.lien.nom)}</span>` : '') +
+    `<figure class="pd-film${k === ch.length - 1 ? ' dernier' : ''}">${c.img !== null && c.img !== undefined ? `<img src="${src(c.img)}" alt="">` : ''}` +
+    `<figcaption><b>${esc(c.titre)}</b>${c.annee ? `<small>${c.annee}</small>` : ''}${c.qui ? `<small style="color:${c.qui.couleur}">${esc(c.qui.nom)}</small>` : ''}</figcaption></figure>`).join('');
+  const pend = (mo.pendules || []).map(j => {
+    const p = Math.max(0, Math.min(1, j.reste / Math.max(mo.temps || 40, j.reste)));
+    return `<div class="pd-pendule${j.actif ? ' actif' : ''}${j.mat ? ' mat' : ''}" style="--c:${j.couleur};--p:${p.toFixed(3)}" data-k="p${esc(j.id)}">` +
+      `<span class="pd-cadran"><i></i></span><b>${j.mat ? 'mat' : Math.ceil(j.reste)}</b><small>${esc(j.nom)}</small></div>`;
+  }).join('');
+  const interdit = mo.interdit && !rev ? `<p class="pd-interdit">Lien interdit au prochain coup : <b>${esc(mo.interdit)}</b></p>` : '';
+  return `<div class="pendule${opt.joueur ? ' tel' : ''}" data-k="pendule"><div class="pd-chaine">${films}</div>${interdit}` +
+    (opt.joueur ? '' : `<div class="pd-pendules">${pend}</div>`) + '</div>';
+}
+
+/* La cérémonie (Dick Tremayne) et le Hibou d'or (Dwayne Milford) : l'enveloppe, les nommés, le lauréat. */
+function ceremonieHTML(v, src, opt = {}) {
+  const mo = v.moteur || {}, env = mo.env, rev = v.phase === 'reponse';
+  if (!env) return `<div class="ceremonie" data-k="ceremonie"><p class="ce-hote">${esc(mo.hote_nom || '')} monte sur scène…</p></div>`;
+  const devoile = env.bonne !== null && env.bonne !== undefined;
+  const items = (env.items || []).map((it, i) => `<figure class="ce-nomme${devoile && i === env.bonne ? ' laureat' : ''}${devoile && i !== env.bonne ? ' perdant' : ''}" data-k="n${it.img}">` +
+    `<img src="${src(it.img)}" alt=""><figcaption>${esc(it.txt)}${devoile && env.infos ? `<small>${esc(env.infos[i] || '')}</small>` : ''}</figcaption>` +
+    `${devoile && i === env.bonne ? '<span class="ce-trophee">🏆</span>' : ''}</figure>`).join('');
+  const tambour = !devoile ? `<p class="ce-tambour">${Math.ceil(mo.reste || 0)}<small>s</small> <span>🥁</span></p>` : '';
+  const qui = devoile ? `<p class="ce-justes">${(env.justes || []).map(j => puce(j, '', 'juste')).join('') || '<span class="doux">Personne n\'a trouvé</span>'}</p>`
+    : `<p class="ce-justes">${(env.repondu || []).map(j => puce(j, '', 'attend')).join('')}</p>`;
+  return `<div class="ceremonie" data-k="ceremonie"><p class="ce-hote">${esc(mo.hote_nom || '')} · enveloppe ${mo.k + 1}/${mo.n}</p>` +
+    `<div class="ce-enveloppe"><b>${esc(env.titre)}</b>${env.sous ? `<small>${esc(env.sous)}</small>` : ''}</div>` +
+    (items ? `<div class="ce-nommes">${items}</div>` : '<p class="ce-cache">Les nommés sont sur vos téléphones…</p>') + tambour + qui + '</div>';
 }

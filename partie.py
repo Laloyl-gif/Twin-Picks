@@ -17,6 +17,8 @@ from config import COULEURS, JEUX, avatars
 from jeux import CONSTRUCTEURS, MOTEURS
 from jeux.complicite import Complicite
 from texte import cle, correspond, est_latin, proche, suggerer
+import historique
+import recompenses
 from tmdb import POOL, TMDB, charger_pools, cle_film, entrees_pool
 
 BAREME = [1000, 750, 550, 400, 300, 200, 150, 100]   # points selon le rang d'arrivée
@@ -76,6 +78,7 @@ class Partie:
         self.message = self.erreur = self.info = ""
         self.pools, self.entrees, self.noms, self.deja = {}, {}, {}, {}
         self.signatures = set()                             # manches déjà construites (jamais deux fois la même)
+        self.recap, self.series_max, self.joues = [], {}, set()   # récap de fin de partie ; films joués (historique)
         self.plan, self.index, self.tour, self.seq = [], 0, 0, 0
         self.fabrique = ThreadPoolExecutor(max_workers=2)   # construit les manches à l'avance (deux d'avance)
         self.futurs, self.attente = {}, None
@@ -230,6 +233,12 @@ class Partie:
                 random.shuffle(self.plan)
             self.api = TMDB(cfg["api_key"], cfg["session_id"], cfg["account_id"])
             self.futurs, self.deja, self.info = {}, {}, ""
+            self.recap, self.series_max, self.joues = [], {}, set()
+            if cfg.get("anti_repetition", True):          # les films des dernières parties passent après les autres
+                try:
+                    self.deja["films"] = historique.recents(int(cfg.get("anti_repetition_n", 3)))
+                except Exception:  # noqa: BLE001
+                    traceback.print_exc()
             self.signatures = set()
             self.utilises, self._entrees_saga = {}, {}
             self.index = self.tour = 0
@@ -277,6 +286,10 @@ class Partie:
                     continue
                 if m.get("saga_id"):
                     deja.add(("saga", m["saga_id"]))            # pas un autre film de cette saga ensuite
+                try:                                             # l'indice « récompenses » (Wikidata)
+                    recompenses.ajouter_indice(m, self.api, self.cfg)
+                except Exception:  # noqa: BLE001
+                    traceback.print_exc()
                 return m
             except Exception as err:  # noqa: BLE001
                 erreur = err
@@ -497,6 +510,7 @@ class Partie:
             if m["reponse"] == "choix":
                 duree = base + 2
         self._rattrapage()
+        self._noter_recap(m)
         self.main = None
         self.phase = "reponse"
         self.reste_reponse = self.duree_reponse = duree
@@ -517,8 +531,57 @@ class Partie:
             j.score += j.gain
             j.trouve = e == 0
 
+    def _noter_recap(self, m):
+        """Ce qu'il faut pour le récap de fin : les gains de chacun à chaque manche, les séries."""
+        try:
+            self.recap.append({"jeu": m["jeu"], "solution": m.get("solution", ""), "type": m.get("reponse"),
+                               "gains": {pid: j.gain for pid, j in self.joueurs.items()},
+                               "trouves": [pid for pid, j in self.joueurs.items() if j.trouve]})
+            for pid, j in self.joueurs.items():
+                self.series_max[pid] = max(self.series_max.get(pid, 0), j.serie)
+            for k in m.get("films", []):
+                self.joues.add(tuple(k) if isinstance(k, list) else k)
+        except Exception:  # noqa: BLE001
+            traceback.print_exc()
+
+    def _sauver_historique(self):
+        if self.joues:
+            historique.ajouter(self.joues)
+            self.joues = set()
+
+    def recap_fin(self):
+        """Le récap de fin : podium, et pour chacun son meilleur jeu, sa meilleure manche, sa plus longue série ;
+        les films qui ont résisté à tout le monde."""
+        J = self.joueurs
+        par_joueur = []
+        for pid, j in J.items():
+            par_jeu = {}
+            meilleure = None
+            for r in self.recap:
+                g = r["gains"].get(pid, 0)
+                par_jeu[r["jeu"]] = par_jeu.get(r["jeu"], 0) + g
+                if g > 0 and (meilleure is None or g > meilleure[0]):
+                    meilleure = (g, r["jeu"])
+            top = max(par_jeu.items(), key=lambda x: x[1], default=(None, 0))
+            par_joueur.append(dict(j.public(), meilleur_jeu=JEUX[top[0]]["nom"] if top[0] and top[1] > 0 else "",
+                                   meilleur_jeu_pts=top[1] if top[0] else 0,
+                                   meilleure_manche=meilleure[0] if meilleure else 0,
+                                   meilleure_manche_jeu=JEUX[meilleure[1]]["nom"] if meilleure else "",
+                                   serie=self.series_max.get(pid, 0),
+                                   trouves=sum(1 for r in self.recap if pid in r["trouves"])))
+        par_joueur.sort(key=lambda x: -x["score"])
+        rates = [r["solution"] for r in self.recap if r["type"] == "titre" and not r["trouves"] and r["solution"]][:4]
+        jeux = {}
+        for r in self.recap:
+            jeux[r["jeu"]] = jeux.get(r["jeu"], 0) + sum(max(0, g) for g in r["gains"].values())
+        jeu_or, pts_or = max(jeux.items(), key=lambda x: x[1], default=(None, 0))
+        jeu_or = jeu_or if pts_or > 0 else None
+        return {"joueurs": par_joueur, "rates": rates, "manches": len(self.recap),
+                "jeu_or": JEUX[jeu_or]["nom"] if jeu_or else ""}
+
     def _terminer(self):
         self._vider_manche()
+        self._sauver_historique()
         self.phase, self.message = "fin", ""
 
     # ============ commandes de l'hôte ============
@@ -544,6 +607,7 @@ class Partie:
                 f.cancel()
             self.futurs, self.attente = {}, None
             self._vider_manche()
+            self._sauver_historique()
             self.phase, self.pause, self.message = "lobby", False, ""
 
     # ============ musique d'ambiance ============
@@ -855,6 +919,8 @@ class Partie:
                             essais=max(0, self.cfg.get("max_essais", 3) - j.essais), repondu=j.essais >= 1,
                             reponse=j.reponse, bloque=max(0, math.ceil(j.bloque - time.monotonic())),
                             moi_main=self.main == pid)
+            if self.phase == "fin":
+                v["mon_recap"] = next((x for x in self.recap_fin()["joueurs"] if x["id"] == j.id), None)
             if self.phase in ("manche", "reponse"):
                 if self.complice:
                     v["complice"] = self.complice.vue(pid, self.phase == "reponse")
@@ -869,6 +935,8 @@ class Partie:
                 v["message"] = (v.get("message") or "") + "\nAffiches vidées : " + PREPARATEUR.etat()["message"]
             v["erreur"] = self.erreur
             v["audio"] = bool(self.manche and self.manche.get("audio") and self.phase in ("manche", "reponse"))
+            if self.phase == "fin":
+                v["recap"] = self.recap_fin()
             if self.phase in ("manche", "reponse"):
                 if self.complice:
                     v["complice"] = self.complice.vue(None, self.phase == "reponse")

@@ -2,8 +2,8 @@
 deux, quinze à trois…, jamais deux films d'une même saga). Chaque joueur reçoit en secret un film de la grille.
 À tour de rôle, le joueur actif retire de la grille un film proche du sien : c'est son indice. À tout moment, chacun
 peut deviner le film d'un autre joueur (une fois par joueur) : moins le joueur visé a donné d'indices, plus ça
-rapporte, et celui dont le film est trouvé marque aussi. Retirer sans le savoir le film d'un autre joueur coûte des
-points (et son film est dévoilé).
+rapporte, et celui dont le film est trouvé marque aussi. On devine en touchant le nom d'un joueur puis un film, même
+pendant son propre tour. Retirer le film d'un autre joueur, c'est perdre : gros malus, et la manche s'arrête net.
 """
 import random
 import time
@@ -52,6 +52,7 @@ class Moteur:
         self.retires = []                       # [(film, pid)]
         self.devines = {}                       # (devin, cible) -> (film proposé, juste, points)
         self.devoiles = set()                   # cibles dont le film a été retiré par un autre
+        self.perdant = None                     # qui a retiré le film d'un autre : la manche s'arrête
         self.tour, self.debut_tour = 0, 0.0
         self.gains = {}
 
@@ -93,6 +94,8 @@ class Moteur:
 
     def action(self, pid, d, frac, info=None):
         self._maj()
+        if self.perdant:
+            return {"ok": False, "msg": "La manche est finie"}
         if "retirer" in d:
             if pid != self._actif():
                 return {"ok": False, "msg": "Ce n'est pas votre tour"}
@@ -106,10 +109,14 @@ class Moteur:
             self._avancer()
             if victime:
                 self.devoiles.add(victime)
+                self.perdant = (pid, victime)
                 self._gagner(pid, -int(self.cfg["hank_retire"]))
-                return {"ok": True, "msg": "Aïe : c'était le film d'un autre joueur !"}
+                nom = self.p.joueurs[victime].nom if victime in self.p.joueurs else "un autre joueur"
+                return {"ok": True, "correct": False, "msg": f"Perdu : c'était le film de {nom} ! La manche s'arrête"}
             return {"ok": True, "msg": "Domino retiré"}
         cible, f = d.get("cible"), d.get("i")
+        # le téléphone ne connaît que l'identifiant public des joueurs
+        cible = next((q for q in self.secret if q in self.p.joueurs and self.p.joueurs[q].id == cible), cible)
         if cible not in self.secret or cible == pid or type(f) is not int or f not in self.grille:
             return {"ok": False, "msg": "Choisissez un joueur, puis un film"}
         if (pid, cible) in self.devines:
@@ -133,6 +140,8 @@ class Moteur:
 
     def fini(self):
         self._maj()
+        if self.perdant:
+            return True
         J = self.p.joueurs
         secrets = set(self.secret.values())
         plus_rien = not [f for f in self._retirables() if f not in secrets]
@@ -166,8 +175,11 @@ class Moteur:
              "dur_tour": float(self.cfg["hank_tour"])}
         if pid:
             v.update(mon_film=self.secret.get(pid), mon_tour=pid == self._actif() and not revele,
-                     mes_devines={c: {"i": f, "ok": ok} for (a, c), (f, ok, _) in self.devines.items() if a == pid},
+                     mes_devines={J[c].id if c in J else c: {"i": f, "ok": ok} for (a, c), (f, ok, _) in self.devines.items() if a == pid},
                      actif=not revele and not self.p.pause)
+        if self.perdant:
+            a, b = self.perdant
+            v["perdant"] = {"qui": J[a].public() if a in J else None, "victime": J[b].public() if b in J else None}
         if revele:
             v["resultats"] = sorted([dict(J[q].public(), gain=self.gains.get(q, 0)) for q in J], key=lambda x: -x["gain"])
         return v

@@ -54,6 +54,10 @@ diable=😈  bisou=😘 larme=😢 sommeil=😴 cri=😱 colère=😡 rire=😂 
 baiser=💋 squelette=💀 fantôme=👻 citrouille=🎃 sorcière=🧙‍♀️ magicien=🧙 génie=🧞 elfe=🧝 sirène=🧜‍♀️ vampire=🧛
 chevalier=🛡️ bouclier=🛡️ arbalète=🏹 hache=🪓 pioche=⛏️ marteau=🔨 clé=🔑 pelle=🪏 chaîne=⛓️
 dollar=💵 pièce=🪙 cible=🎯 dés=🎲 cartes=🃏 domino=🁫 billard=🎱 bowling=🎳 kayak=🛶 voile=⛵
+pot=🪴 car=🚌 gare=🚉 porte=🚪 camp=⛺ champ=🌾 chou=🥬 patate=🥔 noix=🌰 épi=🌽 vis=🔩 toile=🕸️
+lys=⚜️ lotus=🪷 bouc=🐐 rêve=💭 trou=🕳️ saint=😇 son=🔊 pas=👣 temps=⏳ croix=❌ plus=➕ moins=➖ rond=⭕
+yeux=👀 ongle=💅 pâtes=🍝 tong=🩴 gilet=🦺 luge=🛷 but=🥅 rugby=🏉 judo=🥋 piège=🪤 fusil=🔫 rame=🚣
+onze=[🔟1️⃣] douze=[🔟2️⃣] vœu=🌠 nouille=🍜 laisse=🦮 totem=🗿 igloo=🛖 temple=🛕 puzzle=🧩 vote=🗳️ cône=🍦 cube=🧊
 a=🅰️ b=🅱️ o=🅾️ i=ℹ️ m=Ⓜ️ p=🅿️
 """.split()
 

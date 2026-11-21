@@ -1,203 +1,168 @@
-"""Jean Renault's Ransom (La rançon) : Jean Renault retient un film en otage au One Eyed Jack's.
-1) La mise : on ne connaît du film que deux infos tirées au hasard (le genre, la décennie, le pays, la durée…).
-   Chacun mise une rançon : de 0 à 2 500 points.
-2) Le marché noir : Jean vend des preuves. Chacun achète en secret, sur son téléphone, les indices qu'il veut ; leur
-   prix suit ce qu'ils révèlent (le genre ne coûte presque rien, le réalisateur cher) et grimpe avec la mise. On ne
-   voit que ce qu'on a acheté, et on répond quand on veut (trois essais).
-Trouvé : la mise × 2 (plus quelques points), moins les achats. Raté : la mise et les achats sont perdus.
+"""Jean Renault's Blackjack (Le blackjack) : Jean Renault tient la table de blackjack du One Eyed Jack's. Chaque carte
+est un film (son affiche) ; sa valeur, cachée, est sa note TMDB (« Le Parrain » vaut 8,7). Il faut s'approcher de
+21 sans dépasser, en demandant une carte ou en restant, sans jamais voir les valeurs : seule la culture ciné aide à
+estimer. On mise d'abord ; Jean, le croupier, montre une carte et tire jusqu'à 17. À la fin, les notes se révèlent :
+qui bat Jean double sa mise (et gagne quelques points même sans miser) ; qui dépasse 21 ou fait moins que Jean
+perd sa mise ; égalité : la mise est rendue.
 """
 import random
 
 from PIL import ImageOps
 
-from texte import correspond, proche
-from tmdb import details_film, fiche
+import sagas
+from tmdb import cle_film
 from visuels import en_jpeg
-from .commun import affiche, manche_titre, reponse_affichee, tirer, trous
+from .commun import affiche
 
-MISES = (0, 250, 500, 1000, 1500, 2500)
-
-
-def _hm(m):
-    return f"{m // 60} h {m % 60:02d}" if m >= 60 else f"{m} min"
-
-
-def preuves(api, film, d, fi, rep):
-    """[(id, nom, prix de base, {"texte"} | {"img"})] du moins cher (le moins parlant) au plus cher, et les images."""
-    an = d.get("annee") or ""
-    out, images = [], []
-    if d.get("genres"):
-        out.append(("genre", "Le genre", 40, {"texte": ", ".join(g.lower() for g in d["genres"][:3])}))
-    if an:
-        out.append(("decennie", "La décennie", 60, {"texte": f"Les années {an[2]}0" if an[:2] == "19" else f"Les années {an[:3]}0"}))
-    if fi.get("pays"):
-        out.append(("pays", "Le pays", 70, {"texte": ", ".join(fi["pays"][:2])}))
-    if fi.get("duree"):
-        out.append(("duree", "La durée", 70, {"texte": _hm(fi["duree"])}))
-    if fi.get("note"):
-        out.append(("note", "La note TMDB", 80, {"texte": f"{fi['note']:.1f}/10".replace(".", ",")}))
-    if an:
-        out.append(("annee", "L'année exacte", 150, {"texte": an}))
-    acteurs = fi.get("acteurs", [])
-    if len(acteurs) > 3:
-        out.append(("second", "Un second rôle", 180, {"texte": acteurs[random.randint(3, min(6, len(acteurs) - 1))]["nom"]}))
-    fonds = d.get("fonds_neutres") or d.get("fonds") or []
-    if fonds:
-        try:
-            images.append(en_jpeg(ImageOps.fit(api.image(random.choice(fonds[:8]), "w780").convert("RGB"), (480, 270)), 270))
-            out.append(("image", "Une image du film", 220, {"img": len(images) - 1}))
-        except Exception:  # noqa: BLE001
-            pass
-    if fi.get("compositeurs"):
-        out.append(("compo", "Le compositeur", 240, {"texte": fi["compositeurs"][0]["nom"]}))
-    if acteurs:
-        out.append(("star", "La tête d'affiche", 350, {"texte": acteurs[0]["nom"]}))
-    if fi.get("realisateurs"):
-        out.append(("real", "Le réalisateur", 420, {"texte": " & ".join(r["nom"] for r in fi["realisateurs"][:2])}))
-    out.append(("initiales", "Les initiales du titre", 500, {"texte": trous(rep, 0)}))
-    out.append(("trous", "Le titre à moitié", 700, {"texte": trous(rep, 0.5)}))
-    return out, images
+MISES = (0, 100, 250, 500, 1000, 2000)    # on peut miser sans avoir les points : on ne descend jamais sous 0
+CARTES_MAX = 5
+JEAN_RESTE = 17.0
 
 
 def construire(api, cfg, pool, deja):
-    for _ in range(15):
-        film = tirer(pool, deja)
-        d = details_film(api, film)
-        try:
-            fi = fiche(api, film)
-        except Exception:  # noqa: BLE001
-            continue
-        rep = reponse_affichee(cfg, film, d)
-        cat, images = preuves(api, film, d, fi, rep)
-        bases = [c for c in cat if c[0] in ("genre", "decennie", "pays", "duree", "note")]
-        if len(bases) >= 2 and len(cat) >= 7:
+    films = [f for f in pool if not f.get("tv") and f.get("poster_path") and (f.get("note") or 0) >= 1
+             and (f.get("votes") or 0) >= int(cfg.get("jean_votes", 200))]
+    if len(films) < 30:
+        films = [f for f in pool if not f.get("tv") and f.get("poster_path") and (f.get("note") or 0) >= 1]
+    if len(films) < 20:
+        raise RuntimeError("Le blackjack : pas assez de films notés dans les listes choisies.")
+    random.shuffle(films)
+    films = sorted(films, key=lambda f: cle_film(f) in deja)
+    sabot = []
+    for f in films:                                   # pas deux films d'une même saga sur la table
+        if not any(sagas.meme_univers(f, g) for g in sabot):
+            sabot.append(f)
+        if len(sabot) == 60:
             break
-    else:
-        raise RuntimeError("La rançon : pas assez d'informations sur les films des listes choisies.")
-    donnees = random.sample(bases, 2)
-    marche = [{"id": c[0], "nom": c[1], "prix": c[2], **c[3]} for c in cat if c not in donnees]
-    etat = {"etape": "mise", "infos": [{"nom": c[1], "texte": c[3]["texte"]} for c in donnees],
-            "cachees": list(range(len(images)))}
-    dm = float(cfg["jean_dur_mise"])
-    etapes = [(0.0, etat), (dm, {**etat, "etape": "marche"})]
-    m = manche_titre("jean", "rancon", float(cfg["dur_jean"]) + dm, film, d, etapes, images,
-                     en_jpeg(affiche(api, film, "w500")), cfg)
-    m.update(reponse="rancon", dur_mise=dm, marche=marche, suggestions=True)
-    return m
+    images = [en_jpeg(ImageOps.fit(affiche(api, f, "w185"), (160, 240)), 240) for f in sabot]
+    cartes = [{"img": i, "txt": f["title"], "v": round(float(f["note"]), 1)} for i, f in enumerate(sabot)]
+    dm, dj = float(cfg["jean_dur_mise"]), float(cfg["dur_jean"])
+    return dict(jeu="jean", vue="blackjack", duree=dm + dj, reponse="blackjack",
+                etapes=[(0.0, {"cachees": list(range(len(images)))})], images=images, revelation=None, cles=[], bonne="",
+                solution="Les cartes de Jean", detail="", films=[cle_film(f) for f in sabot[:12]], cartes=cartes,
+                dur_mise=dm)
 
 
 class Moteur:
-    suggestions = True
+    suggestions = False
 
     def __init__(self, partie, cfg, m):
         self.p, self.cfg, self.m = partie, cfg, m
-        self.mises, self.achats, self.trouve, self.essais, self.gains = {}, {}, {}, {}, {}
+        self.sabot = list(range(len(m["cartes"])))
+        random.shuffle(self.sabot)
+        self.jean = [self.sabot.pop(), self.sabot.pop()]
+        self.mains, self.mises, self.restes = {}, {}, set()
+        for pid in partie.joueurs:
+            self.mains[pid] = [self.sabot.pop(), self.sabot.pop()]
+        self.gains, self.fin_jean = {}, None
 
     def ok(self):
         return ""
 
+    def _val(self, main):
+        return round(sum(self.m["cartes"][i]["v"] for i in main), 1)
+
     def _etape(self):
-        return "mise" if self.p.ecoule < self.m["dur_mise"] else "marche"
+        return "mise" if self.p.ecoule < self.m["dur_mise"] and len(self.mises) < len(self.p.joueurs) else "jeu"
 
-    def prix(self, pid, base):
-        """Plus on a misé, plus les preuves coûtent (×1 sans mise, ×2 pour 2 500)."""
-        return int(round(base * (1 + self.mises.get(pid, 0) / 2500) / 10) * 10)
-
-    def _depense(self, pid):
-        return sum(self.prix(pid, c["prix"]) for c in self.m["marche"] if c["id"] in self.achats.get(pid, []))
+    def _main(self, pid):
+        if pid not in self.mains:                     # arrivé en cours de manche
+            self.mains[pid] = [self.sabot.pop(), self.sabot.pop()] if len(self.sabot) > 2 else []
+        return self.mains[pid]
 
     def action(self, pid, d, frac, info=None):
         if "mise" in d:
-            if self._etape() != "mise":
-                return {"ok": False, "msg": "Trop tard pour miser"}
-            try:
-                mise = int(d["mise"])
-            except (TypeError, ValueError):
+            if pid in self.mises:
+                return {"ok": False, "msg": "Mise déjà posée"}
+            x = d.get("mise")
+            if x not in MISES:
                 return {"ok": False, "msg": "Mise refusée"}
-            if mise not in MISES:
-                return {"ok": False, "msg": "Mise refusée"}
-            self.mises[pid] = mise
-            if all(p in self.mises for p in self.p.joueurs):        # tout le monde a misé : le marché ouvre
-                self.p.ecoule = max(self.p.ecoule, self.m["dur_mise"])
-            return {"ok": True, "msg": f"Rançon : {mise}"}
+            self.mises[pid] = x
+            return {"ok": True, "msg": f"Mise : {x}" if x else "Pas de mise"}
         if self._etape() == "mise":
             return {"ok": False, "msg": "Misez d'abord"}
-        if pid in self.trouve:
-            return {"ok": False, "msg": "Otage déjà libéré !"}
-        maxi = int(self.cfg.get("max_essais", 3))
-        if "acheter" in d:
-            c = next((c for c in self.m["marche"] if c["id"] == d["acheter"]), None)
-            if not c:
-                return {"ok": False, "msg": "Preuve inconnue"}
-            if c["id"] in self.achats.setdefault(pid, []):
-                return {"ok": False, "msg": "Déjà achetée"}
-            self.achats[pid].append(c["id"])
-            return {"ok": True, "msg": f"{c['nom']} : achetée {self.prix(pid, c['prix'])}"}
-        texte = str(d.get("texte", "")).strip()
-        if not texte:
-            return {"ok": False, "msg": "Tapez un titre"}
-        if self.essais.get(pid, 0) >= maxi:
-            return {"ok": False, "msg": "Plus d'essais"}
-        if any(correspond(texte, c) for c in self.m["cles"]):
-            self.trouve[pid] = frac
-            self.p.joueurs[pid].essais = 1
-            return {"ok": True, "correct": True, "msg": "L'otage est libéré !"}
-        self.essais[pid] = self.essais.get(pid, 0) + 1
-        reste = maxi - self.essais[pid]
-        if not reste:
-            self.p.joueurs[pid].essais = 1
-        presque = any(proche(texte, c) for c in self.m["cles"])
-        return {"ok": False, "msg": ("Presque ! " if presque else "Raté. ") + (f"{reste} essai(s)" if reste else "Plus d'essais.")}
+        main = self._main(pid)
+        if pid in self.restes:
+            return {"ok": False, "msg": "Vous êtes resté"}
+        if d.get("rester"):
+            self.restes.add(pid)
+            return {"ok": True, "msg": "Vous restez"}
+        if d.get("carte"):
+            if not self.sabot:
+                self.restes.add(pid)
+                return {"ok": False, "msg": "Plus de cartes"}
+            main.append(self.sabot.pop())
+            if len(main) >= CARTES_MAX:
+                self.restes.add(pid)
+                return {"ok": True, "msg": "Cinq cartes : vous restez"}
+            return {"ok": True, "msg": "Une carte de plus…"}
+        return {"ok": False, "msg": ""}
 
     def fini(self):
         J = self.p.joueurs
-        maxi = int(self.cfg.get("max_essais", 3))
-        return bool(J) and self._etape() == "marche" and all(p in self.trouve or self.essais.get(p, 0) >= maxi for p in J)
+        return bool(J) and self._etape() == "jeu" and all(p in self.restes for p in J)
+
+    def _jouer_jean(self):
+        if self.fin_jean is None:
+            while self._val(self.jean) < JEAN_RESTE and self.sabot and len(self.jean) < CARTES_MAX + 1:
+                self.jean.append(self.sabot.pop())
+            self.fin_jean = self._val(self.jean)
+        return self.fin_jean
 
     def clore(self):
+        vj = self._jouer_jean()
         for pid, j in self.p.joueurs.items():
-            mise, dep = self.mises.get(pid, 0), self._depense(pid)
-            if pid in self.trouve:
-                gain = 2 * mise + int(self.cfg["jean_pts"]) + int(self.cfg["bonus_vitesse"] * self.trouve[pid] / 2) - dep
+            v = self._val(self._main(pid))
+            mise = self.mises.get(pid, 0)
+            if v > 21:
+                gain, res = -mise, "saute"
+            elif vj > 21 or v > vj:
+                gain, res = mise + int(self.cfg["jean_pts"]), "gagne"
+            elif v == vj:
+                gain, res = 0, "egal"
             else:
-                gain = -(mise + dep)
-            gain = max(gain, -j.score)                      # on ne descend pas sous zéro
+                gain, res = -mise, "perd"
+            gain = max(gain, -j.score)
+            self.gains[pid] = (gain, res)
             j.gain += gain
             j.score += gain
-            j.trouve = pid in self.trouve
+            j.trouve = res == "gagne"
             j.serie = j.serie + 1 if j.trouve else 0
-            self.gains[pid] = gain
 
     def statut(self, pid):
-        if pid in self.trouve:
-            return {"t": "libéré", "c": "ok"}
         if self._etape() == "mise":
             return {"t": "a misé", "c": "ok"} if pid in self.mises else {"t": "", "c": ""}
-        n = len(self.achats.get(pid, []))
-        return {"t": f"{n} preuve{'s' if n > 1 else ''}", "c": ""}
+        n = len(self.mains.get(pid, []))
+        return {"t": f"{n} cartes" + (" · reste" if pid in self.restes else ""), "c": "ok" if pid in self.restes else ""}
 
     def avancement(self):
         J = self.p.joueurs
         if self._etape() == "mise":
-            return f"{sum(1 for p in J if p in self.mises)} / {len(J)} ont misé"
-        return f"{sum(1 for p in J if p in self.trouve)} / {len(J)} ont libéré l'otage"
+            return f"{len(self.mises)} / {len(J)} ont misé"
+        return f"{sum(1 for p in J if p in self.restes)} / {len(J)} restent"
+
+    def _cartes(self, main, montrer):
+        return [dict(self.m["cartes"][i], v=self.m["cartes"][i]["v"] if montrer else None) for i in main]
 
     def vue(self, pid, revele):
         J = self.p.joueurs
         et = self._etape()
-        v = {"etape": et, "mises": MISES,
-             "joueurs": [dict(J[p].public(), mise=self.mises.get(p) if et != "mise" or revele else None,
-                              a_mise=p in self.mises, achats=len(self.achats.get(p, [])), libere=p in self.trouve) for p in J]}
-        if pid:
-            maxi = int(self.cfg.get("max_essais", 3))
-            pris = self.achats.get(pid, [])
-            v.update(ma_mise=self.mises.get(pid), trouve=pid in self.trouve, depense=self._depense(pid),
-                     marche=[{"id": c["id"], "nom": c["nom"], "prix": self.prix(pid, c["prix"]), "achete": c["id"] in pris,
-                              **({k: c[k] for k in ("texte", "img") if k in c} if c["id"] in pris or revele else {})}
-                             for c in self.m["marche"]],
-                     actif=not revele and not self.p.pause and (pid not in self.mises if et == "mise" else
-                                                               pid not in self.trouve and self.essais.get(pid, 0) < maxi))
         if revele:
-            v["resultats"] = sorted([dict(J[p].public(), gain=self.gains.get(p, 0), mise=self.mises.get(p, 0),
-                                          depense=self._depense(p), trouve=p in self.trouve) for p in J], key=lambda x: -x["gain"])
+            self._jouer_jean()
+        v = {"etape": et, "dur_mise": self.m["dur_mise"], "mises_possibles": list(MISES),
+             "jean": self._cartes(self.jean, revele) if revele else
+             [dict(self.m["cartes"][self.jean[0]], v=None), {"img": None, "txt": "", "v": None}],
+             "jean_total": self.fin_jean if revele else None,
+             "joueurs": [dict(J[p].public(), mise=self.mises.get(p) if et == "jeu" or revele else None,
+                              a_mise=p in self.mises, cartes=self._cartes(self._main(p), revele) if et == "jeu" or revele else [],
+                              reste=p in self.restes, total=self._val(self._main(p)) if revele else None,
+                              res=self.gains.get(p, (0, ""))[1] if revele else "") for p in J]}
+        if pid:
+            v.update(ma_mise=self.mises.get(pid), mes_cartes=self._cartes(self._main(pid), revele) if et == "jeu" or revele else [],
+                     reste=pid in self.restes, mon_score=J[pid].score if pid in J else 0,
+                     actif=not revele and not self.p.pause and (pid not in self.mises if et == "mise" else pid not in self.restes))
+        if revele:
+            v["resultats"] = sorted([dict(J[p].public(), gain=self.gains.get(p, (0, ""))[0], res=self.gains.get(p, (0, ""))[1],
+                                          total=self._val(self._main(p)), mise=self.mises.get(p, 0)) for p in J],
+                                    key=lambda x: -x["gain"])
         return v

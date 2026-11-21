@@ -169,13 +169,19 @@ async function action(url, data) {
 async function valider() {
   const texte = $('#saisie').value.trim();
   if (!texte || occupe) return;
+  if (S && S.type === 'code') {                       // Desmond : l'indice et son nombre
+    if (!codeN) return retour({ok: false, msg: 'Choisissez le nombre de films'});
+    await action('/api/jouer', {pid, texte, n: codeN});
+    if ((S.moteur || {}).indice === texte || !(S.moteur || {}).actif) { $('#saisie').value = ''; codeN = 0; }
+    return;
+  }
   clearTimeout(suggT);
   occupe = true;
   try {
     const r = await post('/api/repondre', {pid, texte, case: selCase});
     retour(r);
     $('#sugg').innerHTML = '';
-    if (r.correct && (S.type === 'chrono' || S.type === 'bingo')) { $('#saisie').value = ''; selCase = -1; }
+    if (r.correct && (S.type === 'chrono' || S.type === 'bingo' || S.type === 'pendule')) { $('#saisie').value = ''; selCase = -1; }
     else if (!r.correct) $('#saisie').select();
   } finally { occupe = false; }
   boucle();
@@ -257,7 +263,20 @@ $('#zone').onclick = ev => {
     const b = jf.getBoundingClientRect();
     return action('/api/jouer', {pid, pos: [(ev.clientX - b.left) / b.width, (ev.clientY - b.top) / b.height]});
   }
-  if (ev.target.closest('#b-ct-changer')) return action('/api/jouer', {pid, type: 'changer'});
+  const cn = ev.target.closest('[data-cdn]');
+  if (cn) { codeN = Number(cn.dataset.cdn); return rendre(); }
+  if (ev.target.closest('#b-cd-stop')) return action('/api/jouer', {pid, stop: 1});
+  if (ev.target.closest('#b-cd-fin')) return action('/api/jouer', {pid, terminer: 1});
+  const bjm = ev.target.closest('[data-bjmise]');
+  if (bjm && !bjm.disabled) return action('/api/jouer', {pid, mise: Number(bjm.dataset.bjmise)});
+  if (ev.target.closest('#b-bj-carte')) return action('/api/jouer', {pid, carte: 1});
+  if (ev.target.closest('#b-bj-reste')) return action('/api/jouer', {pid, rester: 1});
+  const ce = ev.target.closest('[data-ce]');
+  if (ce && !ce.disabled) return action('/api/jouer', {pid, env: (S.moteur || {}).k, i: Number(ce.dataset.ce)});
+  const cea = ev.target.closest('[data-cea]');
+  if (cea) return action('/api/jouer', {pid, env: (S.moteur || {}).k, annee: Number(cea.dataset.cea)});
+  const ctc = ev.target.closest('[data-ctc]');
+  if (ctc && !ctc.disabled) return action('/api/jouer', {pid, choix: Number(ctc.dataset.ctc)});
   if (ev.target.closest('#b-cest-lui')) return action('/api/jouer', {pid, cest_lui: 1});
   const ach = ev.target.closest('[data-acheter]');
   if (ach) return action('/api/jouer', {pid, acheter: ach.dataset.acheter});
@@ -529,7 +548,7 @@ function marcheHTML(mo, fige) {
 
 /* Mike's Shoe Samples : toucher une boîte (un personnage), puis l'affiche de son film ; « Envoyer » quand les quatre
    boîtes ont leur film. Une affiche déjà donnée à une autre boîte change de boîte. */
-let pairesTel_ = [], pairesSel = -1, pairesSeq = -1, focusCible = null, focusSeq = -1;
+let codeN = 0, pairesTel_ = [], pairesSel = -1, pairesSeq = -1, focusCible = null, focusSeq = -1;
 function pairesTel() {
   const mo = S.moteur || {}, rev = S.phase === 'reponse', src = i => `/img/${S.seq}/${i}`;
   if (pairesSeq !== S.seq) { pairesSeq = S.seq; pairesTel_ = []; pairesSel = 0; }
@@ -595,7 +614,13 @@ function vueZone() {
       `<button class="secondaire large code-autre" data-code="1"><b>#</b> Rejoindre une autre partie avec un code</button>`];
   }
   if (S.phase === 'chargement') return ['charg', message('<div class="spinner"></div>')];
-  if (S.phase === 'fin') return ['fin' + JSON.stringify(S.classement), '<h2 class="fin-titre">Classement final</h2>' + miniClassement(true)];
+  if (S.phase === 'fin') {
+    const r = S.mon_recap;
+    const mien = r ? `<ul class="rp-moi">${r.meilleur_jeu ? `<li>Votre meilleur jeu : <b>${esc(r.meilleur_jeu)}</b></li>` : ''}` +
+      `${r.meilleure_manche ? `<li>Plus beau coup : <b>+${r.meilleure_manche}</b> (${esc(r.meilleure_manche_jeu)})</li>` : ''}` +
+      `<li>${r.trouves} manche${r.trouves > 1 ? 's' : ''} gagnée${r.trouves > 1 ? 's' : ''}${r.serie > 1 ? ` · série de ${r.serie}` : ''}</li></ul>` : '';
+    return ['fin' + JSON.stringify([S.classement, r]), '<h2 class="fin-titre">Classement final</h2>' + miniClassement(true) + mien];
+  }
   if (S.type === 'complice' && S.complice) {
     return ['c' + JSON.stringify([S.phase, S.seq, S.pause, sel, S.complice]), complTel()];
   }
@@ -621,46 +646,111 @@ function vueZone() {
     if (mo.trouve) return ['rc-ok' + S.seq, message(cooper(true, 'grand') + '<span class="ok">Otage libéré !</span>') + marcheHTML(mo, true)];
     return ['rc-mk' + JSON.stringify([S.seq, mo.marche, mo.actif, mo.depense]), marcheHTML(mo, !mo.actif)];
   }
-  if (S.type === 'code') {                          // Desmond : le code
+  if (S.type === 'code') {                          // Desmond : le code (règles de Codenames)
     const mo = S.moteur || {}, src = i => `/img/${S.seq}/${i}`;
     if (S.phase === 'reponse') {
       const r = (mo.resultats || []).find(x => x.id === m.id) || {};
       return ['cd' + S.seq + JSON.stringify(S.classement), banniere(r.gain > 0 ? 'ok' : 'ko', r.gain > 0 ? `+${r.gain}` : r.gain < 0 ? `${r.gain}` : 'Pas de points', '') +
         codeHTML(S, src, {joueur: true}) + gainTel()];
     }
-    const n = (mo.mes || []).length;
-    const aide = mo.donneur_moi ? (mo.indice ? 'Les autres cherchent…' : '')
-      : mo.indice ? (n < mo.x ? `Touchez ${mo.x - n} film${mo.x - n > 1 ? 's' : ''}` : 'Vous avez fini') : 'Attendez l\'indice…';
-    return ['cd' + JSON.stringify([S.seq, mo.indice, mo.mes, mo.actif]), (aide ? `<p class="fo-aide">${aide}</p>` : '') + codeHTML(S, src, {joueur: true})];
+    let aide = '', bas = '';
+    if (mo.donneur_moi) {
+      if (mo.actif) {
+        const nb = Math.max(1, mo.reste_or || 1);
+        if (codeN > nb) codeN = 0;
+        bas = `<div class="cd-nombres">${Array.from({length: nb}, (_, k) => `<button class="cd-n${codeN === k + 1 ? ' choisi' : ''}" data-cdn="${k + 1}">${k + 1}</button>`).join('')}</div>` +
+          (mo.indices && mo.indices.length ? '<button id="b-cd-fin" class="discret">Terminer la manche</button>' : '');
+        aide = 'Tapez votre indice, choisissez le nombre, puis Valider';
+      } else aide = 'Les autres cherchent…';
+    } else if (mo.elimine) aide = '☠ Le film noir : éliminé pour cette manche';
+    else if (!mo.indice) aide = 'Attendez l\'indice…';
+    else if (mo.actif) {
+      aide = `<b>${esc(mo.indice)} · ${mo.nb}</b> — touchez un film (encore ${mo.essais} au plus)`;
+      bas = '<button id="b-cd-stop" class="discret">Je m\'arrête là</button>';
+    } else aide = 'Tour fini : attendez l\'indice suivant';
+    return ['cd' + JSON.stringify([S.seq, mo.indices, mo.mes, mo.actif, mo.essais, mo.elimine, codeN]),
+      `<p class="fo-aide">${aide}</p>` + codeHTML(S, src, {joueur: true}) + bas];
   }
   if (S.type === 'differences') {                   // Mr. C : le double
     const mo = S.moteur || {}, src = i => `/img/${S.seq}/${i}`;
     if (S.phase === 'reponse') {
       const r = (mo.resultats || []).find(x => x.id === m.id) || {};
-      return ['jm' + S.seq + JSON.stringify(S.classement), banniere(r.n === 3 ? 'ok' : r.n ? '' : 'ko', `${r.n || 0} différence${r.n > 1 ? 's' : ''} sur 3`,
+      return ['jm' + S.seq + JSON.stringify(S.classement), banniere(r.n === mo.n ? 'ok' : r.n ? '' : 'ko', `${r.n || 0} différence${r.n > 1 ? 's' : ''} sur ${mo.n}`,
         `<b>${esc(S.solution)}</b>`) + jumeauxHTML(S, src, {joueur: true}) + gainTel()];
     }
     const n = (mo.mes || []).length;
     return ['jm' + JSON.stringify([S.seq, mo.mes, mo.erreurs, mo.actif]), jumeauxHTML(S, src, {joueur: true, mes: mo.mes}) +
-      `<p class="centre doux">${mo.actif ? `Touchez les différences (${n}/3) · erreurs ${mo.erreurs}/${mo.max_erreurs}` : n === 3 ? 'Les trois !' : 'Plus de touches'}` +
-      `${mo.titre_donne ? '' : '<br>Et le film ? (bonus)'}</p>`];
+      `<p class="centre doux">${mo.actif ? `Touchez les différences (${n}/${mo.n}) · erreurs ${mo.erreurs}/${mo.max_erreurs}` : n === mo.n ? 'Toutes trouvées !' : 'Plus de touches'}</p>`];
   }
-  if (S.type === 'contrat') {                       // Mitchum : la patate chaude
-    const mo = S.moteur || {};
+  if (S.type === 'contrat') {                       // Mitchum : les contrats et les questions éclair
+    const mo = S.moteur || {}, src = i => `/img/${S.seq}/${i}`;
     if (S.phase === 'reponse') {
-      const vic = mo.victime && mo.victime.id === m.id;
-      return ['ct' + S.seq + JSON.stringify(S.classement), banniere(vic ? 'ko' : 'ok', vic ? `Le contrat a éclaté sur vous (−${mo.perte})` : 'Vous vous en sortez',
-        mo.victime ? `${esc(mo.victime.nom)} tenait le contrat` : '') + gainTel()];
+      const moi = (mo.joueurs || []).find(j => j.id === m.id) || {};
+      return ['ct' + S.seq + JSON.stringify(S.classement), banniere(moi.perte ? 'ko' : 'ok', moi.perte ? `Les contrats ont éclaté sur vous (−${moi.perte})` : 'Vous vous en sortez',
+        '') + gainTel()];
     }
-    const reste = Math.max(0, mo.besoin - (mo.donnes || []).length);
-    if (mo.a_moi) {
-      return ['ct-moi' + JSON.stringify([S.seq, mo.condition, mo.besoin, mo.donnes]), `<div class="ct-alerte"><b>Vous avez le contrat !</b>` +
-        `<p>${esc(mo.condition)}</p><small>${reste} film${reste > 1 ? 's' : ''} à citer</small></div>` +
-        (mo.peut_changer ? `<button id="b-ct-changer" class="discret">Changer de condition (un film de plus)</button>` : '')];
+    const q = mo.question;
+    if (mo.mes_contrats && q) {
+      const pen = mo.penalite > 0;
+      const reste = Math.max(0, Math.ceil((mo.duree || 0) - (mo.ecoule || 0)));
+      return ['ct-q' + JSON.stringify([S.seq, q.k, mo.mes_contrats, pen, reste]), `<div class="ct-alerte"><b>${mo.mes_contrats > 1 ? `${mo.mes_contrats} contrats` : 'Un contrat'} sur vous !</b><small> 💣 ${reste} s</small>` +
+        `<p>${esc(q.q)}</p>${q.img !== null && q.img !== undefined ? `<img class="ct-img" src="${src(q.img)}" alt="">` : ''}</div>` +
+        `<div class="ct-choix${pen ? ' bloque' : ''}">${q.choix.map((c, i) => `<button data-ctc="${i}"${pen ? ' disabled' : ''}>${esc(c)}</button>`).join('')}</div>` +
+        (pen ? '<p class="centre doux">Pénalité…</p>' : '')];
     }
-    const p = (mo.joueurs || []).find(j => j.porteur);
-    return ['ct' + JSON.stringify([S.seq, mo.condition, p && p.id]), contratHTML(S, {joueur: true}) +
-      `<p class="centre doux">${p ? esc(p.nom) + ' tient le contrat. Préparez-vous…' : ''}</p>`];
+    return ['ct' + JSON.stringify([S.seq, (mo.joueurs || []).map(j => j.contrats)]), contratHTML(S, {joueur: true}) +
+      '<p class="centre doux">Pas de contrat… pour l\'instant. Il peut vous tomber dessus !</p>'];
+  }
+  if (S.type === 'blackjack') {                     // Jean Renault : le blackjack
+    const mo = S.moteur || {}, src = i => `/img/${S.seq}/${i}`;
+    const mes = (mo.mes_cartes || []).map(c => carteBJ(c, src, 'tel')).join('');
+    if (S.phase === 'reponse') {
+      const r = (mo.resultats || []).find(x => x.id === m.id) || {};
+      const T = {gagne: 'Vous battez Jean !', perd: 'Jean gagne', egal: 'Égalité', saute: 'Sauté : plus de 21'};
+      return ['bj' + S.seq + JSON.stringify(S.classement), banniere(r.res === 'gagne' ? 'ok' : r.res === 'egal' ? '' : 'ko', T[r.res] || '',
+        `Vous : <b>${totalBJ(r.total)}</b> · Jean : <b>${totalBJ(mo.jean_total)}</b>`) + `<div class="bj-main tel">${mes}</div>` + gainTel()];
+    }
+    if (mo.etape === 'mise') {
+      if (!mo.actif) return ['bj-m' + S.seq + mo.ma_mise, message(`<span class="doux">Mise : <b>${mo.ma_mise || 'aucune'}</b></span>`)];
+      return ['bj-mm' + S.seq, `<p class="centre doux">Votre mise ? Battez Jean : elle double. Perdez : elle part.</p>` +
+        `<div class="rc-boutons">${(mo.mises_possibles || []).map(x => `<button class="mise-b" data-bjmise="${x}">${x ? x : 'Rien'}</button>`).join('')}</div>`];
+    }
+    return ['bj' + JSON.stringify([S.seq, mo.mes_cartes, mo.reste, mo.actif]), blackjackHTML(S, src, {joueur: true}) +
+      `<p class="bj-vous">Vos cartes${mo.ma_mise ? ` · mise ${mo.ma_mise}` : ''}</p><div class="bj-main tel">${mes}</div>` +
+      (mo.actif ? '<div class="bj-boutons"><button id="b-bj-carte" class="primaire">Carte !</button><button id="b-bj-reste">Je reste</button></div>'
+        : '<p class="centre doux">Vous restez. Jean va jouer…</p>')];
+  }
+  if (S.type === 'pendule') {                       // Windom Earle : la pendule
+    const mo = S.moteur || {}, src = i => `/img/${S.seq}/${i}`;
+    const moi = (mo.pendules || []).find(j => j.id === m.id) || {};
+    if (S.phase === 'reponse') {
+      const r = (mo.resultats || []).find(x => x.id === m.id) || {};
+      return ['pd' + S.seq + JSON.stringify(S.classement), banniere(r.mat ? 'ko' : 'ok', r.mat ? 'Échec et mat' : 'Dernier en lice !',
+        `${r.coups || 0} film${r.coups > 1 ? 's' : ''} cité${r.coups > 1 ? 's' : ''}`) + gainTel()];
+    }
+    if (mo.mon_tour) return ['pd-moi' + JSON.stringify([S.seq, mo.n, Math.ceil(moi.reste || 0)]),
+      `<p class="pd-a-vous">À vous ! <b>${Math.ceil(moi.reste || 0)} s</b></p>` + penduleHTML(S, src, {joueur: true})];
+    const a = (mo.pendules || []).find(j => j.actif);
+    return ['pd' + JSON.stringify([S.seq, mo.n, a && a.id, mo.mat]), penduleHTML(S, src, {joueur: true}) +
+      `<p class="centre doux">${mo.mat ? '♚ Échec et mat : vous regardez la fin' : a ? `Au tour de <b style="color:${a.couleur}">${esc(a.nom)}</b> · votre pendule : ${Math.ceil(moi.reste || 0)} s` : ''}</p>`];
+  }
+  if (S.type === 'enveloppes') {                    // Dick Tremayne, Dwayne Milford : les enveloppes
+    const mo = S.moteur || {}, src = i => `/img/${S.seq}/${i}`, q = mo.ma_q;
+    if (S.phase === 'reponse') {
+      const r = (mo.resultats || []).find(x => x.id === m.id) || {};
+      return ['ce' + S.seq + JSON.stringify(S.classement), banniere(r.gain ? 'ok' : 'ko', r.gain ? `+${r.gain}` : 'Pas de points', '') + gainTel()];
+    }
+    if (!q) return ['ce-att' + S.seq, message('<span class="doux">La cérémonie commence…</span>')];
+    const devoile = mo.ma_bonne !== null && mo.ma_bonne !== undefined;
+    const items = q.items.map((it, i) => `<button class="ce-choix${mo.mon_choix === i ? ' choisi' : ''}${devoile && i === mo.ma_bonne ? ' bon' : ''}" ` +
+      `data-ce="${i}"${mo.mon_choix !== null && mo.mon_choix !== undefined || !mo.actif ? ' disabled' : ''}><img src="${src(it.img)}" alt=""><span>${esc(it.txt)}</span></button>`).join('');
+    const annees = q.annees ? `<p class="centre"><b>Bonus expert :</b> la cérémonie de quelle année ?</p><div class="ce-annees">${q.annees.map((a, i) =>
+      `<button data-cea="${i}">${a}</button>`).join('')}</div>` : '';
+    const ok = devoile && mo.mon_choix === mo.ma_bonne;
+    return ['ce' + JSON.stringify([S.seq, mo.k, mo.mon_choix, mo.mon_annee, devoile, !!q.annees]),
+      `<p class="ce-q">${esc(q.question)}${q.sous ? `<small>${esc(q.sous)}</small>` : ''}${mo.expert && q.mode === 'experts' ? '<em>expert</em>' : ''}</p>` +
+      (devoile ? `<p class="centre ${ok ? 'ok' : 'err'}">${ok ? 'Bien vu !' : mo.mon_choix === null || mo.mon_choix === undefined ? 'Pas de réponse' : 'Raté'}</p>` : '') +
+      `<div class="ce-grille${q.items.length > 4 ? ' serree' : ''}">${items}</div>${devoile ? '' : annees}`];
   }
   if (S.type === 'lumiere') {                       // Woodsman : la lumière au bout du doigt
     const mo = S.moteur || {};
@@ -740,7 +830,7 @@ function rendre() {
   }
   document.body.dataset.jeu = enManche ? (S.jeu || '') : '';                      // décor du jeu (style.css)
   GRAINE_DECOR = S.seq || 0;
-  const vis = $('#visuel'), avecVisuel = enManche && !['complice', 'choix', 'bingo', 'ordre', 'double', 'duels', 'brelan', 'paires', 'focus', 'lumiere', 'contrat', 'differences', 'code'].includes(S.type);
+  const vis = $('#visuel'), avecVisuel = enManche && !['complice', 'choix', 'bingo', 'ordre', 'double', 'duels', 'brelan', 'paires', 'focus', 'lumiere', 'contrat', 'differences', 'code', 'blackjack', 'pendule', 'enveloppes'].includes(S.type);
   vis.hidden = !avecVisuel;
   if (avecVisuel) {
     maj(vis, `${S.phase}|${S.seq}|${S.revelation}|${JSON.stringify(S.etat)}|${S.vue === 'cassette' ? S.pause || !!S.main : ''}|${(S.moteur || {}).contrainte || ''}|${S.type === 'duree' || S.type === 'plusieurs' || S.type === 'rancon' ? JSON.stringify(S.moteur) : ''}`,
@@ -757,19 +847,18 @@ function rendre() {
   const saisie = html === null || (S.phase === 'manche' && ((S.type === 'chrono' && mo.actif) ||
                                                               (S.type === 'bingo' && mo.actif && selCase >= 0) ||
                                                               (S.type === 'rancon' && mo.etape === 'marche' && mo.actif) ||
-                                                              (S.type === 'contrat' && mo.a_moi && mo.actif) ||
-                                                              (S.type === 'differences' && !mo.titre_donne) ||
-                                                              (S.type === 'code' && mo.donneur_moi && !mo.indice && mo.actif)));
+                                                              (S.type === 'code' && mo.donneur_moi && mo.actif) ||
+                                                              (S.type === 'pendule' && mo.mon_tour && mo.actif)));
   zt.hidden = !saisie;
   z.hidden = html === null;
   if (saisie) {
     const annee = S.type === 'nombre' || S.type === 'duree';
-    $('#saisie').placeholder = S.type === 'contrat' ? 'Un film…' : S.type === 'code' ? 'Un mot (puis le nombre de films)' : S.type === 'duree' ? 'Durée : 140 = 1 h 40' : annee ? 'Année' : (S.jeu === 'filmo' || (S.etat || {}).acteur) ? 'Acteur' : S.type === 'chrono' ? 'Un film…'
+    $('#saisie').placeholder = S.type === 'pendule' ? 'Un film lié au précédent…' : S.type === 'contrat' ? 'Un film…' : S.type === 'code' ? 'Votre indice (1 à 4 mots)' : S.type === 'duree' ? 'Durée : 140 = 1 h 40' : annee ? 'Année' : (S.jeu === 'filmo' || (S.etat || {}).acteur) ? 'Acteur' : S.type === 'chrono' ? 'Un film…'
       : S.type === 'bingo' ? (((mo.cases || [])[selCase] || {}).txt ? `Film : ${mo.cases[selCase].txt}` : 'Un film pour cette case…')
       : 'Titre';
     $('#saisie').inputMode = S.type === 'nombre' ? 'numeric' : S.type === 'duree' ? 'decimal' : 'text';
     $('#aide-saisie').textContent = annee || S.type === 'chrono' || S.type === 'bingo' ? ''
-      : ['paire', 'plusieurs', 'rancon', 'contrat', 'code', 'differences'].includes(S.type) ? '' : S.mode === 'buzzer' ? 'À vous' : `${m.essais} essai${m.essais > 1 ? 's' : ''}`;
+      : ['paire', 'plusieurs', 'rancon', 'contrat', 'code', 'differences', 'pendule'].includes(S.type) ? '' : S.mode === 'buzzer' ? 'À vous' : `${m.essais} essai${m.essais > 1 ? 's' : ''}`;
     if (S.type === 'duree') apercuDuree();
     if (S.type === 'paire' || S.type === 'plusieurs') {
       const miens = mo.mes_films || [], n = mo.n || 2;

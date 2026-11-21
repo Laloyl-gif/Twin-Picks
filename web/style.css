@@ -2342,6 +2342,8 @@ body.joueur .fo-joueur{font-size:.8em;padding:5px 10px 6px}
   box-shadow:inset 0 0 40px #000}
 .vi-flash{position:absolute;inset:0;margin:auto;height:100%;aspect-ratio:2/3;object-fit:cover}
 .vi-flash[hidden],.vi-cheval[hidden]{display:none}
+.vi-flash[data-m=inv]{filter:invert(1)}.vi-flash[data-m=env]{transform:rotate(180deg)}.vi-flash[data-m=mir]{transform:scaleX(-1)}
+.vi-flash[data-m=nb]{filter:grayscale(1) contrast(1.15)}.vi-flash[data-m=teinte]{filter:hue-rotate(160deg) saturate(1.4)}
 @keyframes vi-flash{from{filter:brightness(3) blur(3px);transform:scale(1.06)}}
 .vi-cheval{position:absolute;inset:12% 10%;display:grid;place-items:center;animation:vi-respire 2.4s ease-in-out infinite}
 .vi-cheval svg{width:100%;height:auto;filter:drop-shadow(0 0 18px #fff8)}
@@ -2522,3 +2524,136 @@ body.tel .depart .mode-rep{flex:1 1 auto}
 body.tel .depart #b-lancer{flex:1 1 100%;width:100%}
 .hasard-n{display:inline-flex;align-items:center;margin-left:6px}
 body.tel .lobby-corps{padding-bottom:180px!important}
+
+/* ===== v11 : le code façon Codenames ===== */
+.cd-avant{margin:-4px 0 0;color:var(--doux);font:.85em var(--sans)}
+.cd-avant b{color:#ffd24a}
+.cd-nombres{display:flex;flex-wrap:wrap;justify-content:center;gap:8px;margin:10px 0 4px}
+.cd-n{min-width:46px;height:46px;border-radius:50%;font:800 1.2em var(--sans);background:#2a2730;color:#e8d9b8;border:2px solid #ffd24a55}
+.cd-n.choisi{background:#ffd24a;color:#1d1b1a;border-color:#ffd24a}
+.rc-mise.ko{opacity:.55;text-decoration:line-through}
+.cd-indice b{overflow-wrap:anywhere}
+body.joueur .cd-indice b{font-size:1.3em}
+.fo-perdant{margin:0 0 8px;padding:6px 14px;background:#7d0b14;color:#fff;font-weight:700;border-radius:8px;text-align:center}
+
+/* ===== v11 : Mitchum, plusieurs contrats et questions éclair ===== */
+.ct-alerte{animation:none}
+.ct-alerte b{animation:ct-tremble .4s infinite;display:inline-block}
+.ct-envs{position:absolute;top:-8cqw;display:flex;gap:.6cqw}
+.ct-envs .ct-enveloppe{position:static;width:9cqw}
+.ct-meche{position:relative;height:2.2cqw;margin:2cqw 4cqw 0;border-radius:2cqw;background:#3a2a20;overflow:visible}
+.ct-meche i{position:absolute;inset:0 auto 0 0;width:calc((1 - var(--p)) * 100%);border-radius:2cqw;
+  background:linear-gradient(90deg,#ffd24a,#ff7a2a);box-shadow:0 0 2cqw #ff7a2a;transition:width .5s linear}
+.ct-meche b{position:absolute;right:-3cqw;top:50%;translate:0 -50%;font-size:5cqw}
+.ct-reste{margin:1cqw 0 0;font:800 7cqw/1 Impact,var(--sans);color:#ffd24a}
+.ct-choix{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}
+.ct-choix button{min-height:58px;padding:8px;border-radius:10px;font:700 .95em/1.15 var(--sans);background:#2a2730;color:#f1e3c4;
+  border:1px solid #ffffff22;overflow-wrap:anywhere}
+.ct-choix.bloque button{opacity:.4}
+.ct-img{display:block;width:min(56vw,220px);aspect-ratio:1;object-fit:cover;margin:8px auto 0;border-radius:8px}
+
+/* ===== v11 : Jean Renault, le blackjack ===== */
+.blackjack{display:flex;justify-content:center;width:min(1300px,100%)}
+.bj-tapis{position:relative;display:flex;flex-direction:column;align-items:center;gap:14px;padding:26px 34px 30px;width:100%;
+  background:radial-gradient(ellipse at 50% 40%,#173f2c 0,#10291d 50%,transparent 72%)}
+.bj-jean{display:flex;flex-direction:column;align-items:center;gap:6px}
+.bj-nom{margin:0;display:flex;align-items:center;gap:8px;font:700 1.05em var(--sans);color:#f1e3c4}
+.bj-nom small{color:#cfe8d6;font-weight:500}
+.bj-main{display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
+.bj-c{position:relative;margin:0;width:clamp(70px,7vw,112px);padding:4px 4px 2px;background:#fbf7ec;border-radius:6px;box-shadow:0 6px 14px #0008;
+  transform:rotate(calc(var(--r,0) * 1deg))}
+.bj-c:nth-child(2n){--r:2}.bj-c:nth-child(3n){--r:-2}
+.bj-c img{display:block;width:100%;aspect-ratio:2/3;object-fit:cover;border-radius:3px}
+.bj-c figcaption{font:600 .6em/1.1 var(--sans);color:#1d1b1a;text-align:center;padding-top:2px;overflow-wrap:anywhere}
+.bj-c.dos{display:grid;place-items:center;aspect-ratio:2/3.25;background:repeating-linear-gradient(45deg,#8a1d1d 0 6px,#6e1414 6px 12px);border:4px solid #fbf7ec}
+.bj-c.dos span{font:900 2em Georgia,serif;color:#fbf7ec}
+.bj-c.petite{width:clamp(52px,4.6vw,78px)}
+.bj-v{position:absolute;top:-10px;right:-10px;display:grid;place-items:center;min-width:2.1em;height:2.1em;padding:0 4px;border-radius:50%;
+  background:#ffd24a;color:#1d1b1a;font:800 .85em var(--sans);box-shadow:0 2px 6px #0008}
+.bj-total{display:inline-grid;place-items:center;min-width:2.6em;padding:2px 8px;border-radius:12px;background:#f1e3c4;color:#1d1b1a;font:800 1.1em var(--sans)}
+.bj-total.saute{background:#e0303c;color:#fff}
+.bj-regle{margin:0;color:#cfe8d6;font:italic .95em Georgia,serif}
+.bj-joueurs{display:flex;flex-wrap:wrap;justify-content:center;gap:16px 26px}
+.bj-joueur{display:flex;flex-direction:column;align-items:center;gap:6px;padding:8px 10px;border-radius:12px;box-shadow:inset 0 0 0 2px var(--c)}
+.bj-joueur.reste{opacity:.85}
+.bj-joueur.gagne{background:#ffd24a22}.bj-joueur.saute,.bj-joueur.perd{opacity:.7}
+.bj-jeton{display:inline-grid;place-items:center;min-width:2.4em;height:2.4em;border-radius:50%;background:#e0303c;color:#fff;font:800 .7em var(--sans);
+  border:3px dashed #fff8}
+.bj-res{color:#f1e3c4}
+.bj-vous{margin:8px 0 2px;text-align:center;color:var(--doux)}
+.bj-main.tel .bj-c{width:min(26vw,104px)}
+.bj-boutons{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px}
+.bj-boutons button{min-height:56px;font:800 1.1em var(--sans)}
+body.joueur .bj-jean .bj-c{width:min(16vw,64px)}
+
+/* ===== v11 : Windom Earle, la pendule ===== */
+.pendule{display:flex;flex-direction:column;align-items:center;gap:18px;width:min(1300px,100%)}
+.pd-chaine{display:flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:10px}
+.pd-film{margin:0;display:flex;flex-direction:column;align-items:center;gap:4px;padding:10px 12px;min-width:120px;max-width:190px;border-radius:6px;
+  background:#f4efe2;color:#1d1b1a;box-shadow:0 10px 22px #000b;text-align:center}
+.pd-film img{width:110px;aspect-ratio:2/3;object-fit:cover;border-radius:3px}
+.pd-film figcaption{display:flex;flex-direction:column;font:700 .9em/1.2 var(--sans)}
+.pd-film small{font-weight:500;color:#5a4f45}
+.pd-film.dernier{outline:4px solid #ffd24a;transform:scale(1.06)}
+.pd-lien{display:flex;flex-direction:column;align-items:center;max-width:120px;font:600 .8em/1.15 var(--sans);color:#ffd24a;text-align:center}
+.pd-lien i{font-style:normal;font-size:1.5em}
+.pd-interdit{margin:0;color:var(--doux)}.pd-interdit b{color:#ff6b73}
+.pd-pendules{display:flex;flex-wrap:wrap;justify-content:center;gap:18px}
+.pd-pendule{display:flex;flex-direction:column;align-items:center;gap:4px;padding:10px 16px;border-radius:14px 14px 6px 6px;background:#2b2118;
+  box-shadow:inset 0 0 0 2px #5a4330,0 10px 20px #000a;color:#f1e3c4;min-width:96px}
+.pd-pendule b{font:800 1.8em/1 "Courier New",monospace}
+.pd-pendule small{color:var(--c);font-weight:700}
+.pd-cadran{position:relative;width:54px;height:54px;border-radius:50%;background:conic-gradient(var(--c) calc(var(--p) * 360deg),#f4efe2 0);box-shadow:0 0 0 4px #1a130e}
+.pd-cadran i{position:absolute;inset:8px;border-radius:50%;background:#f4efe2}
+.pd-pendule.actif{outline:3px solid #ffd24a;transform:scale(1.1)}
+.pd-pendule.mat{opacity:.45;filter:grayscale(1)}
+.pendule.tel .pd-film{min-width:0;max-width:44vw;padding:6px 8px}
+.pendule.tel .pd-film img{width:70px}
+.pendule.tel .pd-chaine{gap:6px}
+.pd-a-vous{margin:0 0 6px;text-align:center;font:800 1.4em var(--sans);color:#ffd24a}
+
+/* ===== v11 : la cérémonie et le Hibou d'or ===== */
+.ceremonie{display:flex;flex-direction:column;align-items:center;gap:14px;width:min(1300px,100%)}
+.ce-hote{margin:0;color:var(--doux);font:italic 1em Georgia,serif}
+.ce-enveloppe{display:flex;flex-direction:column;align-items:center;gap:2px;padding:14px 34px;background:linear-gradient(#f4e2b8,#e8cf94);color:#3a2610;
+  border-radius:4px;box-shadow:0 14px 30px #000b;clip-path:polygon(0 0,50% 18%,100% 0,100% 100%,0 100%);padding-top:28px;min-width:min(520px,80vw)}
+.ce-enveloppe b{font:800 1.5em/1.15 Georgia,serif;text-align:center}
+.ce-enveloppe small{font:600 1em var(--sans);color:#6b4a1c}
+.ce-nommes{display:flex;flex-wrap:wrap;justify-content:center;gap:14px}
+.ce-nomme{position:relative;margin:0;width:clamp(90px,9vw,150px);display:flex;flex-direction:column;align-items:center;gap:4px;transition:transform .4s,opacity .4s}
+.ce-nomme img{width:100%;aspect-ratio:2/3;object-fit:cover;border-radius:4px;box-shadow:0 10px 22px #000a}
+.ce-nomme figcaption{display:flex;flex-direction:column;align-items:center;font:700 .8em/1.15 var(--sans);text-align:center;color:#f1e3c4}
+.ce-nomme small{font-weight:500;color:var(--doux)}
+.ce-nomme.laureat{transform:scale(1.15)}.ce-nomme.laureat img{box-shadow:0 0 0 5px #ffd24a,0 0 40px #ffd24a88}
+.ce-nomme.perdant{opacity:.45}
+.ce-trophee{position:absolute;top:-18px;right:-14px;font-size:2.2em;filter:drop-shadow(0 4px 6px #000a)}
+.ce-tambour{margin:0;font:800 2em/1 var(--sans);color:#ffd24a}.ce-tambour small{font-size:.5em}
+.ce-tambour span{display:inline-block;animation:ct-tremble .15s infinite}
+.ce-cache{margin:0;color:var(--doux);font-style:italic}
+.ce-justes{margin:0;display:flex;gap:6px;flex-wrap:wrap;justify-content:center;min-height:1.6em}
+.ce-q{margin:0 0 10px;text-align:center;font:700 1.15em/1.25 Georgia,serif;color:#f1e3c4}
+.ce-q small{display:block;font:600 .8em var(--sans);color:var(--doux)}
+.ce-q em{display:inline-block;margin-left:6px;padding:1px 8px;border-radius:10px;background:#ffd24a;color:#1d1b1a;font:700 .6em var(--sans);vertical-align:middle}
+.ce-grille{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.ce-grille.serree{grid-template-columns:repeat(3,1fr)}
+.ce-choix{display:flex;flex-direction:column;align-items:center;gap:4px;padding:6px;border-radius:10px;background:#2a2730;color:#f1e3c4;border:2px solid transparent}
+.ce-choix img{width:100%;max-width:120px;aspect-ratio:2/3;object-fit:cover;border-radius:4px}
+.ce-choix span{font:700 .78em/1.15 var(--sans);text-align:center;overflow-wrap:anywhere}
+.ce-choix.choisi{border-color:#ffd24a}.ce-choix.bon{border-color:#3ecf8e;box-shadow:0 0 18px #3ecf8e66}
+.ce-choix:disabled{opacity:1}
+.ce-grille .ce-choix:disabled:not(.choisi):not(.bon){opacity:.55}
+.ce-annees{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:6px}
+.ce-annees button{min-height:48px;font:800 1.1em var(--sans)}
+.ce-choix.bon::after{content:"✓ lauréat";font:800 .75em var(--sans);color:#3ecf8e}
+
+/* ===== v11 : le récap de fin ===== */
+.recap{display:flex;flex-direction:column;align-items:center;gap:12px;margin-top:18px;width:min(1200px,100%)}
+.rp-cartes{display:flex;flex-wrap:wrap;justify-content:center;gap:14px}
+.rp-carte{min-width:220px;max-width:300px;padding:10px 14px;border-radius:10px;box-shadow:inset 0 0 0 2px var(--c);background:#ffffff08}
+.rp-nom{margin:0 0 4px;display:flex;gap:6px;align-items:baseline;font:700 1.05em var(--sans)}
+.rp-nom span{margin-left:auto;color:#ffd24a}
+.rp-carte ul,.rp-moi{margin:0;padding-left:18px;color:var(--doux);font:.9em/1.5 var(--sans)}
+.rp-carte b,.rp-moi b{color:#f1e3c4}
+.rp-rates{margin:0;color:var(--doux);font-style:italic;text-align:center}
+.rp-bas{margin:0;color:var(--doux);display:flex;gap:12px;align-items:center;flex-wrap:wrap;justify-content:center}
+.rp-moi{margin-top:12px}

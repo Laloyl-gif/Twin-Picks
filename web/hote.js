@@ -618,6 +618,51 @@ function podium(cl) {
     <div class="avatar-grand" style="--c:${top[i].couleur}">${rond(top[i])}</div>
     <b>${esc(top[i].nom)}</b><span>${top[i].score}</span><div class="socle">${['I', 'II', 'III'][i]}</div></div>`).join('')}</div>`;
 }
+/* Le récap de fin : pour chacun, son meilleur jeu, sa meilleure manche, sa plus longue série ; les films qui ont
+   résisté ; et une image à partager (dessinée dans un canvas, téléchargée en PNG). */
+function recapHTML(r) {
+  if (!r || !r.manches) return '';
+  const cartes = (r.joueurs || []).map((j, k) => `<div class="rp-carte" style="--c:${j.couleur}"><p class="rp-nom"><b>${k + 1}.</b> ${esc(j.nom)} <span>${j.score}</span></p>` +
+    `<ul>${j.meilleur_jeu ? `<li>Meilleur jeu : <b>${esc(j.meilleur_jeu)}</b> (+${j.meilleur_jeu_pts})</li>` : ''}` +
+    `${j.meilleure_manche ? `<li>Plus beau coup : <b>+${j.meilleure_manche}</b> à ${esc(j.meilleure_manche_jeu)}</li>` : ''}` +
+    `<li>${j.trouves} manche${j.trouves > 1 ? 's' : ''} gagnée${j.trouves > 1 ? 's' : ''}${j.serie > 1 ? ` · série de ${j.serie}` : ''}</li></ul></div>`).join('');
+  const rates = (r.rates || []).length ? `<p class="rp-rates">Ils ont résisté à tout le monde : ${r.rates.map(esc).join(' · ')}</p>` : '';
+  return `<div class="recap" data-k="recap"><div class="rp-cartes">${cartes}</div>${rates}` +
+    `<p class="rp-bas">${r.manches} manches${r.jeu_or ? ` · le jeu le plus payant : <b>${esc(r.jeu_or)}</b>` : ''} ` +
+    `<button id="b-recap-image" class="discret">📷 Image à partager</button></p></div>`;
+}
+function imageRecap(r) {
+  const js = (r && r.joueurs) || [], W = 1080, H = 360 + js.length * 150 + ((r.rates || []).length ? 120 : 0);
+  const c = document.createElement('canvas'); c.width = W; c.height = H;
+  const g = c.getContext('2d');
+  g.fillStyle = '#0d0c10'; g.fillRect(0, 0, W, H);
+  for (let x = 0; x < W; x += 60) {                              // le sol de la Black Lodge, en bas
+    g.fillStyle = '#f1e8d6'; g.beginPath(); g.moveTo(x, H - 60); g.lineTo(x + 30, H - 30); g.lineTo(x + 60, H - 60); g.lineTo(x + 60, H); g.lineTo(x, H); g.fill();
+  }
+  g.fillStyle = '#ffd24a'; g.font = '800 64px Georgia, serif'; g.textAlign = 'center';
+  g.fillText('Twin Picks', W / 2, 110);
+  g.fillStyle = '#c9bfae'; g.font = 'italic 30px Georgia, serif';
+  g.fillText(`${r.manches} manches · ${new Date().toLocaleDateString('fr-FR')}`, W / 2, 160);
+  js.forEach((j, k) => {
+    const y = 230 + k * 150;
+    g.fillStyle = j.couleur || '#888'; g.beginPath(); g.arc(110, y + 40, 40, 0, 7); g.fill();
+    g.fillStyle = '#111'; g.font = '800 36px sans-serif'; g.fillText(String(k + 1), 110, y + 53);
+    g.textAlign = 'left'; g.fillStyle = '#f1e3c4'; g.font = '800 44px sans-serif'; g.fillText(j.nom, 180, y + 40);
+    g.fillStyle = '#ffd24a'; g.textAlign = 'right'; g.fillText(String(j.score), W - 70, y + 40);
+    g.textAlign = 'left'; g.fillStyle = '#c9bfae'; g.font = '28px sans-serif';
+    g.fillText([j.meilleur_jeu ? `Meilleur jeu : ${j.meilleur_jeu}` : '', j.serie > 1 ? `série de ${j.serie}` : '', `${j.trouves} gagnée(s)`]
+      .filter(Boolean).join(' · '), 180, y + 88);
+    g.textAlign = 'center';
+  });
+  if ((r.rates || []).length) {
+    g.fillStyle = '#c9bfae'; g.font = 'italic 28px Georgia, serif';
+    g.fillText('Ils ont résisté : ' + r.rates.join(' · ').slice(0, 70), W / 2, H - 110);
+  }
+  const a = document.createElement('a');
+  a.href = c.toDataURL('image/png'); a.download = 'twin-picks-recap.png';
+  document.body.appendChild(a); a.click(); a.remove();
+}
+document.addEventListener('click', ev => { if (ev.target.closest('#b-recap-image')) imageRecap((E || {}).recap); });
 function bandeau(e) {
   if (e.phase === 'chargement') return e.erreur ? `<div class="erreur">${esc(e.erreur)}</div>` : '';
   if (e.phase === 'manche' && e.type !== 'complice') {
@@ -627,7 +672,7 @@ function bandeau(e) {
   }
   if (e.phase === 'reponse' && ['note', 'chrono', 'bingo'].includes(e.type)) return '';
   if (e.phase === 'reponse' && e.type === 'ordre') return `<div class="detail">${esc(e.detail || '')}</div>`;
-  if (e.phase === 'reponse' && ['plusieurs', 'paire', 'brelan', 'paires', 'focus', 'rancon', 'lumiere', 'contrat', 'differences', 'code', 'duels', 'double', 'duree'].includes(e.type)) {
+  if (e.phase === 'reponse' && ['plusieurs', 'paire', 'brelan', 'paires', 'focus', 'rancon', 'lumiere', 'contrat', 'differences', 'code', 'duels', 'double', 'duree', 'blackjack', 'pendule', 'enveloppes'].includes(e.type)) {
     // les résultats de chacun sont déjà sous le jeu : ici, la solution seule
     return `<div class="solution">${esc(e.solution)}</div>` + (e.detail ? `<div class="detail">${esc(e.detail)}</div>` : '');
   }
@@ -733,6 +778,23 @@ function moteurHote(e) {
       r.trouve ? 'juste' : 'faux')).join('')}</div>`;
   }
   if (e.type === 'contrat') return contratHTML(e);         // Mitchum : le contrat
+  if (e.type === 'blackjack') {                          // Jean Renault : le blackjack
+    const d = blackjackHTML(e, src);
+    if (!rev) return d;
+    return d + `<div class="frise-res">${(mo.resultats || []).map(r => puce(r, ` ${String(r.total).replace('.', ',')}` + (r.gain ? ` <em>${r.gain > 0 ? '+' : ''}${r.gain}</em>` : ''),
+      r.res === 'gagne' ? 'juste' : r.res === 'egal' ? '' : 'faux')).join('')}</div>`;
+  }
+  if (e.type === 'pendule') {                            // Windom Earle : la pendule
+    const d = penduleHTML(e, src);
+    if (!rev) return d;
+    return d + `<div class="frise-res">${(mo.resultats || []).map(r => puce(r, ` ${r.coups} film${r.coups > 1 ? 's' : ''}` + (r.gain ? ` <em>+${r.gain}</em>` : ''),
+      r.mat ? 'faux' : 'juste')).join('')}</div>`;
+  }
+  if (e.type === 'enveloppes') {                         // Dick Tremayne, Dwayne Milford : les enveloppes
+    const d = ceremonieHTML(e, src);
+    if (!rev) return d;
+    return d + `<div class="frise-res">${(mo.resultats || []).map(r => puce(r, r.gain ? ` <em>+${r.gain}</em>` : '', r.gain ? 'juste' : 'faux')).join('')}</div>`;
+  }
   if (e.type === 'code') {                               // Desmond : le code
     const d = codeHTML(e, src);
     if (!rev) return d;
@@ -742,8 +804,8 @@ function moteurHote(e) {
   if (e.type === 'differences') {                        // Mr. C : le double
     const d = jumeauxHTML(e, src);
     if (!rev) return d;
-    return d + `<div class="frise-res">${(mo.resultats || []).map(r => puce(r, ` ${r.n}/3` + (r.gain ? ` <em>${r.gain > 0 ? '+' : ''}${r.gain}</em>` : ''),
-      r.n === 3 ? 'juste' : r.n ? '' : 'faux')).join('')}</div>`;
+    return d + `<div class="frise-res">${(mo.resultats || []).map(r => puce(r, ` ${r.n}/${mo.n}` + (r.gain ? ` <em>${r.gain > 0 ? '+' : ''}${r.gain}</em>` : ''),
+      r.n === mo.n ? 'juste' : r.n ? '' : 'faux')).join('')}</div>`;
   }
   if (e.type === 'lumiere') {                            // Woodsman : got a light?
     const d = lumiereHTML(e, src);
@@ -843,7 +905,7 @@ function rendreJeu() {
   if (e.phase === 'chargement') {
     maj(vis, 'charg' + e.message, enveloppe(`<div class="chargement"><div class="spinner"></div><p>${esc(e.message || '')}</p></div>`), 'charg');
   } else if (e.phase === 'fin') {
-    maj(vis, 'fin' + JSON.stringify(e.classement), enveloppe(podium(e.classement || [])), 'fin');
+    maj(vis, 'fin' + JSON.stringify([e.classement, e.recap]), enveloppe(podium(e.classement || []) + recapHTML(e.recap)), 'fin');
   } else if (e.type === 'complice' && e.complice) {
     const pas = e.phase === 'reponse' ? etapesRevelation(e, 99, (e.complice.resultats || {}).pas) : 0;
     maj(vis, JSON.stringify([e.phase, e.seq, e.pause, e.complice, pas]), enveloppe(() => complHote(e)), e.seq);

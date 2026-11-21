@@ -55,15 +55,17 @@ arrête le programme.
 | annie       | Annie's Miss Twin Peaks                      | L'absente                |
 | dougie      | Dougie's Jackpots                            | Le jackpot               |
 | mike        | Mike's Shoe Samples                          | Les paires               |
-| windom      | Windom Earle's Chessboard                    | Le cavalier              |
+| windom      | Windom Earle's Chess Clock                   | La pendule               |
 | harold      | Harold's Orchids                             | Les pétales              |
 | jacques     | Jacques Renault's Card Table                 | Le brelan                |
 | sarah       | Sarah Palmer's Visions                       | La vision                |
-| jean        | Jean Renault's Ransom                        | La rançon                |
+| jean        | Jean Renault's Blackjack                     | Le blackjack             |
 | woodsman    | The Woodsman's Light                         | Got a light?             |
 | mitchum     | The Mitchum Brothers' Contract               | Le contrat               |
 | mrc         | Mr. C's Doppelganger                         | Le double                |
 | desmond     | Desmond's Code                               | Le code                  |
+| dick        | Dick Tremayne's Gala                         | La cérémonie             |
+| milford     | Mayor Milford's Golden Owl                   | Le Hibou d'or            |
 
 Version 9 (novembre 2026, à la demande d'Etienne) : Mr. C retiré ; Annie remplace Lil ; Mike, Dougie et Hank
 changent de jeu (Mike's Missing Arm devient Mike's Shoe Samples) ; Windom Earle, Harold Smith, Jacques Renault arrivent.
@@ -121,3 +123,20 @@ Desmond (le code, façon Codenames), Windom (le cavalier, plusieurs pièces). Le
 dimensions qui n'existaient pas : mémoire, mise de ses points et achat d'indices secrets, exploration à plusieurs
 (le téléphone devient une lampe), patate chaude entre joueurs, jeu des différences, jeux de déduction et de code entre
 joueurs.
+
+## Version 11 (novembre 2026)
+
+Validés par Etienne (QCM oui / non) : Jean Renault devient un vrai blackjack (« Jean Renault's Blackjack »), Windom
+Earle devient la pendule d'échecs (« Windom Earle's Chess Clock »), le contrat des Mitchum passe à plusieurs contrats
+et à des questions à six choix, deux jeux de récompenses arrivent : Dick Tremayne (la cérémonie, données Wikidata)
+et le maire Dwayne Milford (le Hibou d'or, l'« Oscar » des profils). Les titres de Jean et de Windom changent avec
+leur jeu (demande d'Etienne : changer ces jeux).
+- Les récompenses (Oscars, Césars, Palme d'or, BAFTA, Golden Globes, Lion d'or, Ours d'or) s'ajoutent aux indices de
+  la plupart des jeux (réglage général) ; elles viennent de Wikidata (recompenses.py, cache donnees/recompenses.json).
+- La cérémonie : les profils « experts » (Louison par défaut) ont une version plus dure pour les Oscars ; tous les
+  autres cas restent simples (quatre choix au plus).
+- Le Hibou d'or : catégories toujours sur l'ensemble des joueurs, jamais sur un seul profil ; nommés proches, pas
+  d'égalité en tête.
+- Récap de fin de partie (podium, statistiques, image à partager) et anti-répétition des films entre parties.
+- Refusés (ne pas reproposer) : le memory et le palmarès à cocher (Tammy), la danse de Lil en pictogrammes, le
+  bonneteau, le buzzer de Freddie, le ring de Bushnell, le dossier chiffré de Tammy, joker, réactions emoji.

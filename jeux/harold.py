@@ -65,37 +65,71 @@ def detail(im, x, y, z):
     return im.crop((int(x0), int(y0), int(x0 + c), int(y0 + c))).resize((COTE, COTE), Image.LANCZOS)
 
 
+def _empreinte(im):
+    return list(ImageOps.fit(im, (16, 16)).convert("L").getdata())
+
+
+def _pareilles(a, b):
+    """Deux images quasi identiques (le même plan, recadré ou dans une autre langue) ?"""
+    return sum(abs(x - y) for x, y in zip(a, b)) / len(a) < 14
+
+
 def sources(api, film, d):
-    """Les images des pétales : [(étiquette, image, (x, y) du détail ou None, sans_texte)], cinq au plus, variées."""
-    out = []
+    """Les images des pétales : [(étiquette, image, (x, y) du détail ou None, sans_texte)], cinq au plus, variées :
+    jamais deux fois le même plan ni le même acteur."""
+    out, vues = [], []
+
+    def nouvelle(img):
+        e = _empreinte(img)
+        if any(_pareilles(e, v) for v in vues):
+            return False
+        vues.append(e)
+        return True
     im, sans_texte = _affiche(api, film)
+    nouvelle(im)
     out.append(("Affiche", im, None, sans_texte))
     plans = []
-    for chemin in (d.get("fonds_neutres") or [])[:6]:
+    for chemin in list(dict.fromkeys(d.get("fonds_neutres") or []))[:10]:
         try:
-            plans.append(api.image(chemin, "w1280").convert("RGB"))
+            img = api.image(chemin, "w1280").convert("RGB")
         except Exception:  # noqa: BLE001
-            pass
-        if len(plans) == 2:
+            continue
+        if nouvelle(img):
+            plans.append(img)
+        if len(plans) == 3:
             break
-    acteurs = []
+    acteurs, gens = [], set()
     try:
-        for a in fiche(api, film).get("acteurs", [])[:4]:
-            if a.get("photo"):
+        for a in fiche(api, film).get("acteurs", [])[:8]:
+            qui = a.get("id") or a.get("nom") or a.get("photo")
+            if not a.get("photo") or qui in gens or a["photo"] in gens:
+                continue
+            gens.update((qui, a["photo"]))
+            try:
                 acteurs.append(api.image(a["photo"], "h632").convert("RGB"))
-            if len(acteurs) == 2:
+            except Exception:  # noqa: BLE001
+                continue
+            if len(acteurs) == 3:
                 break
     except Exception:  # noqa: BLE001
         pass
-    if plans:
-        out.append(("Plan", plans[0], None, True))
-    if acteurs:
-        out.append(("Acteur", acteurs[0], (0.5, 0.3), True))       # le visage : vers le haut du portrait
-    if len(plans) > 1:
-        out.append(("Plan", plans[1], None, True))
-    if len(acteurs) > 1:
-        out.append(("Acteur", acteurs[1], (0.5, 0.3), True))
-    while len(out) < NB:                                             # pas assez d'images : d'autres coins de l'affiche
+    # alterner plans et acteurs
+    for k in range(3):
+        if k < len(plans):
+            out.append(("Plan", plans[k], None, True))
+        if k < len(acteurs):
+            out.append(("Acteur", acteurs[k], (0.5, 0.3), True))       # le visage : vers le haut du portrait
+    if len(out) < NB:                                                  # pas assez : d'autres affiches du film
+        try:
+            for p in affiches_film(api, film)[1:8]:
+                img = api.image(p["chemin"], "w780").convert("RGB")
+                if nouvelle(img):
+                    out.append(("Affiche", img, None, p["langue"] is None))
+                if len(out) >= NB:
+                    break
+        except Exception:  # noqa: BLE001
+            pass
+    while len(out) < NB:                                             # vraiment rien d'autre : un autre coin de l'affiche
         out.append(("Affiche", im, None, sans_texte))
     return out[:NB]
 

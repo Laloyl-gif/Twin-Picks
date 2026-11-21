@@ -10,7 +10,7 @@ import random
 from tmdb import cle_film, details_film
 from visuels import en_jpeg
 from .commun import affiche, chronologie, manche_titre, reponse_affichee, tirer, trous
-from .phonetique import texte as sons_du_texte
+from .phonetique import francais, texte as sons_du_texte
 from .rebus_sons import LONGUEUR_MAX, VOCAB
 
 LETTRES = {"a": "a", "e": "é", "2": "e", "i": "i", "o": "o", "u": "ou", "y": "u", "A": "an", "O": "on", "I": "in",
@@ -50,12 +50,21 @@ def decouper(sons, fins=(), debuts=(0,)):
     return list(reversed(morceaux))
 
 
+MORCEAU_MAX = 3            # un bout écrit en lettres : trois sons au plus, sinon le rébus ne vaut rien…
+MOT_MAX = 4                # … ou un petit mot entier du titre (« chez », « vers »)
+
+
 def rebus(titre, rng=random):
-    """[{"t": "emoji", "v": émoji, "mot": mot} | {"t": "son", "v": lettres}] et la part des sons dessinés."""
+    """[{"t": "emoji", "v": émoji, "mot": mot} | {"t": "son", "v": lettres}] et la part des sons dessinés.
+    Phonétique française : un titre qui se lit à l'anglaise ne fait pas de rébus (None)."""
+    if not francais(titre):
+        return None, 0.0
     mots = sons_du_texte(titre)
     sons, fins, debuts, k = "", set(), set(), 0
-    for _, s in mots:
+    ecrits = {}                                     # (début, fin) d'un mot entier -> son orthographe
+    for ecrit, s in mots:
         debuts.add(k)
+        ecrits[(k, k + len(s))] = ecrit
         sons += s
         k += len(s)
         fins.add(k)
@@ -72,11 +81,34 @@ def rebus(titre, rng=random):
             dessines += j - i
         else:
             frag = sons[i:j]
+            ecrit = _ecrit(ecrits, i, j)                  # un mot entier sans image : on l'écrit comme dans le titre
+            v = ecrit.lower() if ecrit else "".join(LETTRES.get(c, c) for c in frag)
             if out and out[-1]["t"] == "son":
-                out[-1]["v"] += "".join(LETTRES.get(c, c) for c in frag)
+                out[-1]["v"] += (" " if ecrit and out[-1]["entier"] else "") + v
+                out[-1]["n"] += j - i
+                out[-1]["entier"] = out[-1]["entier"] and bool(ecrit)
             else:
-                out.append({"t": "son", "v": "".join(LETTRES.get(c, c) for c in frag)})
+                out.append({"t": "son", "v": v, "n": j - i, "entier": bool(ecrit)})
+            # robustesse : un bout en lettres reste court (un petit mot entier, ou trois sons au plus)
+            if out[-1]["n"] > (MOT_MAX if out[-1]["entier"] else MORCEAU_MAX):
+                return None, 0.0
+    for x in out:
+        x.pop("n", None)
+        x.pop("entier", None)
     return out, dessines / len(sons)
+
+
+def _ecrit(ecrits, i, j):
+    """L'orthographe des mots entiers qui couvrent exactement les sons [i, j), sinon None."""
+    morceaux, k = [], i
+    while k < j:
+        suite = [(a, b) for (a, b) in ecrits if a == k and b <= j]
+        if not suite:
+            return None
+        a, b = max(suite, key=lambda x: x[1])
+        morceaux.append(ecrits[(a, b)])
+        k = b
+    return " ".join(morceaux)
 
 
 def construire(api, cfg, pool, deja):
@@ -85,13 +117,13 @@ def construire(api, cfg, pool, deja):
     notes = []
     for f in [x for x in pool if not x.get("tv")]:
         r, part = rebus(f["title"], rng)
-        if r and 2 <= len(r) <= 8 and sum(1 for x in r if x["t"] == "emoji") >= 2:
+        if r and 2 <= len(r) <= 7 and sum(1 for x in r if x["t"] == "emoji") >= 2 and part >= 0.5:
             notes.append((part, f))
     if not notes:
         raise RuntimeError("Le rébus : aucun titre des listes ne se dessine.")
     # plus de variété : tous les titres qui se dessinent bien (au moins 55 % des sons en images), les mieux
     # dessinés un peu plus souvent ; jamais le même deux fois de suite (tirer garde la mémoire de la partie)
-    bons = [(p, f) for p, f in notes if p >= 0.55] or notes
+    bons = [(p, f) for p, f in notes if p >= 0.65] or notes
     neufs = [(p, f) for p, f in bons if cle_film(f) not in deja] or bons
     film = random.choices([f for _, f in neufs], weights=[0.4 + p for p, _ in neufs])[0]
     deja.add(cle_film(film))

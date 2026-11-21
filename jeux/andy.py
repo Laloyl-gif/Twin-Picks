@@ -54,17 +54,35 @@ def _crayon(gris):
     return np.clip(g * 255 / np.maximum(1, 255 - flou), 0, 255)
 
 
+def exploitable(img):
+    """L'image donne-t-elle un vrai dessin ? (pas une image vide, unie ou presque blanche)"""
+    if img is None:
+        return False
+    try:
+        petit = ImageOps.contain(img.convert("RGB"), (240, 360))
+    except Exception:  # noqa: BLE001
+        return False
+    gris = np.asarray(ImageOps.autocontrast(petit.convert("L"), cutoff=1))
+    if float(np.asarray(petit.convert("L")).std()) < 20:
+        return False
+    return float(_contours(gris, 0.6).mean()) / 255 > 0.02
+
+
 def croquis(img, etapes):
-    """Les étapes du portrait-robot, des premiers traits au dessin ombré."""
+    """Les étapes du portrait-robot, des premiers traits au dessin ombré. Jamais de feuille blanche : chaque étape
+    montre déjà des traits."""
     img = ImageOps.contain(img.convert("RGB"), (480, 720))
     gris = np.asarray(ImageOps.autocontrast(img.convert("L"), cutoff=1))
     h, w = gris.shape
     fond = _papier(h, w, int(gris.mean() * 1000) % 9999)
     ombres = _crayon(gris)
     vues = []
+    depart = 0.05
+    while depart < 0.5 and _contours(gris, depart).mean() / 255 < 0.006:   # premiers traits trop maigres : on avance
+        depart += 0.05
     for k in range(etapes):
         t = k / max(1, etapes - 1)
-        traits = _contours(gris, min(1.0, 0.05 + t * 1.1)).astype(np.float32)[..., None] / 255
+        traits = _contours(gris, min(1.0, depart + t * (1.15 - depart))).astype(np.float32)[..., None] / 255
         a = fond * (1 - traits * 0.85) + MINE * traits * 0.85
         if t > 0.45:                                     # les ombres arrivent dans la seconde moitié
             o = 0.4 + 0.6 * (ombres[..., None] / 255)        # ombres légères : jamais d'aplat noir
@@ -104,6 +122,8 @@ def portrait_acteur(api, cfg, deja, realisateur=False):
         a = tirer(acteurs, deja, ident=lambda x: ("acteur", x["id"]))
         try:
             photo = api.image(a["profile_path"], "h632")
+            if not exploitable(photo):
+                continue
             connus = ([dict(f, release_date=f.get("release_date")) for f in filmographie(api, a["id"], "Director")[:3]]
                       if realisateur else films_connus(api.get(f"/person/{a['id']}/movie_credits").get("cast", []), 3))
         except Exception:  # noqa: BLE001
@@ -153,13 +173,22 @@ def construire(api, cfg, pool, deja):
         film = tirer(pool, deja, lambda f: f.get("poster_path"))
         essayes.append(cle_film(film))
         image = affiche_sans_texte(api, film)
-        if image is not None:
+        if exploitable(image):
             break
+        try:                                          # pas d'affiche sans texte dessinable : l'affiche habituelle
+            image = affiche(api, film, "w500")
+        except Exception:  # noqa: BLE001
+            image = None
+        if exploitable(image) and _ in (6, 7):
+            break
+        image = None
+    if image is None:
+        raise RuntimeError("Le croquis : aucune image exploitable.")
     for c in essayes[:-1]:                    # les films sans affiche sans texte restent jouables ailleurs
         deja.discard(c)
     d = details_film(api, film)
     duree = float(cfg["dur_andy"])
-    vues = croquis(image if image is not None else affiche(api, film, "w500"), max(4, int(cfg.get("andy_etapes", 10))))
+    vues = croquis(image, max(4, int(cfg.get("andy_etapes", 10))))
     n = len(vues)
     etat = {"img": 0, "indices": [], "trous": ""}
     evts = [(round(duree * 0.85 * k / (n - 1), 2), lambda k=k: etat.update(img=k)) for k in range(1, n)]

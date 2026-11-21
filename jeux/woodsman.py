@@ -57,6 +57,14 @@ def construire(api, cfg, pool, deja):
             break
     else:
         raise RuntimeError("Got a light? : pas assez d'informations sur les films des listes choisies.")
+    if cfg.get("indices_recompenses", True):              # une note de plus : ses récompenses (Wikidata)
+        try:
+            import recompenses
+            r = recompenses.indice(api, cible)
+        except Exception:  # noqa: BLE001
+            r = ""
+        if r:
+            ind = ind[:3] + [r] + ind[3:]
     autres = [f for f in films if f["id"] != cible["id"] and not sagas.meme_univers(f, cible)]
     random.shuffle(autres)
     n_aff = COLS * ROWS - len(ind)
