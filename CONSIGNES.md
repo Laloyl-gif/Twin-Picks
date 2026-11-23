@@ -185,3 +185,11 @@ lanceur.py remet le raccourci à jour, les liens web sont versionnés (?v=emprei
 Actions (dossier android/ modifié) et l'application propose sa nouvelle version (version.txt de la release).
 Validé : difficulté auto. Le classement animé reste refusé (v13).
 Deux fonctions globales du même nom dans les scripts d'une page sont interdites (test_v14 le vérifie).
+
+## Version 15 (novembre 2026)
+
+Images des cartes du menu (web/persos/<perso>.jpg, 900 × 474) et avatars (web/persos/avatars/<perso>.jpg, 256 × 256)
+fournies par Etienne pour les jeux des versions 12 et 13 : Lana Budding, Bernard Renault, Mrs. Tremond, Bushnell
+Mullins (The Return), le Dr Hayward, Gersten Hayward, Naido, Tammy Preston. Recadrées sur le visage, sans filtre (le
+menu applique déjà le noir et blanc des cartes non choisies). Restent sans image : Desmond, Dick Tremayne, le maire
+Milford (emblème affiché à la place).
