@@ -509,6 +509,16 @@ $('#pr-ajouter').onclick = async () => {
   if (!$('#pr-msg').textContent.startsWith('Le profil')) { $('#pr-nom').value = ''; $('#pr-fichier').value = ''; $('#pr-fichier').onchange(); }
 };
 $('#b-profils').onclick = ouvrirProfils;
+$('#b-historique').onclick = async () => {           // les dernières parties : joueurs, manches, films
+  const r = await (await fetch('/api/hote/historique' + Q)).json();
+  const ps = r.parties || [];
+  $('#hi-corps').innerHTML = ps.length ? ps.map((p, k) => `<details class="hi-partie"${k ? '' : ' open'}><summary><b>${esc(p.date || '')}</b>` +
+    `${p.inachevee ? ' <small>(interrompue)</small>' : ''} · ${(p.joueurs || []).map((j, i) => `<span style="color:${j.couleur}">${i ? '' : '🏆 '}${esc(j.nom)} ${j.score}</span>`).join(' · ')}</summary>` +
+    `<ol>${(p.manches || []).map(m => `<li><b>${esc(m.jeu)}</b> — ${esc(m.solution)}${m.detail ? ` <small>${esc(m.detail).slice(0, 90)}</small>` : ''}` +
+      ` <span class="${m.gagnants.length ? 'ok' : 'doux'}">${m.gagnants.length ? '✓ ' + m.gagnants.map(esc).join(', ') : 'personne'}</span></li>`).join('')}</ol></details>`).join('')
+    : '<p class="aide">Aucune partie enregistrée pour l\'instant.</p>';
+  $('#d-historique').showModal();
+};
 $('#b-palmares').onclick = async () => {               // le palmarès à vie, toutes parties confondues
   const r = await (await fetch('/api/hote/palmares' + Q)).json();
   const js = r.joueurs || [];
@@ -568,6 +578,9 @@ function rendreLobby() {
 /* ================= partie ================= */
 $('#b-pause').onclick = () => action('pause');
 $('#b-passer').onclick = () => action('passer');
+$('#b-rejouer-manche').onclick = () => {
+  if (confirm('Relancer cette manche avec d\'autres films ? Les points de la manche sont annulés.')) action('rejouer');
+};
 $('#b-rejouer').onclick = () => action('lancer');
 $('#b-menu').onclick = () => {
   if (E.phase === 'fin' || confirm('Revenir au menu ? La partie en cours sera arrêtée.')) action('menu');
@@ -683,7 +696,7 @@ function bandeau(e) {
   }
   if (e.phase === 'reponse' && ['note', 'chrono', 'bingo'].includes(e.type)) return '';
   if (e.phase === 'reponse' && e.type === 'ordre') return `<div class="detail">${esc(e.detail || '')}</div>`;
-  if (e.phase === 'reponse' && ['plusieurs', 'paire', 'brelan', 'paires', 'focus', 'rancon', 'lumiere', 'contrat', 'differences', 'code', 'duels', 'double', 'duree', 'blackjack', 'pendule', 'enveloppes', 'pluie', 'mensonges', 'tableau', 'poker'].includes(e.type)) {
+  if (e.phase === 'reponse' && ['plusieurs', 'paire', 'brelan', 'paires', 'focus', 'rancon', 'lumiere', 'contrat', 'differences', 'code', 'duels', 'double', 'duree', 'blackjack', 'pendule', 'enveloppes', 'pluie', 'mensonges', 'tableau', 'poker', 'diapason', 'entremots', 'enquete'].includes(e.type)) {
     // les résultats de chacun sont déjà sous le jeu : ici, la solution seule
     return `<div class="solution">${esc(e.solution)}</div>` + (e.detail ? `<div class="detail">${esc(e.detail)}</div>` : '');
   }
@@ -802,6 +815,11 @@ function moteurHote(e) {
       r.mat ? 'faux' : 'juste')).join('')}</div>`;
   }
   if (e.type === 'pluie') return pluieHTML(e, src);
+  if (['diapason', 'entremots', 'enquete'].includes(e.type)) {   // Gersten, Naido, Tammy
+    const d = e.type === 'diapason' ? diapasonHTML(e, src) : e.type === 'entremots' ? entremotsHTML(e, src) : enqueteHTML(e, src);
+    if (!rev) return d;
+    return d + `<div class="frise-res">${(mo.resultats || []).map(r => puce(r, r.gain ? ` <em>+${r.gain}</em>` : '', r.gain ? 'juste' : 'faux')).join('')}</div>`;
+  }
   if (e.type === 'poker') {                              // Bernard Renault : le poker
     const d = pokerHTML(e, src);
     if (!rev) return d;
@@ -920,6 +938,7 @@ function rendreJeu() {
     ? `${Math.min(e.manche, e.total)}<span>/${e.total}</span>` : '';
   $('#b-pause').textContent = e.pause ? 'Reprendre' : 'Pause';
   $('#b-pause').hidden = $('#b-passer').hidden = e.phase === 'fin';
+  $('#b-rejouer-manche').hidden = !['manche', 'reponse'].includes(e.phase);
   $('#b-rejouer').hidden = e.phase !== 'fin';
   $('#code-jeu').innerHTML = e.code ? `Partie <b>${esc(e.code)}</b>` : '';
   t.hidden = e.phase !== 'manche';

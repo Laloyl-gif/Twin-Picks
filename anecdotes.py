@@ -1,7 +1,11 @@
-"""Les anecdotes de tournage des films (et quelques-unes sur les acteurs), d'après Wikipédia en français : rubriques
-« Autour du film », « Anecdotes », « Tournage », « Production »… Le lien TMDB -> Wikidata -> article fr.wikipedia
-passe par recompenses.wikidata_id. Tout est mis en cache (donnees/anecdotes.json), y compris les films sans
-anecdote (pour ne pas les redemander) : la base se constitue au fil des parties, à partir de vos listes.
+"""Les anecdotes de tournage des films (et quelques-unes sur les acteurs), d'après Wikipédia en français ET en anglais
+(rubriques « Autour du film », « Anecdotes », « Tournage », « Production », « Casting », « Filming »…). Les phrases
+anglaises sont traduites (traduction.py) quand elles sont choisies. Chaque phrase reçoit une note « insolite » :
+accidents, improvisations, blessures, refus, faux départs, objets vrais, paris, superstitions… passent devant les
+dates de sortie et les chiffres du box-office. (IMDb interdit la récupération automatique de ses pages : Wikipédia
+est la source libre la plus riche.)
+Tout est mis en cache (donnees/anecdotes.json), y compris les films sans anecdote : la base se constitue au fil des
+parties, à partir de vos listes.
 """
 import html
 import json
@@ -16,6 +20,25 @@ FICHIER = os.path.join(DOSSIER_DONNEES, "anecdotes.json")
 ENTETES = {"User-Agent": "TwinPicks/12 (quiz cinema entre amis; https://github.com/Laloyl-gif/Twin-Picks)"}
 API_WD = "https://www.wikidata.org/w/api.php"
 API_FR = "https://fr.wikipedia.org/w/api.php"
+API_EN = "https://en.wikipedia.org/w/api.php"
+VERSION = "v2"
+# ce qui rend une anecdote insolite (français et anglais) ; et ce qui la rend banale
+INSOLITE = re.compile(r"improvis|ad-lib|accident|bless[ée]|injur|cass[ée]|\bbroke\b|fractur|hôpital|hospital|refus|"
+                      r"turned down|declined|rejected|à l'origine|originally|initialement|failli|\balmost\b|nearly|"
+                      r"\bréel|véritable|\breal\b|actually|en réalité|\bvrai\b|\bvraie\b|secret|par hasard|by chance|"
+                      r"insist|exigé|demanded|renvoy|\bfired\b|remplac|replaced|caméo|cameo|clin d'œil|easter egg|"
+                      r"\bparié|\bpari\b|\bbet\b|superstiti|\bivre\b|drunk|malade|\bsick\b|vomi|terrifi|\bscared|"
+                      r"frightened|détest|\bhated\b|furieux|furious|en colère|\bangry\b|vrai sang|real blood|"
+                      r"\btomb[ée]|\bfell\b|blague|\bjoke|prank|farce|surpris|sans le savoir|without knowing|unaware|"
+                      r"interdit|banned|censur|au lieu de|instead of|en échange|in exchange|gratuitement|for free|"
+                      r"\bchien|\bdog\b|\bchats?\b|\bcats?\b|cheval|\bhorse|serpent|snake|\bours\b|\bbear\b|"
+                      r"insecte|araignée|spider|cascade|stunt|doublure|\bnu\b|naked|nude|perruque|wig|prothèse|"
+                      r"\bdent|tooth|teeth|cicatrice|scar|tatou|tattoo|maquillage|make-up|makeup", re.I)
+BANAL = re.compile(r"box-office|box office|recett|gross|budget de|millions? de dollars|million dollars|sorti[e]? en salles?|"
+                   r"released|distribu|critique|review|festival|nomin|récompens|award|oscar|césar|entrées|admissions|"
+                   r"dvd|blu-ray|vhs|bande-annonce|trailer|première mondiale|premiere", re.I)
+RUBRIQUES_EN = [(r"trivia|behind|anecdote", 3), (r"filming|shooting|principal photography", 2),
+                (r"production|development|casting|pre-production|writing|music", 1)]
 DELAI = 8
 # rubriques, de la plus « anecdotique » à la moins
 RUBRIQUES = [(r"anecdote|autour du film|le saviez|à noter|trivia", 3), (r"tournage", 2),
@@ -57,10 +80,21 @@ def _get(api, url, **params):
     return r.json()
 
 
+def pages(api, qid):
+    """Les titres des articles fr et en.wikipedia d'un élément Wikidata."""
+    d = _get(api, API_WD, action="wbgetentities", ids=qid, props="sitelinks", sitefilter="frwiki|enwiki")
+    sl = ((d.get("entities") or {}).get(qid) or {}).get("sitelinks") or {}
+    return sl.get("frwiki", {}).get("title", ""), sl.get("enwiki", {}).get("title", "")
+
+
 def page_fr(api, qid):
-    """Le titre de l'article fr.wikipedia d'un élément Wikidata."""
-    d = _get(api, API_WD, action="wbgetentities", ids=qid, props="sitelinks", sitefilter="frwiki")
-    return (((d.get("entities") or {}).get(qid) or {}).get("sitelinks") or {}).get("frwiki", {}).get("title", "")
+    return pages(api, qid)[0]
+
+
+def insolite(t):
+    """La note « insolite » d'une phrase : mots qui sentent l'anecdote, moins ceux qui sentent la fiche technique."""
+    n = len(INSOLITE.findall(t))
+    return n - 2 * len(BANAL.findall(t))
 
 
 def nettoyer(h):
@@ -82,15 +116,15 @@ def phrases(texte):
         para = para.strip()
         if len(para) < 40:
             continue
-        for p in re.split(r"(?<=[.!?])\s+(?=[A-ZÀ-Ý«])", para):
+        for p in re.split(r"(?<=[.!?])\s+(?=[A-ZÀ-Ý«\"“])", para):
             p = p.strip()
             if 50 <= len(p) <= 260 and not p.endswith(":") and p.count("(") == p.count(")"):
                 out.append(p)
     return out
 
 
-def _extraire(api, titre, rubriques):
-    d = _get(api, API_FR, action="parse", page=titre, prop="sections", redirects=1)
+def _extraire(api, titre, rubriques, url=API_FR):
+    d = _get(api, url, action="parse", page=titre, prop="sections", redirects=1)
     secs = (d.get("parse") or {}).get("sections") or []
     choix = []
     for s in secs:
@@ -103,21 +137,23 @@ def _extraire(api, titre, rubriques):
     out = []
     for poids, idx in choix[:4]:
         try:
-            t = _get(api, API_FR, action="parse", page=titre, prop="text", section=idx, redirects=1, disabletoc=1)
+            t = _get(api, url, action="parse", page=titre, prop="text", section=idx, redirects=1, disabletoc=1)
         except Exception:  # noqa: BLE001
             continue
         texte = nettoyer(((t.get("parse") or {}).get("text") or {}).get("*", ""))
-        out += [{"t": p, "p": poids} for p in phrases(texte)]
-        if len(out) >= 14:
+        en = url == API_EN
+        out += [{"t": p, "p": poids, "s": insolite(p), "en": en} for p in phrases(texte)]
+        if len(out) >= 40:
             break
-    return out[:20]
+    out.sort(key=lambda a: (-a["s"], -a["p"]))
+    return out[:24]
 
 
 def de_film(api, film):
     """[{"t": phrase, "p": poids}] : les anecdotes d'un film (cache ; [] si rien)."""
     if film.get("tv"):
         return []
-    cle = f"m{film['id']}"
+    cle = f"{VERSION}:m{film['id']}"
     with _verrou:
         c = _charger()
         if cle in c:
@@ -127,10 +163,11 @@ def de_film(api, film):
     if not re.fullmatch(r"Q\d+", qid or ""):
         return []
     try:
-        titre = page_fr(api, qid)
-        res = _extraire(api, titre, RUBRIQUES) if titre else []
+        fr, en = pages(api, qid)
+        res = (_extraire(api, fr, RUBRIQUES) if fr else []) + (_extraire(api, en, RUBRIQUES_EN, API_EN) if en else [])
     except Exception:  # noqa: BLE001
         return []                                   # réseau : on réessaiera
+    res.sort(key=lambda a: (-a["s"], -a["p"], a.get("en", False)))
     with _verrou:
         _charger()[cle] = res
         _sauver()
@@ -138,21 +175,34 @@ def de_film(api, film):
 
 
 def de_personne(api, pid):
-    cle = f"p{pid}"
+    cle = f"{VERSION}:p{pid}"
     with _verrou:
         c = _charger()
         if cle in c:
             return c[cle]
     try:
         qid = (api.get(f"/person/{pid}/external_ids") or {}).get("wikidata_id") or ""
-        titre = page_fr(api, qid) if re.fullmatch(r"Q\d+", qid) else ""
-        res = _extraire(api, titre, RUBRIQUES_PERSONNE) if titre else []
+        fr, en = pages(api, qid) if re.fullmatch(r"Q\d+", qid) else ("", "")
+        res = (_extraire(api, fr, RUBRIQUES_PERSONNE) if fr else []) + \
+            (_extraire(api, en, [(r"personal life|trivia|early life", 3), (r"career", 1)], API_EN) if en else [])
+        res.sort(key=lambda a: (-a["s"], -a["p"], a.get("en", False)))
     except Exception:  # noqa: BLE001
         return []
     with _verrou:
         _charger()[cle] = res
         _sauver()
     return res
+
+
+def en_francais(a):
+    """Le texte d'une anecdote, traduit en français si elle vient de la Wikipédia anglaise (None si impossible)."""
+    if not a.get("en"):
+        return a["t"]
+    try:
+        from traduction import traduire
+        return traduire(a["t"], "en", "fr")
+    except Exception:  # noqa: BLE001
+        return None
 
 
 def masquer(texte, noms):

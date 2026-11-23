@@ -235,6 +235,7 @@ class Partie:
             self.api = TMDB(cfg["api_key"], cfg["session_id"], cfg["account_id"])
             self.futurs, self.deja, self.info = {}, {}, ""
             self.recap, self.series_max, self.joues = [], {}, set()
+            self.recap_sauve = False
             if cfg.get("anti_repetition", True):          # les films des dernières parties passent après les autres
                 try:
                     self.deja["films"] = historique.recents(int(cfg.get("anti_repetition_n", 3)))
@@ -380,6 +381,7 @@ class Partie:
         self.seq += 1
         self.manche, self.duree, self.moteur = m, m["duree"], moteur
         self.scores_debut = {pid: j.score for pid, j in self.joueurs.items()}
+        self.series_debut = {pid: j.serie for pid, j in self.joueurs.items()}
         for j in self.joueurs.values():
             j.reset()
         if m["reponse"] == "titre" and self.cfg["reponse"] == "qcm":
@@ -536,6 +538,7 @@ class Partie:
         """Ce qu'il faut pour le récap de fin : les gains de chacun à chaque manche, les séries."""
         try:
             self.recap.append({"jeu": m["jeu"], "solution": m.get("solution", ""), "type": m.get("reponse"),
+                               "detail": m.get("detail", ""),
                                "gains": {pid: j.gain for pid, j in self.joueurs.items()},
                                "trouves": [pid for pid, j in self.joueurs.items() if j.trouve]})
             for pid, j in self.joueurs.items():
@@ -545,10 +548,18 @@ class Partie:
         except Exception:  # noqa: BLE001
             traceback.print_exc()
 
-    def _sauver_historique(self):
-        if self.joues:
-            historique.ajouter(self.joues)
+    def _sauver_historique(self, inachevee=False):
+        if self.joues or self.recap:
+            J = self.joueurs
+            details = {"inachevee": inachevee,
+                       "joueurs": sorted([{"nom": j.nom, "score": j.score, "couleur": j.couleur} for j in J.values()],
+                                         key=lambda x: -x["score"]),
+                       "manches": [{"jeu": JEUX[r["jeu"]]["nom"] if r["jeu"] in JEUX else r["jeu"], "solution": r["solution"],
+                                    "detail": r.get("detail", ""),
+                                    "gagnants": [J[p].nom for p in r["trouves"] if p in J]} for r in self.recap]}
+            historique.ajouter(self.joues, details)
             self.joues = set()
+            self.recap_sauve = True
 
     def recap_fin(self):
         """Le récap de fin : podium, et pour chacun son meilleur jeu, sa meilleure manche, sa plus longue série ;
@@ -590,6 +601,27 @@ class Partie:
         self.phase, self.message = "fin", ""
 
     # ============ commandes de l'hôte ============
+    def rejouer(self):
+        """Relance la manche en cours avec d'autres films (manche ratée ou buggée) : ses points sont annulés."""
+        with self.lock:
+            if self.phase not in ("manche", "reponse") or not self.manche:
+                return
+            if self.phase == "reponse" and self.recap:
+                self.recap.pop()
+            for pid, j in self.joueurs.items():
+                if pid in getattr(self, "scores_debut", {}):
+                    j.score = self.scores_debut[pid]
+                if pid in getattr(self, "series_debut", {}):
+                    j.serie = self.series_debut[pid]
+                j.reset()
+            jeu = self.manche["jeu"]
+            if self.index < len(self.plan):
+                self.plan[self.index] = jeu
+            self.futurs.pop(self.index, None)
+            self._vider_manche()
+            self.pause = False
+            self._ouvrir(self.index)
+
     def basculer_pause(self):
         with self.lock:
             if self.phase in ("manche", "reponse", "chargement"):
@@ -612,7 +644,8 @@ class Partie:
                 f.cancel()
             self.futurs, self.attente = {}, None
             self._vider_manche()
-            self._sauver_historique()
+            if self.phase not in ("lobby", "fin") and not getattr(self, "recap_sauve", False):
+                self._sauver_historique(inachevee=True)
             self.phase, self.pause, self.message = "lobby", False, ""
 
     # ============ musique d'ambiance ============

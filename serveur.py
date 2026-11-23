@@ -285,6 +285,8 @@ class App:
             p.basculer_pause()
         elif a == "passer":
             p.passer()
+        elif a == "rejouer":
+            p.rejouer()
         elif a == "menu":
             p.menu()
         elif a == "exclure":
@@ -467,6 +469,9 @@ def fabriquer_handler(app):
                     return self._envoyer(dict(app.etat_hote(), ecran_actif=time.monotonic() - app.vu_ecran < 6))
                 if c == "/api/hote/config":
                     return self._envoyer(app.config_hote())
+                if c == "/api/hote/historique":
+                    import historique
+                    return self._envoyer({"parties": historique.liste()})
                 if c == "/api/hote/palmares":
                     import palmares
                     return self._envoyer(palmares.resume())

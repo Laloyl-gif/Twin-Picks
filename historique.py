@@ -34,17 +34,25 @@ def recents(n):
     return out
 
 
-def ajouter(films):
-    """Enregistre une partie (les clés de ses films)."""
+def ajouter(films, details=None):
+    """Enregistre une partie : les clés de ses films (anti-répétition) et, pour l'historique du menu, les joueurs,
+    leurs scores et chaque manche (jeu, solution, qui a gagné)."""
     films = sorted({tuple(k) for k in films if isinstance(k, (list, tuple)) and len(k) == 2}, key=str)
-    if not films:
+    if not films and not (details or {}).get("manches"):
         return
     with _verrou:
         parties = _lire()
-        parties.append({"date": time.strftime("%Y-%m-%d %H:%M"), "films": [list(k) for k in films]})
+        parties.append(dict(details or {}, date=time.strftime("%Y-%m-%d %H:%M"), films=[list(k) for k in films]))
         try:
             with open(FICHIER + ".tmp", "w", encoding="utf-8") as f:
                 json.dump(parties[-GARDE:], f, ensure_ascii=False)
             os.replace(FICHIER + ".tmp", FICHIER)
         except OSError:
             pass
+
+
+def liste(n=30):
+    """Les dernières parties, de la plus récente à la plus ancienne (pour le menu)."""
+    with _verrou:
+        parties = _lire()[-n:]
+    return [{k: p.get(k) for k in ("date", "joueurs", "manches", "inachevee")} for p in reversed(parties) if p.get("manches")]

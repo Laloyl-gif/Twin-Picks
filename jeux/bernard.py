@@ -61,6 +61,7 @@ def regles(cartes):
                     return k
             return 3
         txt_c = "Couleur = la famille de genre : " + " · ".join(f"{COULEURS[k]} {nom}" for k, (nom, _) in enumerate(FAMILLES))
+        court_c = "Couleur : selon le genre"
     else:
         f_c = dims[choix_c][0]
         seuils_c = _quantiles([f_c(fi) for _, fi in cartes], 4)
@@ -70,11 +71,13 @@ def regles(cartes):
         bornes = [f"{x:g}{unite}".replace(".", ",") for x in seuils_c]
         txt_c = (f"Couleur = {dims[choix_c][1]} : {COULEURS[0]} moins de {bornes[0]} · {COULEURS[1]} jusqu'à {bornes[1]} · "
                  f"{COULEURS[2]} jusqu'à {bornes[2]} · {COULEURS[3]} au-delà")
+        court_c = f"Couleur : selon {dims[choix_c][1]}"
     autres = [k for k in dims if k != choix_c]
     choix_v = random.choice(autres)
     f_v = dims[choix_v][0]
     seuils_v = _quantiles([f_v(fi) for _, fi in cartes], 9)
     txt_v = f"Chiffres = {dims[choix_v][1]} : 2 pour les plus petits, 10 pour les plus grands"
+    court_v = f"Chiffres : selon {dims[choix_v][1]}"
     # les figures : des conditions qui touchent 2 à 6 cartes du paquet (des personnes d'abord)
     cands = []
     acteurs, reals = Counter(), Counter()
@@ -88,30 +91,32 @@ def regles(cartes):
             noms[("r", r["id"])] = r["nom"]
     for i, n in acteurs.items():
         if 2 <= n <= 6:
-            cands.append((3, f"film avec {noms[('a', i)]}", lambda fi, i=i: any(a["id"] == i for a in fi.get("acteurs", [])[:8])))
+            cands.append((3, f"film avec {noms[('a', i)]}", "un acteur", lambda fi, i=i: any(a["id"] == i for a in fi.get("acteurs", [])[:8])))
     for i, n in reals.items():
         if 2 <= n <= 6:
-            cands.append((3, f"film de {noms[('r', i)]}", lambda fi, i=i: any(r["id"] == i for r in fi.get("realisateurs", [])[:2])))
+            cands.append((3, f"film de {noms[('r', i)]}", "un réalisateur", lambda fi, i=i: any(r["id"] == i for r in fi.get("realisateurs", [])[:2])))
     for g, nom in GENRES.items():
         n = sum(1 for _, fi in cartes if g in (fi.get("genre_ids") or []))
         if 2 <= n <= 6:
-            cands.append((1, f"film de genre {nom.lower()}", lambda fi, g=g: g in (fi.get("genre_ids") or [])))
-    cands.append((1, "film de plus de 2 h 20", lambda fi: (fi.get("duree") or 0) > 140))
-    cands.append((1, "titre en un seul mot", lambda fi: len((fi.get("titre") or "").split()) == 1))
-    cands = [c for c in cands if 2 <= sum(1 for _, fi in cartes if c[2](fi)) <= 6]
+            cands.append((1, f"film de genre {nom.lower()}", "un genre", lambda fi, g=g: g in (fi.get("genre_ids") or [])))
+    cands.append((1, "film de plus de 2 h 20", "la durée", lambda fi: (fi.get("duree") or 0) > 140))
+    cands.append((1, "titre en un seul mot", "le titre", lambda fi: len((fi.get("titre") or "").split()) == 1))
+    cands = [c for c in cands if 2 <= sum(1 for _, fi in cartes if c[3](fi)) <= 6]
     random.shuffle(cands)
     cands.sort(key=lambda c: -c[0])
     figures = cands[:4]
     random.shuffle(figures)
-    figs = {14 - k: (txt, t) for k, (_, txt, t) in enumerate(figures)}         # as, roi, dame, valet
+    figs = {14 - k: (txt, t, court) for k, (_, txt, court, t) in enumerate(figures)}    # as, roi, dame, valet
 
     def evaluer(fi):
         rang = next((r for r in (14, 13, 12, 11) if r in figs and figs[r][1](fi)), None)
         if rang is None:
             rang = 2 + _bucket(f_v(fi), seuils_v)
         return rang, coul(fi)
-    textes = {"couleur": txt_c, "chiffres": txt_v,
-              "figures": [f"{FIGURES[r]} = {figs[r][0]}" for r in (11, 12, 13, 14) if r in figs]}
+    # pendant la partie, on ne dit que SUR QUOI portent les règles ; le détail se dévoile à l'abattage
+    textes = {"couleur": court_c, "chiffres": court_v,
+              "figures": [f"{FIGURES[r]} : {figs[r][2]}" for r in (11, 12, 13, 14) if r in figs],
+              "detail": [txt_c, txt_v] + [f"{FIGURES[r]} = {figs[r][0]}" for r in (11, 12, 13, 14) if r in figs]}
     return evaluer, textes
 
 
@@ -336,13 +341,16 @@ class Moteur:
         nv = 5 if revele else self._visibles()
         R = self.m["regles"]
         connues = []
-        if revele or self.tour >= 1:
-            connues.append(R["couleur"])
-        if revele or self.tour >= 2:
-            connues.append(R["chiffres"])
-            connues += [x for x in R["figures"] if x.startswith(("Valet", "Dame"))]
-        if revele or self.tour >= 3:
-            connues += [x for x in R["figures"] if x.startswith(("Roi", "As"))]
+        if revele:
+            connues = list(R.get("detail") or [])
+        elif True:
+            if self.tour >= 1:
+                connues.append(R["couleur"])
+            if self.tour >= 2:
+                connues.append(R["chiffres"])
+                connues += [x for x in R["figures"] if x.startswith(("Valet", "Dame"))]
+            if self.tour >= 3:
+                connues += [x for x in R["figures"] if x.startswith(("Roi", "As"))]
         v = {"tour": self.tour, "fin": self.fin, "reste": round(max(0.0, self.m["dur_tour"] - (self.p.ecoule - self.debut)), 1),
              "milieu": [self._carte(i, True) for i in self.milieu[:nv]] + [None] * (5 - nv),
              "regles": connues, "n_regles": 2 + len(R["figures"]), "relances": list(RELANCES),

@@ -172,6 +172,9 @@ const TRAITS = {
   tremond: '<rect x="14" y="14" width="36" height="30" rx="2"/><rect x="19" y="19" width="26" height="20"/><path d="M19 35l8-8 6 6 5-4 7 6"/><path d="M32 44v8M24 52h16"/>',
   bushnell: '<rect x="20" y="8" width="12" height="16" rx="2"/><rect x="34" y="22" width="12" height="16" rx="2"/><rect x="18" y="34" width="12" height="16" rx="2"/><path d="M10 56h44"/>',
   hayward: '<path d="M18 12h28v40H18z"/><path d="M24 22h16M24 30h16M24 38h10"/><path d="M40 46l6 6M46 46l-6 6"/>',
+  gersten: '<path d="M26 10v22a6 6 0 0 0 12 0V10"/><path d="M32 38v16M24 54h16"/>',
+  naido: '<path d="M8 40h48"/><path d="M14 36v8M32 36v8M50 36v8"/><circle cx="24" cy="22" r="6"/><circle cx="40" cy="22" r="6"/><path d="M18 22h-4M50 22h-4"/>',
+  tammy: '<circle cx="28" cy="28" r="12"/><path d="M37 37l13 13"/><path d="M22 28h12M28 22v12"/>',
   dick: '<path d="M14 26l14 6-14 6zM50 26l-14 6 14 6z"/><rect x="28" y="29" width="8" height="6" rx="1.5"/>' +
         '<rect x="16" y="44" width="32" height="12" rx="1"/><path d="M16 44l16 7 16-7"/>',
   milford: '<path d="M22 14l4 6M42 14l-4 6"/><ellipse cx="32" cy="27" rx="12" ry="11"/><circle cx="27" cy="25" r="3"/>' +
@@ -247,6 +250,9 @@ function visuelHTML(v, opt = {}) {
   if (v.vue === 'mensonges') return mensongesHTML(v, opt);
   if (v.vue === 'tableau') return tableauHTML(v, src, opt);
   if (v.vue === 'poker') return pokerHTML(v, src, opt);
+  if (v.vue === 'diapason') return diapasonHTML(v, src, opt);
+  if (v.vue === 'entremots') return entremotsHTML(v, src, opt);
+  if (v.vue === 'enquete') return enqueteHTML(v, src, opt);
   if (v.phase === 'reponse') return v.revelation ? `<img class="scene-img" src="${src('r')}" alt="">` : '';
   if (v.vue === 'image') {
     const img = `<img class="scene-img" src="${src(e.img)}" alt="">`;

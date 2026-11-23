@@ -179,6 +179,15 @@ JEUX = {
                      "bushnell", "pluie"),
     "hayward": _jeu("Doc Hayward's Secrets", "Les secrets", "Dr Will Hayward",
                     "Des anecdotes de tournage, de la plus vague à la plus parlante : de quel film parle-t-on ?", "hayward", "titre"),
+    "gersten": _jeu("Gersten Hayward's Tuning Fork", "Le diapason", "Gersten Hayward",
+                    "Façon Wavelength : un film qui tombe pile sur la cible entre deux pôles ; les autres placent le curseur.",
+                    "gersten", "diapason"),
+    "naido": _jeu("Naido's Words", "Entre les mots", "Naido",
+                  "Un nombre secret entre des mots posés sur une règle : citez un film qui les mélange, les autres devinent le nombre.",
+                  "naido", "entremots"),
+    "tammy": _jeu("Tammy Preston's Investigation", "L'enquête", "Tammy Preston",
+                  "Façon 1jour1film : proposez des films, le rapport dit ce qu'ils partagent avec le film mystère.",
+                  "tammy", "enquete"),
 }
 # Garde-fou : les noms du menu sont figés (CONSIGNES.md). Un nom changé par erreur arrête le jeu au lancement.
 TITRES_FIGES = {
@@ -200,7 +209,8 @@ TITRES_FIGES = {
     "mrc": "Mr. C's Doppelganger", "desmond": "Desmond's Code",
     "dick": "Dick Tremayne's Gala", "milford": "Mayor Milford's Golden Owl", "lana": "Lana Budding's Lies",
     "bernard": "Bernard Renault's Poker", "tremond": "Mrs. Tremond's Painting", "bushnell": "Bushnell Mullins' Rain",
-    "hayward": "Doc Hayward's Secrets",
+    "hayward": "Doc Hayward's Secrets", "gersten": "Gersten Hayward's Tuning Fork", "naido": "Naido's Words",
+    "tammy": "Tammy Preston's Investigation",
     "jerry": "Jerry's Trip", "hank": "Hank's Dominoes",
 }
 assert all(JEUX[g]["titre"] == t for g, t in TITRES_FIGES.items() if g in JEUX), \
@@ -219,7 +229,7 @@ SOURCES_COMPTE = {
     -5: ("rated", "movies", "Films notés"),
     -6: ("rated", "tv", "Séries notées"),
 }
-VERSION_REGLAGES = 18
+VERSION_REGLAGES = 19
 
 PLAYLIST_MENU = "https://music.youtube.com/playlist?list=PLA7jHGp_FUM4"
 PLAYLIST_JEU = "https://music.youtube.com/playlist?list=OLAK5uy_mlZa8Lsr_mNkYfrYynkfQE1ZyamvGWY3A"
@@ -606,6 +616,16 @@ PARAMS = [
     _p("dur_hayward", "hayward", "Durée d'une manche (s)", 75, 30, 180, 5),
     _p("hayward_acteurs", "hayward", "Manches « acteur » (%)", 20, 0, 100, 5),
     _p("hayward_indices", "hayward", "Indices : genre et année, puis titre à trous", True),
+    _p("gersten_tours", "gersten", "Diapasons par manche", 2, 1, 8),
+    _p("gersten_indice", "gersten", "Temps du diapason pour trouver son film (s)", 60, 15, 180, 5),
+    _p("gersten_placer", "gersten", "Temps pour placer le curseur (s)", 30, 10, 90, 5),
+    _p("gersten_pts", "gersten", "Points pour un curseur pile sur la cible", 400, 0, 3000, 50),
+    _p("naido_ecrire", "naido", "Temps pour trouver son film (s)", 75, 20, 240, 5),
+    _p("naido_deviner", "naido", "Temps pour deviner chaque nombre (s)", 25, 10, 90, 5),
+    _p("naido_pts", "naido", "Points pour un nombre deviné pile", 300, 0, 3000, 50),
+    _p("dur_tammy", "tammy", "Durée d'une manche (s)", 150, 45, 600, 15),
+    _p("tammy_essais", "tammy", "Essais par joueur", 12, 3, 40),
+    _p("tammy_essai", "tammy", "Points en moins par essai", 40, 0, 300, 10),
     _p("dur_desmond", "desmond", "Durée d'une manche (s)", 180, 60, 480, 10),
     _p("desmond_or", "desmond", "Films en or à faire deviner", 6, 2, 9),
     _p("desmond_rouges", "desmond", "Films rouges", 4, 0, 8),
@@ -849,6 +869,13 @@ def migrer(brut):
                 if modele and g not in listes:
                     listes[g] = copy.deepcopy(modele)
         brut.pop("milford_n", None)
+    if version < 19:                         # v13 : Gersten, Naido, Tammy arrivent ; la pluie va plus vite
+        listes = brut.get("listes")
+        if isinstance(listes, dict):
+            modele = listes.get("affiche") or listes.get("pete")
+            for g in ("gersten", "naido", "tammy"):
+                if modele and g not in listes:
+                    listes[g] = copy.deepcopy(modele)
     brut["version"] = VERSION_REGLAGES
     return brut
 

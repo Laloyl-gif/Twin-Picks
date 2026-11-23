@@ -1,6 +1,6 @@
 """Doc Hayward's Secrets (Les secrets du docteur) : le Dr Will Hayward, médecin de Twin Peaks, connaît les secrets de
-tout le monde. Des anecdotes de tournage arrivent l'une après l'autre (Wikipédia en français : « Autour du film »,
-« Anecdotes », « Tournage »…), de la plus vague à la plus parlante ; le titre y est masqué, les noms d'acteurs
+tout le monde. Des anecdotes de tournage arrivent l'une après l'autre (Wikipédia en français et en anglais, traduite ;
+les plus insolites d'abord : accidents, improvisations, refus, vrais objets…), de la plus vague à la plus parlante ; le titre y est masqué, les noms d'acteurs
 restent (ce sont des indices). Puis le genre et l'année, puis le titre à trous. Une manche sur cinq environ : trouver
 un acteur, à partir d'anecdotes sur sa vie.
 """
@@ -23,17 +23,23 @@ def specificite(t):
 
 
 def choisir(lst, noms):
-    """Trois anecdotes utilisables (titre masqué), de la plus vague à la plus parlante."""
+    """Trois anecdotes utilisables (titre masqué), les plus insolites d'abord ; puis de la plus vague à la plus
+    parlante. Celles de la Wikipédia anglaise sont traduites."""
     vues, bons = set(), []
-    for a in sorted(lst, key=lambda x: -x["p"]):
-        t = anecdotes.masquer(a["t"], noms)
+    for a in sorted(lst, key=lambda x: (-x.get("s", 0), -x["p"])):
+        if len(bons) >= 6:
+            break
+        brut = anecdotes.en_francais(a)
+        if not brut:
+            continue
+        t = anecdotes.masquer(brut, noms)
         if t.count("…") > 3 or len(t) < 50 or cle(t)[:40] in vues:
             continue
         vues.add(cle(t)[:40])
         bons.append(t)
     if len(bons) < NB:
         return None
-    lot = bons[:8]
+    lot = bons[:5]                                   # les plus insolites, un peu de hasard entre elles
     random.shuffle(lot)
     return sorted(lot[:NB], key=specificite)
 
@@ -91,12 +97,21 @@ def construire(api, cfg, pool, deja):
     random.shuffle(films)
     films = sorted(films, key=lambda f: cle_film(f) in deja)
     t0 = time.time()
-    for f in films[:60]:
+    secours = None
+    candidats = []
+    for f in films[:60]:                             # d'abord un film qui a au moins trois anecdotes vraiment insolites
         if time.time() - t0 > 40:
             break
         lst = anecdotes.de_film(api, f)
         if len(lst) < NB:
             continue
+        if sum(1 for a in lst if a.get("s", 0) >= 1) >= NB:
+            candidats.insert(0, (f, lst))
+            break
+        if secours is None:
+            secours = (f, lst)
+            candidats.append(secours)
+    for f, lst in candidats:
         d = details_film(api, f)
         noms = [f["title"], f.get("original_title"), d.get("en"), d.get("saga")] + [n for n in d.get("noms", [])[:8] if est_latin(n)]
         textes = choisir(lst, noms)

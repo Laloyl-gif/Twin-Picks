@@ -159,7 +159,41 @@ function retour(r) {
   const el = $('#retour');
   el.textContent = r.msg || r.erreur || '';
   el.className = 'retour ' + (r.correct ? 'ok' : r.ok ? 'info' : 'err');
+  if (r.correct === true) vibrer(40);                       // bonne réponse : un petit coup
+  else if (r.correct === false) vibrer([90, 50, 90]);       // mauvaise : deux coups
 }
+/* Vibrations (téléphones qui le permettent) ; plein écran et écran toujours allumé pendant la partie */
+function vibrer(motif) { try { if (navigator.vibrate) navigator.vibrate(motif); } catch (e) { /* rien */ } }
+let tourAvant = false, seqVibre = -1, verrouEcran = null;
+function vibrerSiTour() {
+  if (!S) return;
+  const mo = S.moteur || {};
+  const tour = S.phase === 'manche' && !!(mo.mon_tour || (mo.conteur_moi && mo.actif) || (mo.diapason_moi && mo.actif) ||
+    (S.type === 'code' && mo.donneur_moi && mo.actif) || mo.mes_contrats > 0 || (S.mode === 'buzzer' && S.moi && S.moi.moi_main));
+  if (tour && !tourAvant) vibrer([150, 80, 150]);           // c'est à vous !
+  tourAvant = tour;
+  if (S.phase === 'manche' && S.seq !== seqVibre) { seqVibre = S.seq; vibrer(30); }   // une nouvelle manche commence
+}
+async function garderEcran() {
+  try { if ('wakeLock' in navigator && !verrouEcran && document.visibilityState === 'visible') {
+    verrouEcran = await navigator.wakeLock.request('screen');
+    verrouEcran.addEventListener('release', () => { verrouEcran = null; });
+  } } catch (e) { verrouEcran = null; }
+}
+let etaitPleinEcran = false;
+document.addEventListener('fullscreenchange', () => {        // quitté à la main : on ne le remet pas de force
+  if (document.fullscreenElement) etaitPleinEcran = true;
+  else if (etaitPleinEcran) sessionStorage.setItem('pleinEcranRefuse', '1');
+});
+document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible' && pid) garderEcran(); });
+document.addEventListener('pointerdown', () => {             // au premier toucher : plein écran (le navigateur l'exige)
+  if (!pid) return;
+  garderEcran();
+  const el = document.documentElement;
+  if (!document.fullscreenElement && el.requestFullscreen && !sessionStorage.getItem('pleinEcranRefuse')) {
+    el.requestFullscreen({navigationUI: 'hide'}).catch(() => sessionStorage.setItem('pleinEcranRefuse', '1'));
+  }
+}, {passive: true});
 async function action(url, data) {
   if (occupe) return;
   occupe = true;
@@ -181,7 +215,7 @@ async function valider() {
     const r = await post('/api/repondre', {pid, texte, case: selCase});
     retour(r);
     $('#sugg').innerHTML = '';
-    if ((r.correct && (S.type === 'chrono' || S.type === 'bingo' || S.type === 'pendule')) || (r.ok && (S.type === 'mensonges' || (S.type === 'tableau' && r.msg === 'Indice envoyé')))) { $('#saisie').value = ''; selCase = -1; }
+    if ((r.correct && (S.type === 'chrono' || S.type === 'bingo' || S.type === 'pendule')) || (r.ok && (['mensonges', 'diapason', 'entremots', 'enquete'].includes(S.type) || (S.type === 'tableau' && r.msg === 'Indice envoyé')))) { $('#saisie').value = ''; selCase = -1; }
     else if (!r.correct) $('#saisie').select();
   } finally { occupe = false; }
   boucle();
@@ -275,6 +309,7 @@ $('#zone').onclick = ev => {
   if (ce && !ce.disabled) return action('/api/jouer', {pid, env: (S.moteur || {}).k, i: Number(ce.dataset.ce)});
   const cea = ev.target.closest('[data-cea]');
   if (cea) return action('/api/jouer', {pid, env: (S.moteur || {}).k, annee: Number(cea.dataset.cea)});
+  if (ev.target.closest('#b-dp-ok')) return action('/api/jouer', {pid, valeur: Number($('#dp-val').value)});
   const pkr = ev.target.closest('[data-pkr]');
   if (pkr) return action('/api/jouer', {pid, relance: Number(pkr.dataset.pkr)});
   if (ev.target.closest('[data-pkc]')) return action('/api/jouer', {pid, coucher: 1});
@@ -833,6 +868,43 @@ function vueZone() {
     return ['pk' + JSON.stringify([S.seq, mo.tour, mo.mes_cartes, mo.actif, mo.deja_joue, mo.couche, mo.peut_defausser, (mo.regles || []).length]),
       `<p class="bj-vous">Vos cartes · mise ${mo.ma_mise || 0} · ${Math.ceil(mo.reste || 0)} s</p>${mes}${def}${btn}` + pokerHTML(S, src, {joueur: true})];
   }
+  if (S.type === 'diapason' || S.type === 'entremots') {   // Gersten : le diapason ; Naido : entre les mots
+    const mo = S.moteur || {}, src = i => `/img/${S.seq}/${i}`, dp = S.type === 'diapason';
+    if (S.phase === 'reponse') {
+      const r = (mo.resultats || []).find(x => x.id === m.id) || {};
+      return ['dp' + S.seq + JSON.stringify(S.classement), banniere(r.gain ? 'ok' : 'ko', r.gain ? `+${r.gain}` : 'Pas de points', '') + gainTel()];
+    }
+    const glisser = (min, val) => `<div class="dp-curseur"><input type="range" id="dp-val" min="${min}" max="100" value="${val}"><b id="dp-aff">${val}</b></div>` +
+      '<button id="b-dp-ok" class="primaire large">Valider</button>';
+    if (dp) {
+      if (mo.etape === 'indice') {
+        if (mo.diapason_moi) return ['dp-i' + JSON.stringify([S.seq, mo.k]), `<p class="fo-aide"><b>Vous êtes le diapason :</b> tapez un film qui tombe pile sur la cible</p>` +
+          diapasonHTML(S, src, {joueur: true, cible: mo.ma_cible})];
+        return ['dp-a' + JSON.stringify([S.seq, mo.k]), diapasonHTML(S, src, {joueur: true})];
+      }
+      if (mo.etape === 'placer' && mo.actif) return ['dp-p' + JSON.stringify([S.seq, mo.k]), diapasonHTML(S, src, {joueur: true}) + glisser(0, 50)];
+      return ['dp-r' + JSON.stringify([S.seq, mo.k, mo.etape, mo.ma_place]), diapasonHTML(S, src, {joueur: true}) +
+        (mo.etape === 'placer' ? `<p class="centre doux">${mo.diapason_moi ? 'Les autres placent leur curseur…' : 'Curseur placé : ' + mo.ma_place}</p>` : '')];
+    }
+    if (mo.etape === 'ecrire') {
+      const quoi = mo.mon_nombre ? `<p class="em-moi">Votre nombre : <b>${mo.mon_nombre}</b> · entre « <b>${esc(mo.mes_mots[0])}</b> » et « <b>${esc(mo.mes_mots[1])}</b> »</p>` : '';
+      return ['em-e' + JSON.stringify([S.seq, mo.mon_film]), quoi + (mo.mon_film ? `<p class="centre doux">Film envoyé : <b>${esc(mo.mon_film.txt)}</b></p>` : '') +
+        regleMotsHTML(mo.regle, {nombre: mo.mon_nombre})];
+    }
+    if (mo.etape === 'deviner' && mo.actif) return ['em-d' + JSON.stringify([S.seq, mo.k]), entremotsHTML(S, src, {joueur: true}) + glisser(1, 50)];
+    return ['em-r' + JSON.stringify([S.seq, mo.k, mo.etape, mo.ma_place]), entremotsHTML(S, src, {joueur: true}) +
+      (mo.etape === 'deviner' ? `<p class="centre doux">${mo.auteur_moi ? 'C\'est votre film : les autres devinent' : 'Nombre placé : ' + mo.ma_place}</p>` : '')];
+  }
+  if (S.type === 'enquete') {                       // Tammy : l'enquête
+    const mo = S.moteur || {};
+    if (S.phase === 'reponse') {
+      const r = (mo.resultats || []).find(x => x.id === m.id) || {};
+      return ['tm' + S.seq + JSON.stringify(S.classement), banniere(r.gain ? 'ok' : 'ko', r.gain ? `Trouvé ! +${r.gain}` : 'Pas trouvé', `<b>${esc(S.solution)}</b>`) + gainTel()];
+    }
+    const mes = (mo.mes || []).slice().reverse().map(x => `<li><b>${esc(x.titre)}</b>${x.trouve ? ' <b class="ok">C\'est lui !</b>' : rapportHTML(x.r)}</li>`).join('');
+    return ['tm' + JSON.stringify([S.seq, (mo.mes || []).length, mo.trouve]), (mo.trouve ? message(cooper(true, 'grand') + '<span class="ok">Trouvé !</span>') :
+      `<p class="fo-aide">Proposez un film : ${(mo.mes || []).length}/${mo.maxi} essais</p>`) + `<ul class="tm-fil tel">${mes}</ul>`];
+  }
   if (S.type === 'lumiere') {                       // Woodsman : la lumière au bout du doigt
     const mo = S.moteur || {};
     if (S.phase === 'reponse') return ['lu' + S.seq + JSON.stringify(S.classement), banniere(mo.trouve ? 'ok' : 'ko',
@@ -889,6 +961,7 @@ function vueZone() {
 
 function rendre() {
   montrer('v-jeu');
+  vibrerSiTour();
   const m = S.moi, enManche = S.phase === 'manche' || S.phase === 'reponse';
   document.documentElement.style.setProperty('--moi', m.couleur);
   maj($('#b-profil'), m.nom + m.couleur + m.avatar, `${rond(m)}<span>${esc(m.nom)}</span>`);
@@ -911,7 +984,7 @@ function rendre() {
   }
   document.body.dataset.jeu = enManche ? (S.jeu || '') : '';                      // décor du jeu (style.css)
   GRAINE_DECOR = S.seq || 0;
-  const vis = $('#visuel'), avecVisuel = enManche && !['complice', 'choix', 'bingo', 'ordre', 'double', 'duels', 'brelan', 'paires', 'focus', 'lumiere', 'contrat', 'differences', 'code', 'blackjack', 'pendule', 'enveloppes', 'pluie', 'mensonges', 'tableau', 'poker'].includes(S.type);
+  const vis = $('#visuel'), avecVisuel = enManche && !['complice', 'choix', 'bingo', 'ordre', 'double', 'duels', 'brelan', 'paires', 'focus', 'lumiere', 'contrat', 'differences', 'code', 'blackjack', 'pendule', 'enveloppes', 'pluie', 'mensonges', 'tableau', 'poker', 'diapason', 'entremots', 'enquete'].includes(S.type);
   vis.hidden = !avecVisuel;
   if (avecVisuel) {
     maj(vis, `${S.phase}|${S.seq}|${S.revelation}|${JSON.stringify(S.etat)}|${S.vue === 'cassette' ? S.pause || !!S.main : ''}|${(S.moteur || {}).contrainte || ''}|${S.type === 'duree' || S.type === 'plusieurs' || S.type === 'rancon' ? JSON.stringify(S.moteur) : ''}`,
@@ -931,17 +1004,20 @@ function rendre() {
                                                               (S.type === 'code' && mo.donneur_moi && mo.actif) ||
                                                               (S.type === 'pendule' && mo.mon_tour && mo.actif) ||
                                                               (S.type === 'mensonges' && mo.etape === 'ecrire' && mo.actif) ||
-                                                              (S.type === 'tableau' && mo.etape === 'conteur' && mo.conteur_moi && mo.actif)));
+                                                              (S.type === 'tableau' && mo.etape === 'conteur' && mo.conteur_moi && mo.actif) ||
+                                                              (S.type === 'diapason' && mo.etape === 'indice' && mo.diapason_moi && mo.actif) ||
+                                                              (S.type === 'entremots' && mo.etape === 'ecrire' && mo.actif) ||
+                                                              (S.type === 'enquete' && mo.actif)));
   zt.hidden = !saisie;
   z.hidden = html === null;
   if (saisie) {
     const annee = S.type === 'nombre' || S.type === 'duree';
-    $('#saisie').placeholder = S.type === 'tableau' ? 'Votre indice…' : S.type === 'mensonges' ? 'Votre mensonge…' : S.type === 'pendule' ? 'Un film lié au précédent…' : S.type === 'contrat' ? 'Un film…' : S.type === 'code' ? 'Votre indice (1 à 4 mots)' : S.type === 'duree' ? 'Durée : 140 = 1 h 40' : annee ? 'Année' : (S.jeu === 'filmo' || (S.etat || {}).acteur) ? 'Acteur' : S.type === 'chrono' ? 'Un film…'
+    $('#saisie').placeholder = ['diapason', 'entremots', 'enquete'].includes(S.type) ? 'Un film…' : S.type === 'tableau' ? 'Votre indice…' : S.type === 'mensonges' ? 'Votre mensonge…' : S.type === 'pendule' ? 'Un film lié au précédent…' : S.type === 'contrat' ? 'Un film…' : S.type === 'code' ? 'Votre indice (1 à 4 mots)' : S.type === 'duree' ? 'Durée : 140 = 1 h 40' : annee ? 'Année' : (S.jeu === 'filmo' || (S.etat || {}).acteur) ? 'Acteur' : S.type === 'chrono' ? 'Un film…'
       : S.type === 'bingo' ? (((mo.cases || [])[selCase] || {}).txt ? `Film : ${mo.cases[selCase].txt}` : 'Un film pour cette case…')
       : 'Titre';
     $('#saisie').inputMode = S.type === 'nombre' ? 'numeric' : S.type === 'duree' ? 'decimal' : 'text';
     $('#aide-saisie').textContent = annee || S.type === 'chrono' || S.type === 'bingo' ? ''
-      : ['paire', 'plusieurs', 'rancon', 'contrat', 'code', 'differences', 'pendule', 'mensonges', 'tableau'].includes(S.type) ? '' : S.mode === 'buzzer' ? 'À vous' : `${m.essais} essai${m.essais > 1 ? 's' : ''}`;
+      : ['paire', 'plusieurs', 'rancon', 'contrat', 'code', 'differences', 'pendule', 'mensonges', 'tableau', 'diapason', 'entremots', 'enquete'].includes(S.type) ? '' : S.mode === 'buzzer' ? 'À vous' : `${m.essais} essai${m.essais > 1 ? 's' : ''}`;
     if (S.type === 'duree') apercuDuree();
     if (S.type === 'paire' || S.type === 'plusieurs') {
       const miens = mo.mes_films || [], n = mo.n || 2;
@@ -992,3 +1068,5 @@ document.addEventListener('pointerdown', ev => {
   PLUIE.touches.add(pg.dataset.g); pg.classList.add('touche');
   post('/api/jouer', {pid, goutte: Number(pg.dataset.g)}).then(retour).catch(() => {});
 });
+
+document.addEventListener('input', ev => { if (ev.target.id === 'dp-val') $('#dp-aff').textContent = ev.target.value; });

@@ -77,6 +77,9 @@ Les jeux
   Mrs. Tremond's Painting                     Le tableau         un indice, des affiches leurres, votez (Dixit)
   Bushnell Mullins' Rain                      La pluie d'affiches touchez vite les affiches qui respectent la condition
   Doc Hayward's Secrets                       Les secrets        des anecdotes de tournage : de quel film parle-t-on ?
+  Gersten Hayward's Tuning Fork               Le diapason        un film pile sur la cible entre deux pôles (Wavelength)
+  Naido's Words                               Entre les mots     un nombre secret entre des mots : le film qui les mélange
+  Tammy Preston's Investigation               L'enquête          proposez des films, le rapport dit les points communs
 
 Décors
   Jamais de fond qui dénote : des objets (web/objets.js, web/decor.js). Les objets ne sont jamais cachés derrière
@@ -407,6 +410,24 @@ Autres jeux
     victoires, parties, points, moyenne, record, manches gagnées, plus longue série, jeu fétiche.
   La pendule : les 40 s de chacun s'affichent en texte, sur l'écran et sur les téléphones. Le contrat : au départ,
     chaque joueur tient un contrat. Le Hibou d'or : une enveloppe par manche, des films toujours différents.
+  Le diapason (Gersten Hayward), façon Wavelength : une jauge entre deux pôles (« Navet ↔ Chef-d'œuvre »…). Le
+    diapason (chacun son tour) voit une cible et tape un film qui tombe pile dessus ; les autres placent le curseur.
+    Plus on est près, plus on gagne ; le diapason marque la moyenne des autres. Deux diapasons par manche.
+  Entre les mots (Naido) : une règle de 1 à 100 et quatre mots (1, 33, 66, 100). Chacun reçoit un nombre secret et
+    tape un film qui mélange les deux mots qui l'encadrent, dans la bonne proportion. Puis chaque film s'affiche et
+    les autres devinent le nombre. Points pour les devineurs et pour l'auteur.
+  L'enquête (Tammy Preston), façon 1jour1film : un film mystère. Chacun propose des films ; le rapport dit ce qu'ils
+    ont en commun avec lui (genres, année plus tôt / plus tard, réalisateur, acteurs, musique, pays, durée, note).
+    L'écran montre les rapports de tous, sans les titres. Le premier à trouver gagne le plus ; 12 essais.
+  Le poker : pendant la partie, les règles disent seulement SUR QUOI portent les couleurs, les chiffres et les figures
+    (« Couleur : selon la note TMDB », « Roi : un acteur ») ; le détail se dévoile à l'abattage.
+  Les secrets : anecdotes de Wikipédia en français et en anglais (traduite), les plus insolites d'abord (accidents,
+    improvisations, refus, vrais objets, cascades…). IMDb interdit la récupération automatique de ses pages.
+  Téléphone : vibre à la bonne ou mauvaise réponse et quand c'est votre tour ; passe en plein écran au premier
+    toucher (sauf si vous le quittez) et l'écran ne se met plus en veille pendant la partie.
+  Historique : bouton « Historique » du menu : chaque partie (date, scores, manches, solutions, qui a trouvé).
+  Rejouer la manche : bouton en bas de l'écran pendant une manche ; elle repart avec d'autres films, ses points sont
+    annulés.
   Récap de fin : podium, et pour chacun son meilleur jeu, son plus beau coup, sa plus longue série ; les films qui
     ont résisté à tout le monde ; bouton « Image à partager » (PNG).
   Anti-répétition : les films joués lors des 3 dernières parties (réglable) passent après les autres.

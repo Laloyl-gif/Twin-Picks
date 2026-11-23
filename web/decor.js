@@ -861,3 +861,62 @@ function pokerHTML(v, src, opt = {}) {
     `<p class="bj-regle">${tours[rev ? 4 : Math.min(mo.tour || 0, 3)]} · pot ${mo.pot || 0}${rev ? '' : ` · ${Math.ceil(mo.reste || 0)} s`}</p>${milieu}` +
     `<div class="pk-joueurs">${js}</div></div>${reglesPK(mo)}</div>`;
 }
+
+/* Gersten Hayward : le diapason (façon Wavelength). La jauge entre deux pôles ; la cible ; les curseurs des joueurs. */
+function jaugeHTML(gauche, droite, opt = {}) {
+  const cible = opt.cible !== undefined && opt.cible !== null
+    ? `<span class="dp-cible" style="left:${opt.cible}%"><i class="z1"></i><i class="z2"></i><b>${opt.cibleTxt || ''}</b></span>` : '';
+  const pins = (opt.places || []).map(p => `<span class="dp-pin" style="left:${p.x}%;--c:${p.couleur}" title="${esc(p.nom)}"><b>${esc(p.nom)}</b></span>`).join('');
+  return `<div class="dp-jauge"><span class="dp-pole g">${esc(gauche)}</span><div class="dp-barre">${cible}${pins}</div><span class="dp-pole d">${esc(droite)}</span></div>`;
+}
+function filmCarteHTML(f, src, sous = '') {
+  if (!f) return '';
+  return `<figure class="dp-film">${f.img !== null && f.img !== undefined ? `<img src="${src(f.img)}" alt="">` : ''}<figcaption><b>${esc(f.txt)}</b>${sous}</figcaption></figure>`;
+}
+function diapasonHTML(v, src, opt = {}) {
+  const mo = v.moteur || {}, et = mo.etape, d = mo.diapason;
+  const tete = `<p class="dp-tete">Diapason : ${d ? `<b style="color:${d.couleur}">${esc(d.nom)}</b>` : '?'} · ${mo.k + 1}/${mo.n}${et !== 'rev' ? ` · ${Math.ceil(mo.reste || 0)} s` : ''}</p>`;
+  const jauge = jaugeHTML(mo.gauche, mo.droite, et === 'rev' ? {cible: mo.cible, places: mo.places} : opt.cible !== undefined ? {cible: opt.cible} : {});
+  const film = et === 'indice' ? `<p class="tb-consigne">${d ? esc(d.nom) : '?'} cherche un film qui tombe pile sur sa cible…</p>` : filmCarteHTML(mo.film, src);
+  return `<div class="diapason${opt.joueur ? ' tel' : ''}" data-k="dp">${tete}${film}${jauge}</div>`;
+}
+
+/* Naido : entre les mots. La règle de 1 à 100 et ses mots ; le film en cours ; les nombres devinés. */
+function regleMotsHTML(regle, opt = {}) {
+  const mots = (regle || []).map(r => `<span class="em-mot" style="left:${r.x}%"><b>${esc(r.mot)}</b><small>${r.x}</small></span>`).join('');
+  const marque = opt.nombre ? `<span class="em-nb" style="left:${opt.nombre}%"><b>${opt.nombre}</b></span>` : '';
+  const pins = (opt.places || []).map(p => `<span class="dp-pin" style="left:${p.x}%;--c:${p.couleur}"><b>${esc(p.nom)} ${p.x}</b></span>`).join('');
+  return `<div class="em-regle"><div class="em-barre">${mots}${marque}${pins}</div></div>`;
+}
+function entremotsHTML(v, src, opt = {}) {
+  const mo = v.moteur || {}, et = mo.etape, f = mo.film;
+  let milieu = '';
+  if (et === 'ecrire') milieu = `<p class="tb-consigne">Chacun a reçu un nombre secret : trouvez un film qui mélange les deux mots les plus proches · ${Math.ceil(mo.reste || 0)} s</p>`;
+  else if (f) milieu = filmCarteHTML(f, src, f.auteur ? `<small style="color:${f.auteur.couleur}">de ${esc(f.auteur.nom)}</small>` : '') +
+    (et === 'deviner' ? `<p class="tb-consigne">Quel nombre ? ${Math.ceil(mo.reste || 0)} s</p>` : '');
+  return `<div class="entremots${opt.joueur ? ' tel' : ''}" data-k="em"><p class="dp-tete">Entre les mots${mo.n ? ` · film ${mo.k + 1}/${mo.n}` : ''}</p>${milieu}` +
+    regleMotsHTML(mo.regle, et === 'rev' ? {nombre: mo.nombre, places: mo.places} : {nombre: opt.nombre}) + '</div>';
+}
+
+/* Tammy Preston : l'enquête (façon 1jour1film). Un rapport = ce qu'un film proposé partage avec le film mystère. */
+function rapportHTML(r) {
+  if (!r) return '';
+  const e = x => x === 'ok' ? 'ok' : x === 'part' || x === 'proche' ? 'part' : 'non';
+  const c = [];
+  if (r.genres) c.push(`<span class="tm-c ${e(r.genres.etat)}">Genres${r.genres.communs.length ? ' : ' + r.genres.communs.map(esc).join(', ') : ''}</span>`);
+  if (r.annee) c.push(`<span class="tm-c ${e(r.annee.etat)}">${r.annee.val} ${r.annee.sens}${r.annee.etat === 'proche' ? ' proche' : ''}</span>`);
+  c.push(`<span class="tm-c ${e(r.real.etat)}">Réalisateur${r.real.noms.length ? ' : ' + r.real.noms.map(esc).join(', ') : ''}</span>`);
+  if (r.acteurs.length) c.push(`<span class="tm-c ok">Avec ${r.acteurs.map(esc).join(', ')}</span>`); else c.push('<span class="tm-c non">Aucun acteur commun</span>');
+  if (r.compo.length) c.push(`<span class="tm-c ok">Musique : ${esc(r.compo[0])}</span>`);
+  if (r.pays) c.push(`<span class="tm-c ${e(r.pays.etat)}">Pays${r.pays.communs.length ? ' : ' + r.pays.communs.map(esc).join(', ') : ''}</span>`);
+  if (r.duree) c.push(`<span class="tm-c ${e(r.duree.etat)}">Durée ${r.duree.sens || '≈'}</span>`);
+  if (r.note) c.push(`<span class="tm-c ${e(r.note.etat)}">Note ${r.note.sens || '≈'}</span>`);
+  return `<div class="tm-rapport">${c.join('')}</div>`;
+}
+function enqueteHTML(v, src, opt = {}) {
+  const mo = v.moteur || {};
+  const fil = (mo.fil || []).slice().reverse().map(x => `<li class="${x.trouve ? 'trouve' : ''}"><span class="tm-qui" style="color:${(x.qui || {}).couleur}">${esc((x.qui || {}).nom || '')}` +
+    `${x.titre ? ' · ' + esc(x.titre) : ''}</span>${x.trouve ? '<b class="ok">a trouvé !</b>' : rapportHTML(x.r)}</li>`).join('');
+  return `<div class="enquete" data-k="tm"><div class="tm-dossier"><p class="ds-tete"><b>Agent T. Preston</b><span>Film mystère · rapports</span></p>` +
+    `<ul class="tm-fil">${fil || '<li class="doux">Proposez des films sur vos téléphones : chaque rapport dit ce qu\'ils ont en commun avec le film mystère.</li>'}</ul></div></div>`;
+}

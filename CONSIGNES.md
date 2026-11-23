@@ -71,6 +71,9 @@ arrête le programme.
 | tremond     | Mrs. Tremond's Painting                      | Le tableau               |
 | bushnell    | Bushnell Mullins' Rain                       | La pluie d'affiches      |
 | hayward     | Doc Hayward's Secrets                        | Les secrets              |
+| gersten     | Gersten Hayward's Tuning Fork                | Le diapason              |
+| naido       | Naido's Words                                | Entre les mots           |
+| tammy       | Tammy Preston's Investigation                | L'enquête                |
 
 Version 9 (novembre 2026, à la demande d'Etienne) : Mr. C retiré ; Annie remplace Lil ; Mike, Dougie et Hank
 changent de jeu (Mike's Missing Arm devient Mike's Shoe Samples) ; Windom Earle, Harold Smith, Jacques Renault arrivent.
@@ -158,3 +161,14 @@ Refusés (ne pas reproposer) : Les scellés (Connections), Le cas rare (Pointles
 (coop à voix haute), Le gong (Snap), Le tape-taupe, Le Time's Up de Johnny ; mode équipes, règle animée, vote du jeu
 suivant, bruitages, soirées toutes prêtes, niveaux par profil, rattrapage.
 Envies d'Etienne pour la suite : jeux de bluff / entre joueurs et de rapidité, originaux, inspirés de jeux de société.
+
+## Version 13 (novembre 2026)
+
+Validés par Etienne (QCM) : Gersten Hayward (le diapason, façon Wavelength), Naido (entre les mots : mots posés sur
+une règle de 1 à 100, nombre secret), Tammy Preston (l'enquête, façon 1jour1film) ; vibrations du téléphone,
+historique des parties, rejouer une manche, plein écran du téléphone sans mise en veille.
+Retouches : logo nettoyé sur fond dessiné (la montagne de Twin Peaks) ; poker : pendant la partie, les règles disent
+seulement sur quoi portent couleurs, chiffres et figures (le détail à l'abattage) ; pluie plus rapide et plus dense ;
+anecdotes plus insolites (Wikipédia FR + EN traduite, note « insolite » ; IMDb interdit la récupération automatique).
+Refusés : poker des cafards, Just One (indices en double), Dobble (le couple) ; rideau entre manches, classement
+animé, écran de veille, mode présentateur.

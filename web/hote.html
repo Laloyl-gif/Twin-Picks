@@ -13,6 +13,7 @@
     <div id="logo"></div>
     <nav class="actions">
       <button id="b-palmares" class="discret petit">Palmarès</button>
+      <button id="b-historique" class="discret petit">Historique</button>
       <button id="b-profils" class="discret petit">Profils</button>
       <button id="b-listes" class="discret petit">Listes</button>
       <button id="b-reglages" class="discret petit">Réglages</button>
@@ -61,6 +62,7 @@
   <footer class="controles">
     <button id="b-pause" class="lien" title="Espace">Pause</button>
     <button id="b-passer" class="lien" title="Flèche droite">Passer</button>
+    <button id="b-rejouer-manche" class="lien" title="Relancer cette manche avec d'autres films">Rejouer la manche</button>
     <button id="b-son" class="discret petit" hidden>Activer le son</button>
     <button id="b-rejouer" class="primaire petit" hidden>Rejouer</button>
     <span id="code-jeu" class="code-jeu"></span>
@@ -112,6 +114,11 @@
     <button id="pr-ajouter" class="primaire petit">Ajouter</button>
   </div>
   <div id="pr-msg" class="aide"></div>
+</dialog>
+
+<dialog id="d-historique" class="dialogue large">
+  <header><h2>Historique des parties</h2><button data-fermer class="discret petit">Fermer</button></header>
+  <div id="hi-corps" class="hi-corps"></div>
 </dialog>
 
 <dialog id="d-palmares" class="dialogue large">

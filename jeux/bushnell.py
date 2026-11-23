@@ -67,17 +67,19 @@ def construire(api, cfg, pool, deja):
         i = 0
         while x < fin - 1.0:
             avance = (x - t0) / max(1.0, len(choisies) * D)          # 0 → 1 sur la manche : de plus en plus vite
-            chute = 4.2 - 2.0 * avance
-            f = (oui if (random.random() < 0.45 and oui) or not non else non).pop()
+            chute = 3.2 - 1.6 * avance                                  # de 3,2 s à 1,6 s pour traverser l'écran
+            if not oui:
+                oui = [f for f in films if test(f)]; random.shuffle(oui)
+            if not non:
+                non = [f for f in films if not test(f)]; random.shuffle(non)
+            f = (oui if random.random() < 0.45 else non).pop()
             if cle_film(f) not in idx_img:
                 idx_img[cle_film(f)] = len(images)
                 images.append(en_jpeg(ImageOps.fit(affiche(api, f, "w185"), (140, 210)), 210))
             gouttes.append({"id": len(gouttes), "img": idx_img[cle_film(f)], "t0": round(x, 2), "dur": round(chute, 2),
                             "x": round(random.uniform(0.04, 0.74), 3), "ok": bool(test(f)), "c": k, "txt": f["title"]})
-            x += 1.25 - 0.6 * avance + random.uniform(-0.15, 0.15)
+            x += 0.8 - 0.38 * avance + random.uniform(-0.1, 0.1)       # de plus en plus d'affiches à la fois
             i += 1
-            if not oui and not non:
-                break
         t = fin + 1.5
     duree = t + 2
     for f in films:
