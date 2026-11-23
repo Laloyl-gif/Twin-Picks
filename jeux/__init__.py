@@ -17,7 +17,8 @@ Les jeux « note », « chrono », « bingo », « ordre », « double » et « 
 from . import (affiche, albert, anagramme, andy, ben, blindtest, bobby, briggs, carl, casting, catherine, complicite,
                annie, couleurs, denise, donna, dougie, hank, harold, jacques, jerry, mike, phillip, plusieurs, windom,
                ed, filmo, geant, hawk, james, josie, leland, leo, loglady, lucy, maddy, nadine, norma, persos, pete, plans,
-               shelly, synopsis, sarah, jean, woodsman, mitchum, mrc, desmond, dick, milford, enveloppes)
+               shelly, synopsis, sarah, jean, woodsman, mitchum, mrc, desmond, dick, milford, enveloppes, lana, bernard,
+               tremond, bushnell, hayward)
 
 CONSTRUCTEURS = {
     "affiche": affiche.construire, "plans": plans.construire, "casting": casting.construire,
@@ -33,10 +34,12 @@ CONSTRUCTEURS = {
     "annie": annie.construire, "dougie": dougie.construire, "mike": mike.construire, "windom": windom.construire,
     "harold": harold.construire, "jacques": jacques.construire, "sarah": sarah.construire, "jean": jean.construire,
     "woodsman": woodsman.construire, "mitchum": mitchum.construire, "mrc": mrc.construire, "desmond": desmond.construire,
-    "dick": dick.construire, "milford": milford.construire,
+    "dick": dick.construire, "milford": milford.construire, "lana": lana.construire, "bernard": bernard.construire,
+    "tremond": tremond.construire, "bushnell": bushnell.construire, "hayward": hayward.construire,
 }
 MOTEURS = {"note": norma.Moteur, "chrono": lucy.Moteur, "bingo": donna.Moteur, "ordre": nadine.Moteur,
            "double": ben.Moteur, "duree": ed.Moteur, "duels": leo.Moteur,
            "plusieurs": plusieurs.Moteur, "paire": plusieurs.Moteur, "brelan": jacques.Moteur, "paires": mike.Moteur,
            "focus": hank.Moteur, "lumiere": woodsman.Moteur, "contrat": mitchum.Moteur, "blackjack": jean.Moteur,
-           "differences": mrc.Moteur, "code": desmond.Moteur, "pendule": windom.Moteur, "enveloppes": enveloppes.Moteur}
+           "differences": mrc.Moteur, "code": desmond.Moteur, "pendule": windom.Moteur, "enveloppes": enveloppes.Moteur,
+           "mensonges": lana.Moteur, "poker": bernard.Moteur, "tableau": tremond.Moteur, "pluie": bushnell.Moteur}

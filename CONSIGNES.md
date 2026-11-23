@@ -66,6 +66,11 @@ arrête le programme.
 | desmond     | Desmond's Code                               | Le code                  |
 | dick        | Dick Tremayne's Gala                         | La cérémonie             |
 | milford     | Mayor Milford's Golden Owl                   | Le Hibou d'or            |
+| lana        | Lana Budding's Lies                          | Les mensonges            |
+| bernard     | Bernard Renault's Poker                      | Le poker                 |
+| tremond     | Mrs. Tremond's Painting                      | Le tableau               |
+| bushnell    | Bushnell Mullins' Rain                       | La pluie d'affiches      |
+| hayward     | Doc Hayward's Secrets                        | Les secrets              |
 
 Version 9 (novembre 2026, à la demande d'Etienne) : Mr. C retiré ; Annie remplace Lil ; Mike, Dougie et Hank
 changent de jeu (Mike's Missing Arm devient Mike's Shoe Samples) ; Windom Earle, Harold Smith, Jacques Renault arrivent.
@@ -140,3 +145,16 @@ leur jeu (demande d'Etienne : changer ces jeux).
 - Récap de fin de partie (podium, statistiques, image à partager) et anti-répétition des films entre parties.
 - Refusés (ne pas reproposer) : le memory et le palmarès à cocher (Tammy), la danse de Lil en pictogrammes, le
   bonneteau, le buzzer de Freddie, le ring de Bushnell, le dossier chiffré de Tammy, joker, réactions emoji.
+
+## Version 12 (novembre 2026)
+
+Validés par Etienne (QCM) : Lana Budding (les mensonges, façon Fibbage), Bernard Renault (le poker à règles cachées,
+défausse qui coûte un pourcentage du gain), Mrs. Tremond (le tableau, façon Dixit, avec une règle à deux joueurs),
+Bushnell Mullins (la pluie d'affiches), le Dr Hayward (les anecdotes de tournage, Wikipédia FR) ; le palmarès à vie ;
+le logo K (Cooper pouce levé en sérigraphie, d'après l'image fournie par Etienne, devant la Red Room).
+Corrections : la pendule affiche les 40 s de chacun en texte ; un contrat par joueur ; le Hibou d'or : une enveloppe
+par manche, des films toujours différents.
+Refusés (ne pas reproposer) : Les scellés (Connections), Le cas rare (Pointless), Le road trip (GeoGuessr), Le duo
+(coop à voix haute), Le gong (Snap), Le tape-taupe, Le Time's Up de Johnny ; mode équipes, règle animée, vote du jeu
+suivant, bruitages, soirées toutes prêtes, niveaux par profil, rattrapage.
+Envies d'Etienne pour la suite : jeux de bluff / entre joueurs et de rapidité, originaux, inspirés de jeux de société.

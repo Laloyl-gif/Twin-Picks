@@ -72,6 +72,11 @@ Les jeux
   Desmond's Code                              Le code            Codenames : un indice et un nombre, stop à la 1re erreur
   Dick Tremayne's Gala                        La cérémonie       Oscars, Césars, Palme d'or… : trouvez le lauréat
   Mayor Milford's Golden Owl                  Le Hibou d'or      l'« Oscar » de vos notes : quel film a gagné ?
+  Lana Budding's Lies                         Les mensonges      inventez une fausse réponse, trouvez la vraie (Fibbage)
+  Bernard Renault's Poker                     Le poker           Texas Hold'em de films, règles de la table à deviner
+  Mrs. Tremond's Painting                     Le tableau         un indice, des affiches leurres, votez (Dixit)
+  Bushnell Mullins' Rain                      La pluie d'affiches touchez vite les affiches qui respectent la condition
+  Doc Hayward's Secrets                       Les secrets        des anecdotes de tournage : de quel film parle-t-on ?
 
 Décors
   Jamais de fond qui dénote : des objets (web/objets.js, web/decor.js). Les objets ne sont jamais cachés derrière
@@ -379,6 +384,29 @@ Autres jeux
     rapport à TMDB, le Hibou de plomb. Les nommés sont proches, sans égalité en tête ; à la révélation, les notes.
   Récompenses dans les indices : la plupart des jeux ajoutent un indice « 🏆 Oscar du meilleur film (1995) » ou
     « Nommé : … » quand le film a une grande récompense (Wikidata ; réglage général).
+  Les mensonges (Lana Budding), façon Fibbage : une vraie info à trou (le rôle d'un acteur, un slogan, un titre
+    original). Chacun invente un mensonge crédible sur son téléphone ; puis toutes les réponses s'affichent mélangées
+    et chacun vote pour la vraie. Points pour la vraie trouvée, et pour chaque joueur piégé par votre mensonge.
+  Le poker (Bernard Renault, le dernier des frères Renault) : Texas Hold'em où les cartes sont des films. Chaque
+    manche, la table a ses règles, cachées : la couleur suit une chose (décennie, famille de genre, note, durée), les
+    chiffres une autre, et les figures sont des conditions (« As = film avec … »). On ne voit que les affiches : les
+    cartes du milieu montrent leur valeur, et les règles se dévoilent tour après tour. À chaque tour on peut
+    défausser une carte (−15 % du gain final par défausse), puis rester, relancer ou se coucher, tous en même temps.
+    Bernard suit toujours ; les pots suivent le poker (plus on mise, plus on peut gagner).
+  Le tableau (Mrs. Tremond), façon Dixit : six affiches en main ; le conteur en choisit une et tape un indice (pas un
+    mot du titre ni le nom d'un acteur). À 3 et plus : chacun pose un leurre, puis on vote (règles de Dixit). À deux :
+    on joue ensemble, les leurres sont les autres affiches du conteur, deux essais.
+  La pluie d'affiches (Bushnell Mullins) : une condition simple, des affiches qui tombent de plus en plus vite sur
+    tous les écrans. Touchez celles qui la respectent ; en laisser tomber une bonne ou en toucher une mauvaise coûte
+    des points. Trois conditions par manche, scores en direct.
+  Les secrets (le Dr Hayward) : trois anecdotes de tournage (Wikipédia en français : « Autour du film »,
+    « Anecdotes », « Tournage »…), de la plus vague à la plus parlante, titre masqué ; puis genre et année, puis
+    titre à trous. Une manche sur cinq : un acteur, d'après sa vie. Il faut Internet ; les anecdotes sont gardées
+    dans donnees/anecdotes.json, la base se remplit au fil des parties.
+  Palmarès à vie : bouton « Palmarès » du menu. Par profil (ou pseudo), sur toutes les parties terminées :
+    victoires, parties, points, moyenne, record, manches gagnées, plus longue série, jeu fétiche.
+  La pendule : les 40 s de chacun s'affichent en texte, sur l'écran et sur les téléphones. Le contrat : au départ,
+    chaque joueur tient un contrat. Le Hibou d'or : une enveloppe par manche, des films toujours différents.
   Récap de fin : podium, et pour chacun son meilleur jeu, son plus beau coup, sa plus longue série ; les films qui
     ont résisté à tout le monde ; bouton « Image à partager » (PNG).
   Anti-répétition : les films joués lors des 3 dernières parties (réglable) passent après les autres.

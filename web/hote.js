@@ -509,6 +509,17 @@ $('#pr-ajouter').onclick = async () => {
   if (!$('#pr-msg').textContent.startsWith('Le profil')) { $('#pr-nom').value = ''; $('#pr-fichier').value = ''; $('#pr-fichier').onchange(); }
 };
 $('#b-profils').onclick = ouvrirProfils;
+$('#b-palmares').onclick = async () => {               // le palmarès à vie, toutes parties confondues
+  const r = await (await fetch('/api/hote/palmares' + Q)).json();
+  const js = r.joueurs || [];
+  $('#pa-corps').innerHTML = js.length ? `<p class="aide">${r.parties} partie${r.parties > 1 ? 's' : ''} terminée${r.parties > 1 ? 's' : ''}` +
+    `${r.derniere ? ` · la dernière le ${esc(r.derniere)}` : ''}</p><table class="palmares"><thead><tr><th></th><th>Joueur</th><th>Victoires</th><th>Parties</th>` +
+    `<th>Points</th><th>Moyenne</th><th>Record</th><th>Manches gagnées</th><th>Série</th><th>Jeu fétiche</th></tr></thead><tbody>` +
+    js.map((j, k) => `<tr><td>${k < 3 ? ['🥇', '🥈', '🥉'][k] : k + 1}</td><td><b>${esc(j.nom)}</b></td><td>${j.victoires}</td><td>${j.parties}</td>` +
+      `<td>${j.points}</td><td>${j.moyenne}</td><td>${j.record}</td><td>${j.manches}</td><td>${j.serie}</td><td>${esc(j.jeu)}</td></tr>`).join('') + '</tbody></table>'
+    : '<p class="aide">Aucune partie terminée pour l\'instant : le palmarès se remplit à la fin de chaque partie.</p>';
+  $('#d-palmares').showModal();
+};
 
 document.querySelectorAll('[data-fermer]').forEach(b => { b.onclick = () => b.closest('dialog').close(); });
 $('#b-reglages').onclick = () => ouvrirReglages();
@@ -672,7 +683,7 @@ function bandeau(e) {
   }
   if (e.phase === 'reponse' && ['note', 'chrono', 'bingo'].includes(e.type)) return '';
   if (e.phase === 'reponse' && e.type === 'ordre') return `<div class="detail">${esc(e.detail || '')}</div>`;
-  if (e.phase === 'reponse' && ['plusieurs', 'paire', 'brelan', 'paires', 'focus', 'rancon', 'lumiere', 'contrat', 'differences', 'code', 'duels', 'double', 'duree', 'blackjack', 'pendule', 'enveloppes'].includes(e.type)) {
+  if (e.phase === 'reponse' && ['plusieurs', 'paire', 'brelan', 'paires', 'focus', 'rancon', 'lumiere', 'contrat', 'differences', 'code', 'duels', 'double', 'duree', 'blackjack', 'pendule', 'enveloppes', 'pluie', 'mensonges', 'tableau', 'poker'].includes(e.type)) {
     // les résultats de chacun sont déjà sous le jeu : ici, la solution seule
     return `<div class="solution">${esc(e.solution)}</div>` + (e.detail ? `<div class="detail">${esc(e.detail)}</div>` : '');
   }
@@ -790,6 +801,23 @@ function moteurHote(e) {
     return d + `<div class="frise-res">${(mo.resultats || []).map(r => puce(r, ` ${r.coups} film${r.coups > 1 ? 's' : ''}` + (r.gain ? ` <em>+${r.gain}</em>` : ''),
       r.mat ? 'faux' : 'juste')).join('')}</div>`;
   }
+  if (e.type === 'pluie') return pluieHTML(e, src);
+  if (e.type === 'poker') {                              // Bernard Renault : le poker
+    const d = pokerHTML(e, src);
+    if (!rev) return d;
+    return d + `<div class="frise-res">${(mo.resultats || []).map(r => puce(r, ` ${esc(r.main || '')}` + (r.gain ? ` <em>${r.gain > 0 ? '+' : ''}${r.gain}</em>` : ''),
+      r.gagne ? 'juste' : r.gain >= 0 ? '' : 'faux')).join('')}</div>`;
+  }
+  if (e.type === 'tableau') {                            // Mrs. Tremond : le tableau
+    const d = tableauHTML(e, src);
+    if (!rev) return d;
+    return d + `<div class="frise-res">${(mo.resultats || []).map(r => puce(r, r.gain ? ` <em>+${r.gain}</em>` : '', r.gain ? 'juste' : 'faux')).join('')}</div>`;
+  }
+  if (e.type === 'mensonges') {                          // Lana : les mensonges
+    const d = mensongesHTML(e);
+    if (!rev) return d;
+    return d + `<div class="frise-res">${(mo.resultats || []).map(r => puce(r, r.gain ? ` <em>+${r.gain}</em>` : '', r.gain ? 'juste' : 'faux')).join('')}</div>`;
+  }          // Bushnell : la pluie d'affiches
   if (e.type === 'enveloppes') {                         // Dick Tremayne, Dwayne Milford : les enveloppes
     const d = ceremonieHTML(e, src);
     if (!rev) return d;

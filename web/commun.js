@@ -167,6 +167,11 @@ const TRAITS = {
          '<path d="M27 30h10M14 20h36M18 46l4-6h20l4 6"/><path d="M44 52c4-2 8 0 10-4"/>',
   ed: '<rect x="14" y="16" width="24" height="40" rx="3"/><rect x="18" y="21" width="16" height="10" rx="1"/>' +
       '<path d="M38 26h6c4 0 6 3 6 6v14c0 3 3 4 5 2V22l-5-6"/><path d="M10 56h32"/><path d="M22 40h8"/>',
+  lana: '<path d="M20 30c4-10 20-10 24 0M24 34c2 2 6 2 8 0M32 34c2 2 6 2 8 0"/><path d="M22 44c6 6 14 6 20 0"/><circle cx="32" cy="32" r="20"/>',
+  bernard: '<rect x="12" y="16" width="20" height="30" rx="3"/><rect x="30" y="20" width="20" height="30" rx="3" transform="rotate(12 40 35)"/><path d="M22 26l-3 6h6z"/>',
+  tremond: '<rect x="14" y="14" width="36" height="30" rx="2"/><rect x="19" y="19" width="26" height="20"/><path d="M19 35l8-8 6 6 5-4 7 6"/><path d="M32 44v8M24 52h16"/>',
+  bushnell: '<rect x="20" y="8" width="12" height="16" rx="2"/><rect x="34" y="22" width="12" height="16" rx="2"/><rect x="18" y="34" width="12" height="16" rx="2"/><path d="M10 56h44"/>',
+  hayward: '<path d="M18 12h28v40H18z"/><path d="M24 22h16M24 30h16M24 38h10"/><path d="M40 46l6 6M46 46l-6 6"/>',
   dick: '<path d="M14 26l14 6-14 6zM50 26l-14 6 14 6z"/><rect x="28" y="29" width="8" height="6" rx="1.5"/>' +
         '<rect x="16" y="44" width="32" height="12" rx="1"/><path d="M16 44l16 7 16-7"/>',
   milford: '<path d="M22 14l4 6M42 14l-4 6"/><ellipse cx="32" cy="27" rx="12" ry="11"/><circle cx="27" cy="25" r="3"/>' +
@@ -238,6 +243,10 @@ function visuelHTML(v, opt = {}) {
   if (v.vue === 'blackjack') return blackjackHTML(v, src, opt);
   if (v.vue === 'pendule') return penduleHTML(v, src, opt);
   if (v.vue === 'ceremonie') return ceremonieHTML(v, src, opt);
+  if (v.vue === 'pluie') return pluieHTML(v, src, opt);
+  if (v.vue === 'mensonges') return mensongesHTML(v, opt);
+  if (v.vue === 'tableau') return tableauHTML(v, src, opt);
+  if (v.vue === 'poker') return pokerHTML(v, src, opt);
   if (v.phase === 'reponse') return v.revelation ? `<img class="scene-img" src="${src('r')}" alt="">` : '';
   if (v.vue === 'image') {
     const img = `<img class="scene-img" src="${src(e.img)}" alt="">`;
@@ -253,6 +262,7 @@ function visuelHTML(v, opt = {}) {
   if (v.vue === 'identite') return identiteHTML(e);
   if (v.vue === 'complices') return complicesHTML(e, src) + trousHTML(e);
   if (v.vue === 'rebus') return rebusHTML(e) + trousHTML(e) + indicesHTML(e);
+  if (v.vue === 'secrets') return secretsHTML(e) + trousHTML(e) + indicesHTML(e);
   if (v.vue === 'jackpot') return jackpotHTML(e, src, {arret: v.phase === 'reponse'}) + (v.phase === 'reponse' ? '' : indicesHTML(e));
   if (v.vue === 'rancon') return ranconHTML(v, src);
   if (v.vue === 'cavalier') return cavalierHTML(e) + indicesHTML(e);

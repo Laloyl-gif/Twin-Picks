@@ -737,11 +737,14 @@ function penduleHTML(v, src, opt = {}) {
   const pend = (mo.pendules || []).map(j => {
     const p = Math.max(0, Math.min(1, j.reste / Math.max(mo.temps || 40, j.reste)));
     return `<div class="pd-pendule${j.actif ? ' actif' : ''}${j.mat ? ' mat' : ''}" style="--c:${j.couleur};--p:${p.toFixed(3)}" data-k="p${esc(j.id)}">` +
-      `<span class="pd-cadran"><i></i></span><b>${j.mat ? 'mat' : Math.ceil(j.reste)}</b><small>${esc(j.nom)}</small></div>`;
+      `<span class="pd-cadran"><i></i></span><b>${j.mat ? 'mat' : Math.ceil(j.reste) + ' s'}</b><small>${esc(j.nom)}</small></div>`;
   }).join('');
+  const liste = (mo.pendules || []).map(j => `<span class="pd-txt${j.actif ? ' actif' : ''}${j.mat ? ' mat' : ''}" style="--c:${j.couleur}">` +
+    `${esc(j.nom)} <b>${j.mat ? 'mat' : Math.ceil(j.reste) + ' s'}</b></span>`).join('');
   const interdit = mo.interdit && !rev ? `<p class="pd-interdit">Lien interdit au prochain coup : <b>${esc(mo.interdit)}</b></p>` : '';
   return `<div class="pendule${opt.joueur ? ' tel' : ''}" data-k="pendule"><div class="pd-chaine">${films}</div>${interdit}` +
-    (opt.joueur ? '' : `<div class="pd-pendules">${pend}</div>`) + '</div>';
+    (opt.joueur ? `<div class="pd-liste">${liste}</div>` : `<div class="pd-pendules">${pend}</div>`) +
+    `<p class="pd-regle">Chacun ${Math.round(mo.temps || 40)} s de pendule · répondre en moins de 10 s rend 5 s</p></div>`;
 }
 
 /* La cérémonie (Dick Tremayne) et le Hibou d'or (Dwayne Milford) : l'enveloppe, les nommés, le lauréat. */
@@ -758,4 +761,103 @@ function ceremonieHTML(v, src, opt = {}) {
   return `<div class="ceremonie" data-k="ceremonie"><p class="ce-hote">${esc(mo.hote_nom || '')} · enveloppe ${mo.k + 1}/${mo.n}</p>` +
     `<div class="ce-enveloppe"><b>${esc(env.titre)}</b>${env.sous ? `<small>${esc(env.sous)}</small>` : ''}</div>` +
     (items ? `<div class="ce-nommes">${items}</div>` : '<p class="ce-cache">Les nommés sont sur vos téléphones…</p>') + tambour + qui + '</div>';
+}
+
+/* Bushnell Mullins : la pluie d'affiches. Chaque écran anime la chute avec sa propre horloge, calée sur le chrono
+   de la manche (comme la vision de Sarah). */
+const PLUIE = {seq: null, base: 0, touches: new Set()};
+function calePluie(v) {
+  if (!v || v.jeu !== 'bushnell' || v.phase !== 'manche') return;
+  const base = performance.now() - (v.ecoule || 0) * 1000;
+  if (PLUIE.seq !== v.seq) { PLUIE.seq = v.seq; PLUIE.base = base; PLUIE.touches = new Set(); }
+  else PLUIE.base = Math.min(PLUIE.base + 40, Math.max(PLUIE.base - 40, base));
+}
+function pluieHTML(v, src, opt = {}) {
+  calePluie(v);
+  const mo = v.moteur || {}, mes = mo.mes || {};
+  const g = (mo.gouttes || []).map(x => {
+    const t = mes[x.id] !== undefined ? (mes[x.id] ? ' bon' : ' faux') : x.ok === true ? ' rate' : '';
+    return `<img class="pl-goutte${t}" data-g="${x.id}" data-t0="${x.t0}" data-dur="${x.dur}" style="left:${x.x * 100}%" src="${src(x.img)}" alt="" draggable="false">`;
+  }).join('');
+  const scores = opt.joueur ? '' : `<div class="pl-scores">${(mo.scores || []).map(j => `<span style="--c:${j.couleur}">${esc(j.nom)} <b>${j.live > 0 ? '+' : ''}${j.live}</b></span>`).join('')}</div>`;
+  return `<div class="pluie${opt.joueur ? ' tel' : ''}" data-k="pluie"><p class="pl-cond">${mo.condition ? `Touchez : <b>${esc(mo.condition)}</b>` : 'Prêts ?'}</p>` +
+    `<div class="pl-zone">${g}<span class="pl-sol"></span></div>${scores}</div>`;
+}
+(function animerPluie() {
+  const t = (performance.now() - PLUIE.base) / 1000;
+  for (const el of document.querySelectorAll('.pl-goutte')) {
+    const t0 = Number(el.dataset.t0), dur = Number(el.dataset.dur), p = (t - t0) / dur;
+    if (p < 0 || p > 1.02) { el.style.visibility = 'hidden'; continue; }
+    el.style.visibility = 'visible';
+    el.style.top = `calc(${(p * 100).toFixed(2)}% - ${(p * 30).toFixed(1)}%)`;
+    if (PLUIE.touches.has(el.dataset.g)) el.classList.add('touche');
+  }
+  requestAnimationFrame(animerPluie);
+})();
+
+/* Lana Budding : les mensonges (façon Fibbage). La question à trou, puis les réponses mélangées, puis qui a menti. */
+function mensongesHTML(v, opt = {}) {
+  const mo = v.moteur || {}, et = mo.etape;
+  const q = `<div class="ms-q"><small>Question ${mo.k + 1}/${mo.n}</small><b>${esc(mo.q || '').replace('___', '<i>_____</i>')}</b></div>`;
+  if (et === 'ecrire') return `<div class="mensonges" data-k="ms">${q}<p class="ms-consigne">Inventez une fausse réponse crédible` +
+    `${opt.joueur ? '' : ' sur vos téléphones'} · ${Math.ceil(mo.reste || 0)} s</p></div>`;
+  const opts = (mo.options || []).map((o, i) => {
+    const cls = o.vraie ? ' vraie' : o.leurre ? ' leurre' : '';
+    const det = et === 'rev' ? `<small>${o.vraie ? 'LA VÉRITÉ' : o.leurre ? 'mensonge de Lana' : (o.auteurs || []).map(a => esc(a.nom)).join(', ') + ' a menti'}` +
+      `${(o.votants || []).length ? ' · ' + o.votants.map(j => puce(j, '', 'mini')).join('') : ''}</small>` : '';
+    return `<div class="ms-opt${et === 'rev' ? cls : ''}"><b>${LETTRES_MS[i]}</b><span>${esc(o.txt)}</span>${det}</div>`;
+  }).join('');
+  return `<div class="mensonges" data-k="ms">${q}${et === 'voter' ? `<p class="ms-consigne">Laquelle est vraie ? ${Math.ceil(mo.reste || 0)} s</p>` : ''}` +
+    `<div class="ms-opts">${opts}</div></div>`;
+}
+const LETTRES_MS = 'ABCDEFGHIJKL';
+
+/* Mrs. Tremond : le tableau (façon Dixit). Le cadre doré du tableau porte l'indice ; les affiches posées dessous. */
+function tableauHTML(v, src, opt = {}) {
+  const mo = v.moteur || {}, et = mo.etape, c = mo.conteur;
+  const tete = `<div class="tb-cadre"><small>${c ? `Conteur : <b style="color:${c.couleur}">${esc(c.nom)}</b>` : ''}${mo.deux ? ' · règle à deux' : ''}</small>` +
+    `<b>${mo.indice ? '« ' + esc(mo.indice) + ' »' : '…'}</b></div>`;
+  if (et === 'conteur') return `<div class="tableau" data-k="tb">${tete}<p class="tb-consigne">${c ? esc(c.nom) : '?'} choisit une affiche de sa main et tape un indice… ${Math.ceil(mo.reste || 0)} s</p></div>`;
+  if (et === 'poser') return `<div class="tableau" data-k="tb">${tete}<p class="tb-consigne">Choisissez dans votre main l'affiche qui colle le mieux à l'indice · ${Math.ceil(mo.reste || 0)} s</p></div>`;
+  const cartes = (mo.table || []).map(t => `<figure class="tb-carte${t.cible ? ' cible' : ''}" data-k="t${t.img}"><b>${LETTRES_MS[t.i]}</b><img src="${src(t.img)}" alt="">` +
+    (et === 'rev' ? `<figcaption>${esc(t.txt || '')}<small>${t.cible ? 'l\'affiche du conteur' : t.de ? 'posée par ' + esc(t.de.nom) : 'le tableau'}</small>` +
+      `<span>${(t.votants || []).map(j => puce(j, '', 'mini')).join('')}</span></figcaption>` : '') + '</figure>').join('');
+  return `<div class="tableau" data-k="tb">${tete}${et === 'voter' ? `<p class="tb-consigne">Laquelle est l'affiche du conteur ? ${Math.ceil(mo.reste || 0)} s</p>` : ''}` +
+    `<div class="tb-table">${cartes}</div></div>`;
+}
+
+/* Le Dr Hayward : le dossier médical, trois secrets (anecdotes) qui s'écrivent l'un après l'autre ; leur place est
+   réservée dès le début. */
+function secretsHTML(e) {
+  const s = e.secrets || [];
+  const lignes = [0, 1, 2].map(k => `<li class="${s[k] ? '' : 'vide'}" data-k="s${k}">${s[k] ? esc(s[k]) : '&nbsp;'}</li>`).join('');
+  return `<div class="dossier" data-k="dossier"><p class="ds-tete"><b>Dr W. Hayward</b><span>Dossier confidentiel</span></p><ol>${lignes}</ol></div>`;
+}
+
+/* Bernard Renault : le poker. Les cartes sont des affiches ; un badge (valeur + couleur) apparaît quand la valeur
+   est connue. Les règles de la table se dévoilent tour après tour (leur place est réservée). */
+function cartePK(c, src, cls = '') {
+  if (!c) return `<figure class="pk-c dos ${cls}"><span>B</span></figure>`;
+  return `<figure class="pk-c ${cls}"><img src="${src(c.img)}" alt=""><figcaption>${esc(c.txt)}</figcaption>` +
+    (c.r ? `<b class="pk-badge${c.rouge ? ' rouge' : ''}">${c.r}${c.c}</b>` : '<b class="pk-badge inconnu">?</b>') + '</figure>';
+}
+function reglesPK(mo) {
+  const l = mo.regles || [];
+  return `<ul class="pk-regles">${Array.from({length: mo.n_regles || 6}, (_, k) => `<li class="${l[k] ? '' : 'vide'}">${l[k] ? esc(l[k]) : 'Règle cachée…'}</li>`).join('')}</ul>`;
+}
+function pokerHTML(v, src, opt = {}) {
+  const mo = v.moteur || {}, rev = v.phase === 'reponse';
+  const milieu = `<div class="pk-milieu">${(mo.milieu || []).map(c => cartePK(c, src)).join('')}</div>`;
+  if (opt.joueur) return milieu + reglesPK(mo);
+  const b = mo.bernard || {};
+  const bern = `<div class="pk-bernard${b.gagne ? ' gagne' : ''}"><p class="bj-nom">Bernard Renault <small>suit toujours</small>${b.main ? ` <b class="pk-main">${esc(b.main)}</b>` : ''}</p>` +
+    `<div class="bj-main">${(b.cartes && b.cartes.length ? b.cartes : [null, null]).map(c => cartePK(c, src, 'petite')).join('')}</div></div>`;
+  const tours = ['Avant le flop', 'Le flop', 'Le turn', 'La river', 'Abattage'];
+  const js = (mo.joueurs || []).map(j => `<div class="pk-joueur${j.couche ? ' couche' : ''}" style="--c:${j.couleur}" data-k="j${esc(j.id)}">` +
+    `<p class="bj-nom">${esc(j.nom)} <span class="bj-jeton">${j.mise}</span>${j.couche ? ' <small>couché</small>' : j.a_joue ? ` <small>${esc(j.a_joue)}</small>` : ''}` +
+    `${j.defausses ? ` <small>défausses ${j.defausses}</small>` : ''}${j.main ? ` <b class="pk-main">${esc(j.main)}</b>` : ''}</p>` +
+    (j.cartes && j.cartes.length ? `<div class="bj-main">${j.cartes.map(c => cartePK(c, src, 'petite')).join('')}</div>` : '') + '</div>').join('');
+  return `<div class="poker" data-k="poker"><div class="pk-tapis">${bern}` +
+    `<p class="bj-regle">${tours[rev ? 4 : Math.min(mo.tour || 0, 3)]} · pot ${mo.pot || 0}${rev ? '' : ` · ${Math.ceil(mo.reste || 0)} s`}</p>${milieu}` +
+    `<div class="pk-joueurs">${js}</div></div>${reglesPK(mo)}</div>`;
 }

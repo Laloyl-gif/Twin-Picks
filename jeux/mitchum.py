@@ -1,6 +1,6 @@
 """The Mitchum Brothers' Contract (Le contrat) : les frères Mitchum ont des contrats sur la tête de quelqu'un… et ils
-passent de main en main, comme des patates chaudes, toujours dans le même sens. Il circule autant de contrats qu'il y
-a de joueurs moins un (au moins un). Celui qui tient un contrat reçoit sur son téléphone une question éclair à six
+passent de main en main, comme des patates chaudes, toujours dans le même sens. Au départ, chaque joueur tient un
+contrat. Celui qui tient un contrat reçoit sur son téléphone une question éclair à six
 choix (réalisateur, acteur, année, gros plan d'affiche…) : bonne réponse, il refile le contrat au suivant (qui peut
 alors en tenir deux) ; mauvaise réponse, une autre question après une courte pénalité. La minuterie (30 à 45 s) est
 visible par tous ; quand elle éclate, chaque contrat qu'on tient coûte des points.
@@ -31,7 +31,7 @@ class Moteur:
         self.p, self.cfg, self.m = partie, cfg, m
         self.ordre = list(partie.joueurs)
         random.shuffle(self.ordre)
-        n = max(1, len(self.ordre) - 1)
+        n = len(self.ordre)                                 # un contrat par joueur au départ
         self.contrats = {p: 0 for p in self.ordre}           # pid -> contrats tenus
         for p in self.ordre[:n]:
             self.contrats[p] = 1

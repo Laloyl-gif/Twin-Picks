@@ -1,5 +1,6 @@
 """Mayor Milford's Golden Owl (Le Hibou d'or) : le maire Dwayne Milford, qui préside l'élection de Miss Twin Peaks,
-remet ce soir le Hibou d'or : l'« Oscar » des joueurs eux-mêmes. Chaque enveloppe nomme cinq films notés par TOUS
+remet ce soir le Hibou d'or : l'« Oscar » des joueurs eux-mêmes. Une manche = une enveloppe (une catégorie), avec
+des films tirés au hasard, jamais deux fois les mêmes dans la partie. L'enveloppe nomme cinq films notés par TOUS
 les profils présents (on est l'académie) : lequel a été sacré dans la catégorie ? Meilleur film (la meilleure
 moyenne), le plus clivant (le plus gros écart de notes), le plus sous-coté (au-dessus de TMDB), le plus surcoté, le
 Hibou de plomb (la plus basse moyenne). Les nommés ont des valeurs proches (c'est plus dur) et jamais d'égalité.
@@ -26,7 +27,10 @@ def construire(api, cfg, pool, deja):
     presents = sorted({p["nom"] for p in cfg.get("_profils", []) if p.get("notes")})
     if len(presents) < 2:
         raise RuntimeError("Le Hibou d'or : il faut au moins 2 joueurs présents avec des notes (profils).")
-    films = [f for f in pool if not f.get("tv") and set(presents) <= set(f["notes"]) and f.get("poster_path")]
+    tous = [f for f in pool if not f.get("tv") and set(presents) <= set(f["notes"]) and f.get("poster_path")]
+    films = [f for f in tous if cle_film(f) not in deja]           # jamais deux fois les mêmes films dans la partie
+    if len(films) < 8:
+        films = tous
     if len(films) < 8:
         raise RuntimeError("Le Hibou d'or : pas assez de films notés par tous les joueurs présents.")
     stats = {}
@@ -34,7 +38,7 @@ def construire(api, cfg, pool, deja):
         ns = [float(f["notes"][p]) for p in presents]
         stats[cle_film(f)] = {"moy": sum(ns) / len(ns), "ecart": max(ns) - min(ns), "tmdb": float(f.get("note") or 0),
                               "notes": {p: f["notes"][p] for p in presents}}
-    n = max(2, int(cfg.get("milford_n", 5)))
+    n = max(1, int(cfg.get("milford_n", 1)))
     cats = CATEGORIES[:]
     random.shuffle(cats)
     if not cfg.get("_tmdb_ok", True):
@@ -55,8 +59,8 @@ def construire(api, cfg, pool, deja):
                 fenetres.append((vs[0] - vs[-1], i, w))
         if not fenetres:
             continue
-        fenetres.sort(key=lambda x: x[0])                           # les plus serrées d'abord
-        _, _, w = random.choice(fenetres[:max(1, len(fenetres) // 3)])
+        fenetres.sort(key=lambda x: x[0])                           # au hasard parmi les plus serrées
+        _, _, w = random.choice(fenetres[:max(3, len(fenetres) // 2)])
         gagnant = w[0]
         ordre = w[:]
         random.shuffle(ordre)
@@ -70,13 +74,14 @@ def construire(api, cfg, pool, deja):
             infos.append((f"moyenne {s['moy']:.1f}" + plus).replace(".", ",") + f" ({det})")
         for f in w:
             utilises.add(cle_film(f))
+            deja.add(cle_film(f))
         env = {"titre": titre, "sous": crit, "items": items, "bonne": ordre.index(gagnant), "infos": infos,
                "question": f"Le {titre} est attribué à…" if not titre.startswith("Hibou de plomb") else "Le Hibou de plomb est attribué à…"}
         env["simple"] = {"items": items, "bonne": env["bonne"]}         # cinq nommés pour tout le monde
         envs.append(env)
         deja.add(cle_film(gagnant))
-    if len(envs) < 2:
-        raise RuntimeError("Le Hibou d'or : pas assez de films pour des catégories sans égalité.")
+    if not envs:
+        raise RuntimeError("Le Hibou d'or : pas assez de films pour une catégorie sans égalité.")
     D, R = float(cfg.get("milford_dur", 15)), 5.0
     t0 = 2.0
     return dict(jeu="milford", vue="ceremonie", duree=round(t0 + len(envs) * (D + R), 1), reponse="enveloppes",

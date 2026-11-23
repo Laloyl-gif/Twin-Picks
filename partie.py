@@ -18,6 +18,7 @@ from jeux import CONSTRUCTEURS, MOTEURS
 from jeux.complicite import Complicite
 from texte import cle, correspond, est_latin, proche, suggerer
 import historique
+import palmares
 import recompenses
 from tmdb import POOL, TMDB, charger_pools, cle_film, entrees_pool
 
@@ -563,7 +564,7 @@ class Partie:
                 if g > 0 and (meilleure is None or g > meilleure[0]):
                     meilleure = (g, r["jeu"])
             top = max(par_jeu.items(), key=lambda x: x[1], default=(None, 0))
-            par_joueur.append(dict(j.public(), meilleur_jeu=JEUX[top[0]]["nom"] if top[0] and top[1] > 0 else "",
+            par_joueur.append(dict(j.public(), par_jeu={k: v for k, v in par_jeu.items() if v > 0}, meilleur_jeu=JEUX[top[0]]["nom"] if top[0] and top[1] > 0 else "",
                                    meilleur_jeu_pts=top[1] if top[0] else 0,
                                    meilleure_manche=meilleure[0] if meilleure else 0,
                                    meilleure_manche_jeu=JEUX[meilleure[1]]["nom"] if meilleure else "",
@@ -582,6 +583,10 @@ class Partie:
     def _terminer(self):
         self._vider_manche()
         self._sauver_historique()
+        try:                                             # le palmarès à vie (profils, sinon pseudos)
+            palmares.enregistrer(self.recap_fin(), {j.id: j.profil or j.nom for j in self.joueurs.values()})
+        except Exception:  # noqa: BLE001
+            traceback.print_exc()
         self.phase, self.message = "fin", ""
 
     # ============ commandes de l'hôte ============

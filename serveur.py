@@ -467,6 +467,9 @@ def fabriquer_handler(app):
                     return self._envoyer(dict(app.etat_hote(), ecran_actif=time.monotonic() - app.vu_ecran < 6))
                 if c == "/api/hote/config":
                     return self._envoyer(app.config_hote())
+                if c == "/api/hote/palmares":
+                    import palmares
+                    return self._envoyer(palmares.resume())
                 if c == "/api/hote/musique":
                     sauf = [int(x) if x.isdigit() else x for x in q.get("sauf", [""])[0].split(",") if x]
                     return self._envoyer({"piste": musique.piste_aleatoire(q.get("genre", ["jeu"])[0], sauf,

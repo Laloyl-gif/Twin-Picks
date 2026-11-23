@@ -167,6 +167,18 @@ JEUX = {
     "milford": _jeu("Mayor Milford's Golden Owl", "Le Hibou d'or", "Dwayne Milford",
                     "Vous êtes l'académie : à quel film vos notes ont-elles donné le Hibou d'or ?", "milford", "enveloppes",
                     listes=False, profils=2),
+    "lana": _jeu("Lana Budding's Lies", "Les mensonges", "Lana Budding",
+                 "Une vraie info à trou : inventez un mensonge crédible, puis trouvez la vraie réponse parmi les mensonges.",
+                 "lana", "mensonges"),
+    "bernard": _jeu("Bernard Renault's Poker", "Le poker", "Bernard Renault",
+                    "Texas Hold'em avec des films : valeurs et couleurs suivent des règles cachées à deviner.", "bernard", "poker"),
+    "tremond": _jeu("Mrs. Tremond's Painting", "Le tableau", "Mrs. Tremond",
+                    "Façon Dixit : un indice pour une affiche, des leurres, et chacun vote pour celle du conteur.", "tremond", "tableau"),
+    "bushnell": _jeu("Bushnell Mullins' Rain", "La pluie d'affiches", "Bushnell Mullins",
+                     "Des affiches tombent : touchez vite toutes celles qui respectent la condition, et seulement elles.",
+                     "bushnell", "pluie"),
+    "hayward": _jeu("Doc Hayward's Secrets", "Les secrets", "Dr Will Hayward",
+                    "Des anecdotes de tournage, de la plus vague à la plus parlante : de quel film parle-t-on ?", "hayward", "titre"),
 }
 # Garde-fou : les noms du menu sont figés (CONSIGNES.md). Un nom changé par erreur arrête le jeu au lancement.
 TITRES_FIGES = {
@@ -186,7 +198,9 @@ TITRES_FIGES = {
     "harold": "Harold's Orchids", "jacques": "Jacques Renault's Card Table", "sarah": "Sarah Palmer's Visions",
     "jean": "Jean Renault's Blackjack", "woodsman": "The Woodsman's Light", "mitchum": "The Mitchum Brothers' Contract",
     "mrc": "Mr. C's Doppelganger", "desmond": "Desmond's Code",
-    "dick": "Dick Tremayne's Gala", "milford": "Mayor Milford's Golden Owl",
+    "dick": "Dick Tremayne's Gala", "milford": "Mayor Milford's Golden Owl", "lana": "Lana Budding's Lies",
+    "bernard": "Bernard Renault's Poker", "tremond": "Mrs. Tremond's Painting", "bushnell": "Bushnell Mullins' Rain",
+    "hayward": "Doc Hayward's Secrets",
     "jerry": "Jerry's Trip", "hank": "Hank's Dominoes",
 }
 assert all(JEUX[g]["titre"] == t for g, t in TITRES_FIGES.items() if g in JEUX), \
@@ -205,7 +219,7 @@ SOURCES_COMPTE = {
     -5: ("rated", "movies", "Films notés"),
     -6: ("rated", "tv", "Séries notées"),
 }
-VERSION_REGLAGES = 17
+VERSION_REGLAGES = 18
 
 PLAYLIST_MENU = "https://music.youtube.com/playlist?list=PLA7jHGp_FUM4"
 PLAYLIST_JEU = "https://music.youtube.com/playlist?list=OLAK5uy_mlZa8Lsr_mNkYfrYynkfQE1ZyamvGWY3A"
@@ -568,9 +582,30 @@ PARAMS = [
     _p("dick_pts", "dick", "Points pour le bon lauréat (plus vite = plus)", 500, 0, 3000, 50),
     _p("dick_bonus", "dick", "Experts : bonus pour la bonne année", 300, 0, 2000, 50),
     _p("dick_experts", "dick", "Profils experts (Oscars plus durs), séparés par des virgules", "Louison", type="texte"),
-    _p("milford_n", "milford", "Enveloppes par manche", 5, 2, 10),
+    _p("milford_n", "milford", "Enveloppes par manche", 1, 1, 10),
     _p("milford_dur", "milford", "Temps pour répondre à chaque enveloppe (s)", 15, 5, 60, 1),
     _p("milford_pts", "milford", "Points pour le bon lauréat (plus vite = plus)", 500, 0, 3000, 50),
+    _p("lana_n", "lana", "Questions par manche", 3, 1, 8),
+    _p("lana_ecrire", "lana", "Temps pour inventer son mensonge (s)", 40, 10, 120, 5),
+    _p("lana_voter", "lana", "Temps pour voter (s)", 25, 10, 90, 5),
+    _p("lana_vrai", "lana", "Points pour qui trouve la vraie réponse", 500, 0, 3000, 50),
+    _p("lana_piege", "lana", "Points par joueur piégé par son mensonge", 300, 0, 3000, 50),
+    _p("bernard_tour", "bernard", "Temps de chaque tour de mise (s)", 30, 10, 120, 5),
+    _p("bernard_defausse", "bernard", "Défausse : gain final réduit de (%) par carte", 15, 0, 50, 5),
+    _p("bernard_pts", "bernard", "Bonus pour qui gagne la main (même sans miser)", 200, 0, 2000, 50),
+    _p("dur_tremond", "tremond", "Durée maximale d'une manche (s)", 180, 60, 600, 10),
+    _p("tremond_conteur", "tremond", "Temps du conteur pour choisir et écrire (s)", 60, 15, 180, 5),
+    _p("tremond_poser", "tremond", "Temps pour poser son leurre (s)", 25, 10, 90, 5),
+    _p("tremond_voter", "tremond", "Temps pour voter (s)", 25, 10, 90, 5),
+    _p("tremond_unite", "tremond", "Points par unité (3 unités pour une bonne réponse)", 150, 10, 1000, 10),
+    _p("bushnell_conditions", "bushnell", "Conditions par manche", 3, 1, 6),
+    _p("bushnell_dur", "bushnell", "Durée de chaque condition (s)", 20, 10, 60, 5),
+    _p("bushnell_pts", "bushnell", "Points par bonne affiche touchée", 100, 0, 1000, 10),
+    _p("bushnell_faux", "bushnell", "Points perdus en touchant une mauvaise affiche", 60, 0, 1000, 10),
+    _p("bushnell_rate", "bushnell", "Points perdus par bonne affiche laissée tomber", 30, 0, 1000, 10),
+    _p("dur_hayward", "hayward", "Durée d'une manche (s)", 75, 30, 180, 5),
+    _p("hayward_acteurs", "hayward", "Manches « acteur » (%)", 20, 0, 100, 5),
+    _p("hayward_indices", "hayward", "Indices : genre et année, puis titre à trous", True),
     _p("dur_desmond", "desmond", "Durée d'une manche (s)", 180, 60, 480, 10),
     _p("desmond_or", "desmond", "Films en or à faire deviner", 6, 2, 9),
     _p("desmond_rouges", "desmond", "Films rouges", 4, 0, 8),
@@ -806,6 +841,14 @@ def migrer(brut):
         for k in ("genre", "decennie", "periode", "acteur", "realisateur", "compositeur", "langue", "pays", "duree",
                   "note", "theme", "titre"):
             brut.pop("mitchum_" + k, None)
+    if version < 18:                         # v12 : Lana, Bernard, Mrs. Tremond, Bushnell, le Dr Hayward arrivent
+        listes = brut.get("listes")
+        if isinstance(listes, dict):
+            modele = listes.get("affiche") or listes.get("pete")
+            for g in ("lana", "bernard", "tremond", "bushnell", "hayward"):
+                if modele and g not in listes:
+                    listes[g] = copy.deepcopy(modele)
+        brut.pop("milford_n", None)
     brut["version"] = VERSION_REGLAGES
     return brut
 
