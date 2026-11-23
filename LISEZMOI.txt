@@ -549,3 +549,17 @@ Version 10
   - L'absente : écharpes droites, texte plus grand. Le brelan : plus de films de saga.
   - Logo et icône : la tasse rouge de profil, fond noir, sol de la Black Lodge.
   - Réglages à virgule : ils suivent maintenant leur propre pas (avant, tout était arrondi au demi : 0,3 devenait 0,5).
+
+Version 14
+  - Logo et icônes : Cooper sur papier crème, soleil doré, sommets violets et sol à chevrons de la Black Lodge
+    (couleurs du jeu : violet, or, crème). Détourage refait à partir de la photo d'origine.
+  - Icônes toujours à jour :
+      · Ordinateur : au lancement, si l'icône a changé, le raccourci du bureau est remis sur la nouvelle (Windows la
+        redessine). Tout de suite : outils\mettre_a_jour_icones.bat.
+      · Navigateur et écran d'accueil du téléphone : icône versionnée (onglet, « Ajouter à l'écran d'accueil »).
+      · Application Android : vraie icône adaptative (ronde, carrée… selon le téléphone, et monochrome sur Android 13).
+        Quand GitHub a construit une application plus récente, elle propose de la télécharger au lancement.
+  - Difficulté auto (Réglages › Général) : si presque tout le monde trouve, les manches suivantes prennent des films
+    moins connus ; si personne ne trouve, des films plus connus.
+  - Corrections : La durée (Ed) affichait du code à la place de la jauge ; Entre les mots : les mots des bords ne
+    sortent plus de l'écran du téléphone ; écran d'attente du téléphone avec le logo.

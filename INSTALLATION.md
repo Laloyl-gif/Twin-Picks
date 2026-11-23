@@ -75,6 +75,17 @@ ouvert la partie) peut changer les jeux et les réglages : il a un bouton rouge 
 - Le téléphone qui héberge doit rester dans l'application (écran allumé : l'application l'empêche de s'éteindre).
 - Sur téléphone, « Affiche vidée » (Pete) marche en mode simplifié (sans les outils de détection lourds).
 - La toute première ouverture a besoin d'Internet (pour télécharger le jeu).
+- Quand l'application elle-même change (nouvelle icône…), GitHub la reconstruit ; au lancement suivant, elle propose
+  « Télécharger » : ouvrez le fichier, elle s'installe par-dessus l'ancienne (réglages et profils gardés).
+
+## Icônes
+
+- **Ordinateur** : rien à faire. Au lancement, si l'icône du jeu a changé, le raccourci du bureau est remis sur la
+  nouvelle. Pour le faire tout de suite : double-cliquez `outils\mettre_a_jour_icones.bat`.
+- **Téléphone (navigateur)** : l'icône de l'onglet et celle de « Ajouter à l'écran d'accueil » suivent toujours la
+  dernière version. Une icône déjà posée sur l'écran d'accueil d'un iPhone garde l'ancienne image : supprimez-la et
+  ajoutez-la de nouveau.
+- **Application Android** : voir ci-dessus (elle propose sa nouvelle version).
 
 ## 5. Les plans de Truman's Files (plus tard)
 

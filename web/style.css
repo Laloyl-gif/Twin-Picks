@@ -12,6 +12,8 @@ button{font:inherit;font-weight:600;cursor:pointer;border:1px solid transparent;
 button:hover:not(:disabled){background:#28232f}
 button:active:not(:disabled){transform:scale(.98)}
 button:disabled{opacity:.35;cursor:default}
+button,a,input,[data-k]{-webkit-tap-highlight-color:transparent}
+button:focus-visible,input:focus-visible{outline:2px solid var(--violet-clair);outline-offset:2px}
 button.primaire{background:var(--violet);color:#fff}
 button.primaire:hover:not(:disabled){background:#9a7cf2}
 button.discret{background:transparent;border-color:var(--bord);color:var(--txt);font-weight:500}
@@ -386,7 +388,9 @@ button.large{padding:15px;font-size:1.1em}
 #aide-saisie{margin-top:8px}
 .retour{text-align:center;font-weight:600;min-height:1.4em;margin-top:10px}
 .retour.ok{color:var(--ok)} .retour.err{color:var(--err)} .retour.info{color:var(--doux)}
-.attente-tel{width:90px;margin:30px auto 24px;color:var(--violet-clair);opacity:.8}
+.attente-tel{margin:26px auto 22px;color:var(--violet-clair);text-align:center}
+.attente-logo{display:block;margin:0 auto;width:150px;height:150px;filter:drop-shadow(0 10px 24px #000a);animation:respire 4s ease-in-out infinite}
+@keyframes respire{50%{transform:translateY(-4px) scale(1.02)}}
 .presents{display:flex;flex-wrap:wrap;gap:8px;justify-content:center}
 .qcm{display:grid;grid-template-columns:1fr 1fr;gap:8px}
 .qcm button{text-align:left;min-height:58px;font-size:.95em;font-weight:500;background:var(--panel);border-color:var(--bord)}
@@ -2787,6 +2791,8 @@ table.palmares tr:first-child td{color:#ffd24a}
 .em-nb{position:absolute;top:-6px;translate:-50% 0;display:grid;place-items:center;width:30px;height:24px;border-radius:6px;background:#ffd24a;color:#111;font:800 .85em var(--sans)}
 .em-moi{text-align:center;font:600 1.05em var(--sans);color:#f1e3c4}.em-moi b{color:#ffd24a}
 .entremots.tel .em-mot b{font-size:.8em}
+.em-mot.g{translate:-12px 0;align-items:flex-start}.em-mot.d{translate:calc(-100% + 12px) 0;align-items:flex-end}
+.entremots.tel .em-regle{padding:30px 6% 36px}
 .tm-dossier{width:min(1000px,94vw);padding:16px 22px;background:#f4ecd8;color:#1d1b1a;box-shadow:0 16px 34px #000b;rotate:.4deg}
 .tm-fil{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px}
 .tm-fil li{display:flex;flex-direction:column;gap:4px;padding-bottom:6px;border-bottom:1px dashed #0003}
@@ -2805,3 +2811,6 @@ table.palmares tr:first-child td{color:#ffd24a}
 .hi-partie ol{margin:8px 0 2px;padding-left:1.6em;font:.88em/1.5 var(--sans);color:#d8cdbb}
 .hi-partie small{color:var(--doux)}
 .dp-jauge{padding-bottom:34px}
+
+/* v14 : mouvements réduits si le système le demande */
+@media (prefers-reduced-motion: reduce){*,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}}

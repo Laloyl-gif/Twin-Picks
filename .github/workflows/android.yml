@@ -34,7 +34,9 @@ jobs:
         working-directory: android
         run: gradle assembleRelease --no-daemon --stacktrace
       - name: Nommer l'APK
-        run: cp android/app/build/outputs/apk/release/app-release.apk twin-picks.apk
+        run: |
+          cp android/app/build/outputs/apk/release/app-release.apk twin-picks.apk
+          echo "${GITHUB_RUN_NUMBER}" > version.txt
       - name: Publier l'application
         uses: softprops/action-gh-release@v2
         with:
@@ -43,5 +45,8 @@ jobs:
           body: |
             Sur le téléphone : téléchargez twin-picks.apk ci-dessous, ouvrez-le et autorisez l'installation.
             L'application se met à jour toute seule (elle télécharge la dernière version du jeu à chaque lancement).
-          files: twin-picks.apk
+            Quand l'application elle-même change (nouvelle icône…), elle propose de télécharger cette nouvelle version.
+          files: |
+            twin-picks.apk
+            version.txt
           make_latest: true

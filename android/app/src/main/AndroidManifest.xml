@@ -9,8 +9,8 @@
 
     <application
         android:label="Twin Picks"
-        android:icon="@drawable/icone"
-        android:roundIcon="@drawable/icone"
+        android:icon="@mipmap/ic_lanceur"
+        android:roundIcon="@mipmap/ic_lanceur"
         android:usesCleartextTraffic="true"
         android:theme="@android:style/Theme.Material.NoActionBar"
         android:hardwareAccelerated="true">

@@ -863,7 +863,7 @@ function pokerHTML(v, src, opt = {}) {
 }
 
 /* Gersten Hayward : le diapason (façon Wavelength). La jauge entre deux pôles ; la cible ; les curseurs des joueurs. */
-function jaugeHTML(gauche, droite, opt = {}) {
+function jaugeDP(gauche, droite, opt = {}) {
   const cible = opt.cible !== undefined && opt.cible !== null
     ? `<span class="dp-cible" style="left:${opt.cible}%"><i class="z1"></i><i class="z2"></i><b>${opt.cibleTxt || ''}</b></span>` : '';
   const pins = (opt.places || []).map(p => `<span class="dp-pin" style="left:${p.x}%;--c:${p.couleur}" title="${esc(p.nom)}"><b>${esc(p.nom)}</b></span>`).join('');
@@ -876,14 +876,15 @@ function filmCarteHTML(f, src, sous = '') {
 function diapasonHTML(v, src, opt = {}) {
   const mo = v.moteur || {}, et = mo.etape, d = mo.diapason;
   const tete = `<p class="dp-tete">Diapason : ${d ? `<b style="color:${d.couleur}">${esc(d.nom)}</b>` : '?'} · ${mo.k + 1}/${mo.n}${et !== 'rev' ? ` · ${Math.ceil(mo.reste || 0)} s` : ''}</p>`;
-  const jauge = jaugeHTML(mo.gauche, mo.droite, et === 'rev' ? {cible: mo.cible, places: mo.places} : opt.cible !== undefined ? {cible: opt.cible} : {});
+  const jauge = jaugeDP(mo.gauche, mo.droite, et === 'rev' ? {cible: mo.cible, places: mo.places} : opt.cible !== undefined ? {cible: opt.cible} : {});
   const film = et === 'indice' ? `<p class="tb-consigne">${d ? esc(d.nom) : '?'} cherche un film qui tombe pile sur sa cible…</p>` : filmCarteHTML(mo.film, src);
   return `<div class="diapason${opt.joueur ? ' tel' : ''}" data-k="dp">${tete}${film}${jauge}</div>`;
 }
 
 /* Naido : entre les mots. La règle de 1 à 100 et ses mots ; le film en cours ; les nombres devinés. */
 function regleMotsHTML(regle, opt = {}) {
-  const mots = (regle || []).map(r => `<span class="em-mot" style="left:${r.x}%"><b>${esc(r.mot)}</b><small>${r.x}</small></span>`).join('');
+  const cale = x => x < 12 ? 'g' : x > 88 ? 'd' : '';                  // les mots des bords restent dans la règle
+  const mots = (regle || []).map(r => `<span class="em-mot ${cale(r.x)}" style="left:${r.x}%"><b>${esc(r.mot)}</b><small>${r.x}</small></span>`).join('');
   const marque = opt.nombre ? `<span class="em-nb" style="left:${opt.nombre}%"><b>${opt.nombre}</b></span>` : '';
   const pins = (opt.places || []).map(p => `<span class="dp-pin" style="left:${p.x}%;--c:${p.couleur}"><b>${esc(p.nom)} ${p.x}</b></span>`).join('');
   return `<div class="em-regle"><div class="em-barre">${mots}${marque}${pins}</div></div>`;

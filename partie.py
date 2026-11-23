@@ -242,6 +242,7 @@ class Partie:
                 except Exception:  # noqa: BLE001
                     traceback.print_exc()
             self.signatures = set()
+            self.reussites = []                           # difficulté auto : part des joueurs qui marquent, par manche
             self.utilises, self._entrees_saga = {}, {}
             self.index = self.tour = 0
             self.pause, self.erreur = False, ""
@@ -274,7 +275,7 @@ class Partie:
         for essai in range(8):
             try:
                 deja = self._deja(pool)
-                m = CONSTRUCTEURS[jeu](self.api, self.cfg, self.pools[pool], deja)
+                m = CONSTRUCTEURS[jeu](self.api, self.cfg, self._pool_ajuste(pool), deja)
                 m["jeu"], m["pool"] = jeu, m.get("pool") or pool     # Andy : une manche d'acteur → pool « acteurs »
                 sig = self._signature(m)
                 with self.lock:
@@ -513,6 +514,7 @@ class Partie:
             if m["reponse"] == "choix":
                 duree = base + 2
         self._rattrapage()
+        self._noter_reussite(m)
         self._noter_recap(m)
         self.main = None
         self.phase = "reponse"
@@ -682,6 +684,34 @@ class Partie:
 
     def _frac(self):
         return max(0.0, min(1.0, 1 - self.ecoule / max(1.0, self.duree)))
+
+    def niveau_auto(self):
+        """Difficulté auto, de -1 (le groupe peine : films très connus) à +1 (le groupe trouve tout : films moins
+        connus). Moyenne des 4 dernières manches de films : part des joueurs qui ont marqué."""
+        r = getattr(self, "reussites", [])[-4:]
+        if len(r) < 2 or not self.cfg.get("difficulte_auto", True):
+            return 0.0
+        return max(-1.0, min(1.0, (sum(r) / len(r) - 0.5) * 2.2))
+
+    def _noter_reussite(self, m):
+        if len(self.joueurs) < 1 or POOL.get(m.get("jeu")) in (None, "acteurs") or m.get("pool") == "acteurs":
+            return
+        part = sum(1 for j in self.joueurs.values() if (j.gain or 0) - (getattr(j, "bonus", 0) or 0) > 0) / len(self.joueurs)
+        self.reussites = (getattr(self, "reussites", []) + [part])[-12:]
+
+    def _pool_ajuste(self, nom):
+        """Le pool donné au jeu, resserré selon la difficulté auto : les films les plus connus (nombre de votes TMDB)
+        quand le groupe peine, les moins connus quand il trouve tout. Jamais moins de 30 films."""
+        films = self.pools[nom]
+        niv = self.niveau_auto()
+        if abs(niv) < 0.15 or not isinstance(films, list) or len(films) < 60 or not isinstance(films[0], dict) \
+                or "votes" not in films[0]:
+            return films
+        tri = sorted(films, key=lambda f: (f.get("votes") or 0, f.get("popularite") or 0), reverse=True)
+        n = len(tri)
+        if niv < 0:
+            return tri[:max(30, int(n * (1 + 0.6 * niv)))]          # -1 → les 40 % les plus connus
+        return tri[min(int(n * 0.5 * niv), n - 30):]                # +1 → sans la moitié la plus connue
 
     def _rattrapage(self):
         """Tous les jeux : un joueur en retard qui marque pendant la manche gagne en plus une part de son retard

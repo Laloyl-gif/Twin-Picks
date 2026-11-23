@@ -657,7 +657,7 @@ function vueZone() {
   const m = S.moi;
   if (S.phase === 'lobby') {
     return ['lobby' + JSON.stringify(S.classement.map(j => [j.nom, j.couleur])),
-      `<div class="attente-tel">${embleme('pics')}<p>En attente du lancement…</p></div>` +
+      `<div class="attente-tel"><img class="attente-logo" src="/web/icone.png" alt="Twin Picks"><p>En attente du lancement…</p></div>` +
       `<div class="presents">${S.classement.map(j => puce(j)).join('')}</div>` +
       `<button class="secondaire large code-autre" data-code="1"><b>#</b> Rejoindre une autre partie avec un code</button>`];
   }

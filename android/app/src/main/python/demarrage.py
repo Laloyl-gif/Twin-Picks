@@ -85,6 +85,19 @@ def mettre_a_jour(base, depot):
     return code
 
 
+def nouvelle_appli(depot, numero):
+    """L'adresse de la nouvelle application (APK) si GitHub en a construit une plus récente que celle-ci, sinon « ».
+    Le jeu se met à jour tout seul, mais l'application elle-même (son icône…) doit être réinstallée."""
+    if not depot:
+        return ""
+    base = f"https://github.com/{depot}/releases/download/application"
+    try:
+        en_ligne = int(_lire(f"{base}/version.txt", 6).decode().strip())
+    except Exception:  # noqa: BLE001  (hors ligne, pas encore publiée…)
+        return ""
+    return f"{base}/twin-picks.apk" if en_ligne > int(numero) else ""
+
+
 def demarrer(base, depot, libs=""):
     """L'adresse de la page à ouvrir : une partie du Wi-Fi, ou celle ouverte ici (avec la clé d'administrateur)."""
     if _SERVEUR:

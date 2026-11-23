@@ -630,7 +630,7 @@ async function gererSon(e) {
 }
 
 function classementHTML(e) {
-  return (e.classement || []).map((j, i) => `<div class="rang" style="--c:${j.couleur}"><span class="pos">${i + 1}</span>` +
+  return (e.classement || []).map((j, i) => `<div class="rang" data-k="j${j.id}" style="--c:${j.couleur}"><span class="pos">${i + 1}</span>` +
     `<span class="pastille">${rond(j)}</span><span class="nom">${esc(j.nom)}</span>` +
     `<span class="statut ${(j.statut || {}).c || ''}">${esc((j.statut || {}).t || '')}</span><span class="pts">${j.score}</span></div>`
   ).join('') || '<p class="doux">Aucun joueur</p>';

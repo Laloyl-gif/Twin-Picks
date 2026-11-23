@@ -304,6 +304,9 @@ PARAMS = [
     _p("rattrapage", "general", "Rattrapage : bonus pour les joueurs en retard qui marquent", True,
        aide="Dans tous les jeux : quand un joueur marque des points, il gagne en plus une part de son retard sur le "
             "premier."),
+    _p("difficulte_auto", "general", "Difficulté auto : films plus ou moins connus selon la réussite du groupe", True,
+       aide="Si presque tout le monde trouve, les manches suivantes prennent des films moins connus ; si personne "
+            "ne trouve, des films plus connus."),
     _p("rattrapage_pct", "general", "Rattrapage : part du retard sur le premier (%)", 15, 0, 50, 1),
     _p("rattrapage_max", "general", "Rattrapage : bonus maximal par manche", 500, 0, 3000, 50),
     _p("musique", "general", "Musique d'ambiance (Twin Peaks au menu)", True),

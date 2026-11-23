@@ -172,3 +172,16 @@ seulement sur quoi portent couleurs, chiffres et figures (le détail à l'abatta
 anecdotes plus insolites (Wikipédia FR + EN traduite, note « insolite » ; IMDb interdit la récupération automatique).
 Refusés : poker des cafards, Just One (indices en double), Dobble (le couple) ; rideau entre manches, classement
 animé, écran de veille, mode présentateur.
+
+## Version 14 (novembre 2026)
+
+Logo validé par Etienne : R4, papier crème (soleil doré, sommets violets enneigés, chevrons noir et crème de la Black
+Lodge en bas, Cooper en sérigraphie nuit / violet / or / crème). Palette du logo = celle du jeu (violet #8a6ae6,
+or #ffd24a, crème #f1e3c4, nuit #0d0b10). Détourage : contour relevé à la main sur la photo, affiné là où le bord
+est net ; le haut des cheveux est complet sur la photo (pas de calotte ajoutée).
+Icônes : web/icone.png / .ico / -192 / -apple / -plein-512, icône adaptative Android (mipmap/ic_lanceur : fond
+drawable-nodpi/ic_fond, premier plan ic_premier_plan, monochrome). Après un changement d'icône, ne rien faire d'autre :
+lanceur.py remet le raccourci à jour, les liens web sont versionnés (?v=empreinte), l'APK est reconstruit par GitHub
+Actions (dossier android/ modifié) et l'application propose sa nouvelle version (version.txt de la release).
+Validé : difficulté auto. Le classement animé reste refusé (v13).
+Deux fonctions globales du même nom dans les scripts d'une page sont interdites (test_v14 le vérifie).

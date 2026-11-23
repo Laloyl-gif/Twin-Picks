@@ -1,9 +1,12 @@
 package fr.twinpicks.app;
 
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.content.Context;
+import android.content.Intent;
 import android.graphics.Color;
 import android.graphics.Typeface;
+import android.net.Uri;
 import android.net.wifi.WifiManager;
 import android.os.Bundle;
 import android.os.Handler;
@@ -135,12 +138,43 @@ public class MainActivity extends Activity {
                     web.setVisibility(View.VISIBLE);
                     accueil.setVisibility(View.GONE);
                 });
+                proposerNouvelleAppli();
             } catch (Throwable t) {
                 String m = t.getMessage() == null ? t.toString() : t.getMessage();
                 int i = m.lastIndexOf("Error: ");
                 erreur(i >= 0 ? m.substring(i + 7) : m);
             }
         }).start();
+    }
+
+    private boolean appliProposee = false;
+
+    /** Une application plus récente a été construite (nouvelle icône…) : on propose de l'installer, une fois. */
+    private void proposerNouvelleAppli() {
+        if (appliProposee) return;
+        appliProposee = true;
+        String apk = "";
+        try {
+            apk = module.callAttr("nouvelle_appli", BuildConfig.DEPOT, BuildConfig.VERSION_CODE).toString();
+        } catch (Throwable ignore) {
+        }
+        if (apk.isEmpty()) return;
+        final String lien = apk;
+        ui.post(() -> {
+            if (isFinishing()) return;
+            new AlertDialog.Builder(this)
+                    .setTitle("Nouvelle version de l'application")
+                    .setMessage("Une nouvelle version de Twin Picks est prête (nouvelle icône, améliorations). "
+                            + "Téléchargez-la puis ouvrez le fichier : elle s'installe par-dessus celle-ci.")
+                    .setPositiveButton("Télécharger", (d, w) -> {
+                        try {
+                            startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(lien)));
+                        } catch (Throwable ignore) {
+                        }
+                    })
+                    .setNegativeButton("Plus tard", null)
+                    .show();
+        });
     }
 
     private final Runnable suivi = new Runnable() {

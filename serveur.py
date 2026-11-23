@@ -22,7 +22,22 @@ from tmdb import TMDB, charger_pools, connecter, id_liste, lire_listes_compte, r
 
 TYPES = {".html": "text/html; charset=utf-8", ".js": "text/javascript; charset=utf-8",
          ".css": "text/css; charset=utf-8", ".png": "image/png", ".svg": "image/svg+xml",
-         ".jpg": "image/jpeg", ".jpeg": "image/jpeg", ".webp": "image/webp"}
+         ".jpg": "image/jpeg", ".jpeg": "image/jpeg", ".webp": "image/webp", ".ico": "image/x-icon",
+         ".webmanifest": "application/manifest+json; charset=utf-8"}
+
+
+def _version_icone():
+    """Empreinte de l'icône : ajoutée aux liens (?v=…) pour que navigateurs et écrans d'accueil la rechargent
+    dès qu'elle change, au lieu de garder l'ancienne en cache."""
+    import hashlib
+    try:
+        with open(os.path.join(config.DOSSIER_WEB, "icone.png"), "rb") as f:
+            return hashlib.md5(f.read()).hexdigest()[:8]
+    except OSError:
+        return "0"
+
+
+V_ICONE = _version_icone()
 DOSSIER_PERSOS = os.path.join(config.DOSSIER_WEB, "persos")
 
 
@@ -375,7 +390,10 @@ def fabriquer_handler(app):
                     data = f.read()
             except OSError:
                 return self.send_error(404)
-            self._envoyer(data, TYPES.get(os.path.splitext(nom)[1].lower(), "application/octet-stream"), cache=cache)
+            ext = os.path.splitext(nom)[1].lower()
+            if ext in (".html", ".webmanifest"):
+                data = data.replace(b"__VICONE__", V_ICONE.encode())
+            self._envoyer(data, TYPES.get(ext, "application/octet-stream"), cache=cache)
 
         def _flux(self, chemin, mime):
             """Fichier audio envoyé par morceaux, avec prise en charge de « Range » (avance rapide, reprise)."""
@@ -425,6 +443,10 @@ def fabriquer_handler(app):
                 return self._fichier("joueur.html")
             if c == "/hote":
                 return self._fichier("hote.html")
+            if c == "/favicon.ico":
+                return self._fichier("icone.ico", cache="no-cache")
+            if c == "/manifest.webmanifest":
+                return self._fichier("manifest.webmanifest", cache="no-cache")
             if c.startswith("/web/"):
                 return self._fichier(c[5:])
             if c.startswith("/persos/avatars/"):
