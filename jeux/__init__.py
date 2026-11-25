@@ -41,7 +41,7 @@ CONSTRUCTEURS = {
 MOTEURS = {"note": norma.Moteur, "chrono": lucy.Moteur, "bingo": donna.Moteur, "ordre": nadine.Moteur,
            "double": ben.Moteur, "duree": ed.Moteur, "duels": leo.Moteur,
            "plusieurs": plusieurs.Moteur, "paire": plusieurs.Moteur, "brelan": jacques.Moteur, "paires": mike.Moteur,
-           "focus": hank.Moteur, "dessin": woodsman.Moteur, "contrat": mitchum.Moteur, "blackjack": jean.Moteur,
+           "focus": hank.Moteur, "lumiere": woodsman.Moteur, "contrat": mitchum.Moteur, "blackjack": jean.Moteur,
            "differences": mrc.Moteur, "code": desmond.Moteur, "pendule": windom.Moteur, "enveloppes": enveloppes.Moteur,
            "mensonges": lana.Moteur, "poker": bernard.Moteur, "tableau": tremond.Moteur, "pluie": bushnell.Moteur,
            "diapason": gersten.Moteur, "entremots": naido.Moteur, "enquete": tammy.Moteur}

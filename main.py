@@ -14,10 +14,11 @@ import reseau_local
 from serveur import App, fabriquer_handler
 
 
-def demarrer_serveur(type_="ordinateur"):
+def demarrer_serveur(type_="ordinateur", reprise=None):
     """Ouvre le serveur du jeu (sans le bloquer) : (app, port, serveur) ou None si aucun port n'est libre.
-    type_ : « ordinateur » (l'écran hôte est l'administrateur) ou « telephone » (application Android)."""
-    app = App(type_)
+    type_ : « ordinateur » (l'écran hôte est l'administrateur) ou « telephone » (application Android).
+    reprise : la sauvegarde d'une partie dont l'hôte s'est éteint (ce téléphone la reprend)."""
+    app = App(type_, reprise)
     serveur = None
     for port in range(config.PORT, config.PORT + 10):
         try:
@@ -28,7 +29,7 @@ def demarrer_serveur(type_="ordinateur"):
     if serveur is None:
         return None
     app.definir_port(port)
-    reseau_local.repondre(port, type_)                      # les téléphones du Wi-Fi trouvent cette partie
+    reseau_local.repondre(port, type_, code=app.code)                      # les téléphones du Wi-Fi trouvent cette partie
     threading.Thread(target=serveur.serve_forever, daemon=True).start()
     return app, port, serveur
 

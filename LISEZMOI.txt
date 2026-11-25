@@ -66,9 +66,9 @@ Les jeux
   Jacques Renault's Card Table                Le brelan          cinq affiches : les trois qui ont quelqu'un en commun
   Sarah Palmer's Visions                      La vision          des affiches en un éclair : laquelle n'y était pas ?
   Jean Renault's Blackjack                    Le blackjack       cartes = films, valeur = note TMDB : 21 sans dépasser
-  The Woodsman's Light                        Dessin de lumière  un dessin du bout du doigt qui s'éteint vite : devinez
+  The Woodsman's Light                        Got a light?       dans le noir, chacun éclaire l'écran avec son téléphone
   The Mitchum Brothers' Contract              Le contrat         des contrats en patate chaude : répondez juste pour les refiler
-  Mr. C's Doppelganger                        Le double          l'affiche et son double : trouvez les différences
+  Mr. C's Doppelganger                        Le double          l'affiche et son double : des différences discrètes
   Desmond's Code                              Le code            Codenames : un indice et un nombre, stop à la 1re erreur
   Dick Tremayne's Gala                        La cérémonie       Oscars, Césars, Palme d'or… : trouvez le lauréat
   Mayor Milford's Golden Owl                  Le Hibou d'or      l'« Oscar » de vos notes : quel film a gagné ?
@@ -357,10 +357,10 @@ Autres jeux
     chacun reçoit deux cartes : des affiches de films, dont la valeur cachée est la note TMDB. « Carte ! » ou « Je
     reste » : approchez-vous de 21 sans dépasser, à l'estime. Jean montre une carte et tire jusqu'à 17. Battre Jean :
     la mise doublée et un petit bonus ; égalité : mise rendue ; plus de 21 ou moins que Jean : mise perdue.
-  Le dessin de lumière (le Woodsman) : chacun son tour dessine un film connu sur son téléphone (avec quelques idées
-    de choses à dessiner). Sur l'écran, dans le noir, son trait s'allume puis s'éteint au bout de 2,5 s (réglable) :
-    il faut redessiner sans cesse. Les autres tapent le titre, autant de fois qu'ils veulent. Plus tôt = plus de
-    points, bonus au premier ; le dessinateur marque pour chaque joueur qui trouve. 2 joueurs minimum.
+  Got a light? (le Woodsman) : l'écran dans le noir, une quarantaine d'affiches et quatre indices écrits cachés.
+    Chacun promène sa lumière en glissant le doigt sur son téléphone ; tout le monde profite de la lumière des
+    autres, et un indice éclairé reste allumé. « C'est lui ! » quand votre lumière est sur le bon film : un seul
+    essai (raté : hors jeu pour la manche). Le premier a un bonus.
   Le contrat (les frères Mitchum) : des patates chaudes. Il circule autant de contrats que de joueurs moins un,
     toujours dans le même sens. Qui tient un contrat reçoit une question éclair à six choix (réalisateur, acteur,
     année, gros plan d'affiche, le plus long, le mieux noté…) : bonne réponse, il le refile au suivant (qui peut en
@@ -563,3 +563,20 @@ Version 14
     moins connus ; si personne ne trouve, des films plus connus.
   - Corrections : La durée (Ed) affichait du code à la place de la jauge ; Entre les mots : les mots des bords ne
     sortent plus de l'écran du téléphone ; écran d'attente du téléphone avec le logo.
+
+Version 15
+  - La partie continue si l'hôte s'éteint :
+      · La partie est sauvegardée en continu (donnees/reprise.json).
+      · Ordinateur qui plante ou qui s'éteint : au prochain lancement, le menu propose « Reprendre » (manche en cours
+        recommencée, scores, séries et récap gardés) ou « Oublier ».
+      · Pendant la partie, les téléphones de l'application Android gardent aussi la sauvegarde : si l'ordinateur
+        (ou le téléphone hôte) ne répond plus, un téléphone de l'application reprend la partie tout seul (même code)
+        et en devient l'administrateur. Les autres téléphones (application ou navigateur) le retrouvent et gardent
+        leur joueur et leurs points. Il faut au moins un téléphone avec l'application dans la partie.
+  - Préchargement (Réglages › Général) : 4 manches préparées d'avance (réglable de 2 à 8), et l'écran hôte télécharge
+    d'un coup toutes les images de la manche.
+  - Palmarès :
+      · 14 succès à débloquer (« Damn fine coffee », « Plus rapide que BOB », « Le retour de Cooper »…), affichés
+        au récap de fin quand on en débloque un, sur l'écran et sur le téléphone.
+      · Films signature de chacun (trouvés quand personne d'autre ne les a trouvés), les films qui résistent encore
+        à la bande, les films qui reviennent le plus.

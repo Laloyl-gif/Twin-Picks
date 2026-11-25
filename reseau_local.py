@@ -11,7 +11,7 @@ PORT_RECHERCHE = 47474
 QUESTION = b"TWINPICKS?"
 
 
-def repondre(port_jeu, type_, nom=""):
+def repondre(port_jeu, type_, nom="", code=""):
     """En tâche de fond : répond « je suis une partie Twin Picks » aux appels du réseau local."""
     def boucle():
         try:
@@ -20,7 +20,7 @@ def repondre(port_jeu, type_, nom=""):
             s.bind(("", PORT_RECHERCHE))
         except OSError:
             return                                       # déjà une partie sur cet appareil : elle répond pour nous
-        rep = json.dumps({"jeu": "twinpicks", "port": port_jeu, "type": type_,
+        rep = json.dumps({"jeu": "twinpicks", "port": port_jeu, "type": type_, "code": code,
                           "nom": nom or socket.gethostname(), "debut": time.time()}).encode()
         while True:
             try:

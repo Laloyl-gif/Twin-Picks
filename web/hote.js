@@ -521,12 +521,24 @@ $('#b-historique').onclick = async () => {           // les dernières parties :
 };
 $('#b-palmares').onclick = async () => {               // le palmarès à vie, toutes parties confondues
   const r = await (await fetch('/api/hote/palmares' + Q)).json();
-  const js = r.joueurs || [];
-  $('#pa-corps').innerHTML = js.length ? `<p class="aide">${r.parties} partie${r.parties > 1 ? 's' : ''} terminée${r.parties > 1 ? 's' : ''}` +
+  const js = r.joueurs || [], tous = r.succes || [];
+  const table = `<p class="aide">${r.parties} partie${r.parties > 1 ? 's' : ''} terminée${r.parties > 1 ? 's' : ''}` +
     `${r.derniere ? ` · la dernière le ${esc(r.derniere)}` : ''}</p><table class="palmares"><thead><tr><th></th><th>Joueur</th><th>Victoires</th><th>Parties</th>` +
     `<th>Points</th><th>Moyenne</th><th>Record</th><th>Manches gagnées</th><th>Série</th><th>Jeu fétiche</th></tr></thead><tbody>` +
     js.map((j, k) => `<tr><td>${k < 3 ? ['🥇', '🥈', '🥉'][k] : k + 1}</td><td><b>${esc(j.nom)}</b></td><td>${j.victoires}</td><td>${j.parties}</td>` +
-      `<td>${j.points}</td><td>${j.moyenne}</td><td>${j.record}</td><td>${j.manches}</td><td>${j.serie}</td><td>${esc(j.jeu)}</td></tr>`).join('') + '</tbody></table>'
+      `<td>${j.points}</td><td>${j.moyenne}</td><td>${j.record}</td><td>${j.manches}</td><td>${j.serie}</td><td>${esc(j.jeu)}</td></tr>`).join('') + '</tbody></table>';
+  // succès (débloqués en or, les autres en creux) et films signature de chacun
+  const cartes = js.map(j => {
+    const eux = new Set((j.succes || []).map(s => s.id));
+    const badges = tous.map(s => `<span class="palv-badge${eux.has(s.id) ? ' oui' : ''}" title="${esc(s.desc)}">${esc(s.nom)}</span>`).join('');
+    const sig = (j.signature || []).length ? `<p class="palv-sig"><small>Films signature</small>${j.signature.map(esc).join(' · ')}</p>` : '';
+    return `<div class="palv-carte"><p class="palv-nom"><b>${esc(j.nom)}</b><span>${eux.size} / ${tous.length} succès</span></p>` +
+      `<div class="palv-badges">${badges}</div>${sig}</div>`;
+  }).join('');
+  const films = (r.rates || []).length || (r.revenants || []).length ? `<div class="palv-films">` +
+    `<div><h3 class="etiquette">Ils résistent encore</h3><ol>${(r.rates || []).map(f => `<li>${esc(f.titre)} <small>raté ${f.rates} fois sur ${f.joues}</small></li>`).join('') || '<li class="doux">—</li>'}</ol></div>` +
+    `<div><h3 class="etiquette">Les revenants</h3><ol>${(r.revenants || []).map(f => `<li>${esc(f.titre)} <small>${f.joues} fois</small></li>`).join('') || '<li class="doux">—</li>'}</ol></div></div>` : '';
+  $('#pa-corps').innerHTML = js.length ? table + `<div class="palv-cartes">${cartes}</div>` + films
     : '<p class="aide">Aucune partie terminée pour l\'instant : le palmarès se remplit à la fin de chaque partie.</p>';
   $('#d-palmares').showModal();
 };
@@ -562,6 +574,11 @@ function rendreLobby() {
   $('#b-tunnel').textContent = t === 'connexion' ? 'Connexion…' : E.en_ligne ? 'Fermer l\'accès Internet' : 'Ouvrir sur Internet';
   $('#b-tunnel').disabled = t === 'connexion';
   $('#tunnel-info').textContent = t.startsWith('erreur:') ? t.slice(7) : '';
+  const rp = E.reprise;                             // partie interrompue (plantage, coupure) : on peut la reprendre
+  $('#reprise').hidden = !rp;
+  maj($('#reprise'), JSON.stringify(rp || ''), rp ? `<div class="rp-texte"><b>Partie interrompue à ${esc(rp.quand)}</b>` +
+    `<span>Manche ${rp.manche} sur ${rp.total} · ${rp.joueurs.map(j => `<i style="color:${j.couleur}">${esc(j.nom)}</i> ${j.score}`).join(' · ')}</span></div>` +
+    `<button class="primaire" data-reprise="reprendre">Reprendre</button><button class="discret" data-reprise="oublier_reprise">Oublier</button>` : '');
   const js = E.classement || [];
   $('#nb-joueurs').textContent = js.length || '';
   maj($('#liste-joueurs'), JSON.stringify(js.map(j => [j.id, j.nom, j.couleur, j.avatar, j.profil])), js.length
@@ -578,6 +595,13 @@ function rendreLobby() {
 /* ================= partie ================= */
 $('#b-pause').onclick = () => action('pause');
 $('#b-passer').onclick = () => action('passer');
+document.addEventListener('click', async ev => {
+  const b = ev.target.closest('[data-reprise]');
+  if (!b) return;
+  if (b.dataset.reprise === 'oublier_reprise' && !confirm('Oublier la partie interrompue ? Elle ne pourra plus être reprise.')) return;
+  const r = await post('/api/hote/action' + Q, {action: b.dataset.reprise});
+  if (r && r.erreur) $('#erreur').textContent = r.erreur;
+});
 $('#b-rejouer-manche').onclick = () => {
   if (confirm('Relancer cette manche avec d\'autres films ? Les points de la manche sont annulés.')) action('rejouer');
 };
@@ -649,7 +673,8 @@ function recapHTML(r) {
   const cartes = (r.joueurs || []).map((j, k) => `<div class="rp-carte" style="--c:${j.couleur}"><p class="rp-nom"><b>${k + 1}.</b> ${esc(j.nom)} <span>${j.score}</span></p>` +
     `<ul>${j.meilleur_jeu ? `<li>Meilleur jeu : <b>${esc(j.meilleur_jeu)}</b> (+${j.meilleur_jeu_pts})</li>` : ''}` +
     `${j.meilleure_manche ? `<li>Plus beau coup : <b>+${j.meilleure_manche}</b> à ${esc(j.meilleure_manche_jeu)}</li>` : ''}` +
-    `<li>${j.trouves} manche${j.trouves > 1 ? 's' : ''} gagnée${j.trouves > 1 ? 's' : ''}${j.serie > 1 ? ` · série de ${j.serie}` : ''}</li></ul></div>`).join('');
+    `<li>${j.trouves} manche${j.trouves > 1 ? 's' : ''} gagnée${j.trouves > 1 ? 's' : ''}${j.serie > 1 ? ` · série de ${j.serie}` : ''}</li>` +
+    (j.succes || []).map(x => `<li class="rp-succes" title="${esc(x.desc)}">🏅 Succès : <b>${esc(x.nom)}</b></li>`).join('') + `</ul></div>`).join('');
   const rates = (r.rates || []).length ? `<p class="rp-rates">Ils ont résisté à tout le monde : ${r.rates.map(esc).join(' · ')}</p>` : '';
   return `<div class="recap" data-k="recap"><div class="rp-cartes">${cartes}</div>${rates}` +
     `<p class="rp-bas">${r.manches} manches${r.jeu_or ? ` · le jeu le plus payant : <b>${esc(r.jeu_or)}</b>` : ''} ` +
@@ -696,7 +721,7 @@ function bandeau(e) {
   }
   if (e.phase === 'reponse' && ['note', 'chrono', 'bingo'].includes(e.type)) return '';
   if (e.phase === 'reponse' && e.type === 'ordre') return `<div class="detail">${esc(e.detail || '')}</div>`;
-  if (e.phase === 'reponse' && ['plusieurs', 'paire', 'brelan', 'paires', 'focus', 'rancon', 'dessin', 'contrat', 'differences', 'code', 'duels', 'double', 'duree', 'blackjack', 'pendule', 'enveloppes', 'pluie', 'mensonges', 'tableau', 'poker', 'diapason', 'entremots', 'enquete'].includes(e.type)) {
+  if (e.phase === 'reponse' && ['plusieurs', 'paire', 'brelan', 'paires', 'focus', 'rancon', 'lumiere', 'contrat', 'differences', 'code', 'duels', 'double', 'duree', 'blackjack', 'pendule', 'enveloppes', 'pluie', 'mensonges', 'tableau', 'poker', 'diapason', 'entremots', 'enquete'].includes(e.type)) {
     // les résultats de chacun sont déjà sous le jeu : ici, la solution seule
     return `<div class="solution">${esc(e.solution)}</div>` + (e.detail ? `<div class="detail">${esc(e.detail)}</div>` : '');
   }
@@ -853,11 +878,10 @@ function moteurHote(e) {
     return d + `<div class="frise-res">${(mo.resultats || []).map(r => puce(r, ` ${r.n}/${mo.n}` + (r.gain ? ` <em>${r.gain > 0 ? '+' : ''}${r.gain}</em>` : ''),
       r.n === mo.n ? 'juste' : r.n ? '' : 'faux')).join('')}</div>`;
   }
-  if (e.type === 'dessin') {                             // Woodsman : le dessin de lumière
-    const d = dessinHTML(e, src);
-    if (!rev) return d + `<div class="frise-res">${(mo.trouves || []).map(r => puce(r, '', 'juste')).join('')}</div>`;
-    return d + `<div class="frise-res">${(mo.resultats || []).map(r => puce(r, (r.dessine ? ' (dessin)' : '') +
-      (r.gain ? ` <em>+${r.gain}</em>` : ''), r.gain > 0 ? 'juste' : 'faux')).join('')}</div>`;
+  if (e.type === 'lumiere') {                            // Woodsman : got a light?
+    const d = lumiereHTML(e, src);
+    if (!rev) return d;
+    return d + `<div class="frise-res">${(mo.trouves || []).map(r => puce(r, '', 'juste')).join('') || '<span class="doux">Personne</span>'}</div>`;
   }
   if (e.type === 'focus') {                              // Hank : les dominos (façon Focus)
     const d = focusHTML(e, src);
@@ -988,11 +1012,21 @@ async function boucle() {
     const e = await get('/api/hote/etat' + Q + (TEL ? '&tel=1' : ''));
     if (e.interdit) return interdit();
     E = e;
+    precharger(e);
     if (CFG) rendre();
     gererSon(e);
     if (CFG && typeof majMusique === 'function') majMusique(e);
   } catch (err) { console.error(err); }
-  setTimeout(boucle, E && E.type === 'dessin' && E.phase === 'manche' ? 150 : 400);   // le dessin : plus fluide
+  setTimeout(boucle, 400);
+}
+/* Préchargement : dès qu'une manche commence, l'écran hôte télécharge toutes ses images (elles s'affichent
+   ensuite sans attente, même si le Wi-Fi faiblit). */
+let prechargeSeq = -1, prechargees = [];
+function precharger(e) {
+  if (!e.nb_images || e.seq === prechargeSeq || (CFG && CFG.reglages && CFG.reglages.prechargement === false)) return;
+  prechargeSeq = e.seq;
+  prechargees = [];
+  for (let i = 0; i < e.nb_images; i++) { const im = new Image(); im.decoding = 'async'; im.src = `/img/${e.seq}/${i}${Q}`; prechargees.push(im); }
 }
 if (!K) interdit(); else { chargerConfig(); boucle(); }
 

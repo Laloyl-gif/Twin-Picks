@@ -67,6 +67,7 @@ public class MainActivity extends Activity {
         s.setDomStorageEnabled(true);
         s.setMediaPlaybackRequiresUserGesture(false);
         s.setCacheMode(WebSettings.LOAD_NO_CACHE);
+        s.setUserAgentString(s.getUserAgentString() + " TwinPicksApp/" + BuildConfig.VERSION_CODE);
         web.setBackgroundColor(FOND);
         web.setWebChromeClient(new WebChromeClient());
         web.setWebViewClient(new WebViewClient() {
@@ -138,6 +139,12 @@ public class MainActivity extends Activity {
                     web.setVisibility(View.VISIBLE);
                     accueil.setVisibility(View.GONE);
                 });
+                try {                                  // la partie d'un autre appareil : on garde sa sauvegarde
+                    module.callAttr("veiller", url);
+                } catch (Throwable ignore) {
+                }
+                ui.removeCallbacks(releve);
+                ui.postDelayed(releve, 2000);
                 proposerNouvelleAppli();
             } catch (Throwable t) {
                 String m = t.getMessage() == null ? t.toString() : t.getMessage();
@@ -146,6 +153,36 @@ public class MainActivity extends Activity {
             }
         }).start();
     }
+
+    /** L'hôte s'est éteint et la partie continue ailleurs (ou ici) : on y va avec son joueur (pid). */
+    private final Runnable releve = new Runnable() {
+        @Override
+        public void run() {
+            if (module == null) return;
+            String b = "";
+            try {
+                b = module.callAttr("bascule").toString();
+            } catch (Throwable ignore) {
+            }
+            if (b.isEmpty()) {
+                ui.postDelayed(this, 1500);
+                return;
+            }
+            final String cible = b;
+            web.evaluateJavascript("localStorage.getItem('pid')", valeur -> {
+                String p = valeur == null ? "" : valeur.replace("\"", "");
+                String sep = cible.contains("?") ? "&" : "?";
+                web.loadUrl(p.isEmpty() || p.equals("null") ? cible : cible + sep + "pid=" + Uri.encode(p) + "&relais=1");
+                new Thread(() -> {
+                    try {
+                        module.callAttr("veiller", cible);
+                    } catch (Throwable ignore) {
+                    }
+                }).start();
+                ui.postDelayed(releve, 2000);
+            });
+        }
+    };
 
     private boolean appliProposee = false;
 

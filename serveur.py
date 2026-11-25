@@ -102,10 +102,11 @@ def image_menu(d):
 class App:
     """Relie les réglages, la partie, le tunnel et les actions de l'écran hôte."""
 
-    def __init__(self, type_="ordinateur"):
+    def __init__(self, type_="ordinateur", reprise=None):
         self.type = type_                                  # « ordinateur » ou « telephone » (application Android)
         self.reglages = config.charger()
         self.partie = Partie()
+        self.snap_json, self.snap_v, self._etait_en_cours = None, "", False
         self.jeton = secrets.token_urlsafe(12)            # clé de l'écran hôte
         self.verrou = threading.Lock()
         self.tunnel, self.tunnel_etat, self.url_locale = Tunnel(config.PORT), "", ""
@@ -115,11 +116,89 @@ class App:
         self._qr = (None, None)
         self._sig_affiches = None                         # dernière préparation automatique lancée
         threading.Thread(target=self._surveiller_affiches, daemon=True).start()
+        if reprise:                                       # l'hôte s'est éteint : ce téléphone reprend la partie
+            self.code = reseau.normaliser_code(reprise.get("code") or "") or self.code
+            self.partie.restaurer(reprise)
+        threading.Thread(target=self._sauvegarder, daemon=True).start()
 
     def definir_port(self, port):
         self.url_locale = f"http://{ip_locale()}:{port}"
         self.tunnel = Tunnel(port)
         threading.Thread(target=self._salle, daemon=True).start()
+
+    # ---------- sauvegarde continue, reprise ----------
+    FICHIER_REPRISE = config.donnee("reprise.json")
+
+    def _sauvegarder(self):
+        """Toutes les 3 s : la partie en cours est sauvegardée (donnees/reprise.json) si elle a changé, et gardée
+        pour les téléphones de l'application, qui la reprennent si cet appareil s'éteint. Partie finie, ou retour
+        volontaire au menu : la sauvegarde est effacée."""
+        import hashlib
+        while True:
+            time.sleep(3)
+            try:
+                snap = self.partie.instantane(self.code)
+                if snap:
+                    snap["relais"] = self.relais()
+                    corps = json.dumps({k: v for k, v in snap.items() if k != "quand"}, ensure_ascii=False,
+                                       sort_keys=True, default=list)
+                    v = hashlib.md5(corps.encode()).hexdigest()[:12]
+                    if v != self.snap_v:
+                        self.snap_json, self.snap_v = json.dumps(snap, ensure_ascii=False, default=list), v
+                        with open(self.FICHIER_REPRISE + ".tmp", "w", encoding="utf-8") as f:
+                            f.write(self.snap_json)
+                        os.replace(self.FICHIER_REPRISE + ".tmp", self.FICHIER_REPRISE)
+                    self._etait_en_cours = True
+                elif self._etait_en_cours and self.partie.phase in ("lobby", "fin"):
+                    self._etait_en_cours, self.snap_json, self.snap_v = False, None, ""
+                    self.oublier_reprise()
+            except Exception:  # noqa: BLE001
+                import traceback
+                traceback.print_exc()
+
+    def reprise_dispo(self):
+        """La partie interrompue (plantage, coupure) qu'on peut reprendre depuis le menu : résumé, ou None."""
+        if self.partie.en_cours():
+            return None
+        try:
+            mt = os.path.getmtime(self.FICHIER_REPRISE)
+            if getattr(self, "_reprise_cache", (None,))[0] == mt:
+                return self._reprise_cache[1]
+            with open(self.FICHIER_REPRISE, encoding="utf-8") as f:
+                snap = json.load(f)
+        except (OSError, ValueError):
+            return None
+        if time.time() - snap.get("quand", 0) > 12 * 3600:
+            return None
+        js = sorted(snap.get("joueurs", []), key=lambda j: -j.get("score", 0))
+        res = {"manche": snap.get("index", 0) + 1, "total": len(snap.get("plan", [])),
+               "quand": time.strftime("%H:%M", time.localtime(snap.get("quand", 0))),
+               "joueurs": [{"nom": j["nom"], "score": j["score"], "couleur": j["couleur"]} for j in js]}
+        self._reprise_cache = (mt, res)
+        return res
+
+    def reprendre(self):
+        try:
+            with open(self.FICHIER_REPRISE, encoding="utf-8") as f:
+                snap = json.load(f)
+        except (OSError, ValueError):
+            return "Aucune partie à reprendre."
+        return self.partie.restaurer(snap)
+
+    def oublier_reprise(self):
+        try:
+            os.remove(self.FICHIER_REPRISE)
+        except OSError:
+            pass
+
+    def relais(self):
+        """Les téléphones de l'application qui peuvent reprendre la partie si cet appareil s'éteint (adresses)."""
+        out = []
+        for j in list(self.partie.joueurs.values()):
+            ip = getattr(j, "ip_appli", "")
+            if ip and not ip.startswith("127.") and f"http://{ip}:{config.PORT}" not in out:
+                out.append(f"http://{ip}:{config.PORT}")
+        return out
 
     # ---------- code de la partie ----------
     @staticmethod
@@ -224,6 +303,7 @@ class App:
     def etat_hote(self):
         v = self.partie.vue_hote()
         v.update(url=self.url, en_ligne=bool(self.tunnel.url), tunnel=self.tunnel_etat, code=self.code,
+                 reprise=self.reprise_dispo() if v.get("phase") in ("lobby", "fin") else None,
                  profils_actifs=self.partie.profils_presents() if self.reglages["profils_auto"] else [],
                  profils_presents=self.partie.profils_presents(),
                  affiches=PREPARATEUR.etat())
@@ -304,6 +384,10 @@ class App:
             p.rejouer()
         elif a == "menu":
             p.menu()
+        elif a == "reprendre":
+            return {"erreur": self.reprendre()}
+        elif a == "oublier_reprise":
+            self.oublier_reprise()
         elif a == "exclure":
             p.exclure(str(d.get("id", "")))
         elif a == "tunnel":
@@ -370,7 +454,7 @@ def fabriquer_handler(app):
         def log_message(self, *args):
             pass
 
-        def _envoyer(self, data, type_="application/json; charset=utf-8", code=200, cache="no-store"):
+        def _envoyer(self, data, type_="application/json; charset=utf-8", code=200, cache="no-store", entetes=None):
             if not isinstance(data, bytes):
                 data = json.dumps(data, ensure_ascii=False).encode("utf-8")
             try:
@@ -378,6 +462,8 @@ def fabriquer_handler(app):
                 self.send_header("Content-Type", type_)
                 self.send_header("Content-Length", str(len(data)))
                 self.send_header("Cache-Control", cache)
+                for k, val in (entetes or {}).items():
+                    self.send_header(k, val)
                 self.end_headers()
                 self.wfile.write(data)
             except (ConnectionError, OSError):
@@ -469,9 +555,28 @@ def fabriquer_handler(app):
                 data = musique.mp3(int(ident)) if self._hote(q) and ident.isdigit() else None
                 return self._envoyer(data, "audio/mpeg", cache="private, max-age=600") if data else self.send_error(404)
             if c == "/api/etat":
-                return self._envoyer(p.vue_joueur(q.get("pid", [""])[0]))
-            if c == "/api/salle":
-                return self._envoyer({"code": app.code, "internet": bool(app.tunnel.url)})
+                pid = q.get("pid", [""])[0]
+                p.reclamer(pid)
+                j = p.joueurs.get(pid)
+                if j and "TwinPicksApp" in (self.headers.get("User-Agent") or ""):
+                    j.ip_appli = self.client_address[0]       # téléphone de l'application : relais possible
+                v = p.vue_joueur(pid)
+                if j and p.en_cours():                          # où aller si cet appareil s'éteint
+                    v["relais"], v["code"] = app.relais(), app.code
+                return self._envoyer(v)
+            if c == "/api/salle":                               # lisible depuis une autre partie (relais)
+                return self._envoyer({"code": app.code, "internet": bool(app.tunnel.url),
+                                      "en_cours": p.en_cours()}, entetes={"Access-Control-Allow-Origin": "*"})
+            if c == "/api/reprise":
+                # la sauvegarde, pour les téléphones de l'application seulement (reconnus à leur adresse)
+                ip = self.client_address[0]
+                if not any(getattr(j, "ip_appli", "") == ip for j in list(p.joueurs.values())):
+                    return self._envoyer({"interdit": True}, code=403)
+                if not app.snap_json:
+                    return self._envoyer({"aucune": True})
+                if q.get("v", [""])[0] == app.snap_v:
+                    return self._envoyer({"meme": True, "v": app.snap_v})
+                return self._envoyer(('{"v": "%s", "snap": %s}' % (app.snap_v, app.snap_json)).encode("utf-8"))
             if c == "/api/couleurs":
                 return self._envoyer(p.couleurs())
             if c == "/api/suggestions":
@@ -518,6 +623,7 @@ def fabriquer_handler(app):
             except (ValueError, OSError):
                 d = {}
             pid = str(d.get("pid", ""))
+            p.reclamer(pid)
             joueur = {
                 "/api/rejoindre": lambda: {"pid": p.rejoindre(d.get("nom", ""), d.get("couleur", ""),
                                                               str(d.get("avatar") or ""),

@@ -22,6 +22,17 @@ import palmares
 import recompenses
 from tmdb import POOL, TMDB, charger_pools, cle_film, entrees_pool
 
+def empreinte(pid):
+    """Ce qu'une sauvegarde garde d'un pid (secret du téléphone) : de quoi le reconnaître, pas de quoi le voler."""
+    import hashlib
+    return "h:" + hashlib.sha256(str(pid).encode()).hexdigest()[:20]
+
+
+def _tuples(x):
+    """Après JSON : les listes redeviennent des tuples (clés de films, signatures de manches)."""
+    return tuple(_tuples(v) for v in x) if isinstance(x, list) else x
+
+
 BAREME = [1000, 750, 550, 400, 300, 200, 150, 100]   # points selon le rang d'arrivée
 SERIE_MAX = 4
 MAIN_MAX = 15                                         # secondes pour répondre après le buzzer
@@ -81,7 +92,9 @@ class Partie:
         self.signatures = set()                             # manches déjà construites (jamais deux fois la même)
         self.recap, self.series_max, self.joues = [], {}, set()   # récap de fin de partie ; films joués (historique)
         self.plan, self.index, self.tour, self.seq = [], 0, 0, 0
-        self.fabrique = ThreadPoolExecutor(max_workers=2)   # construit les manches à l'avance (deux d'avance)
+        self.fabrique = ThreadPoolExecutor(max_workers=3)   # construit les manches à l'avance (préchargement)
+        self.version = 0                                    # change à chaque événement qui compte pour la reprise
+        self.port_relais = 0                                # port des parties ouvertes sur un téléphone (relais)
         self.futurs, self.attente = {}, None
         self.profils_partie = []
         self.utilises = {}                                  # pid -> films déjà donnés (Chrono, Bingo)
@@ -235,7 +248,7 @@ class Partie:
             self.api = TMDB(cfg["api_key"], cfg["session_id"], cfg["account_id"])
             self.futurs, self.deja, self.info = {}, {}, ""
             self.recap, self.series_max, self.joues = [], {}, set()
-            self.recap_sauve = False
+            self.recap_sauve, self.succes_fin = False, {}
             if cfg.get("anti_repetition", True):          # les films des dernières parties passent après les autres
                 try:
                     self.deja["films"] = historique.recents(int(cfg.get("anti_repetition_n", 3)))
@@ -327,6 +340,9 @@ class Partie:
         if not self.attente or not self.attente[1].done():
             return
         quoi, fut = self.attente
+        if quoi == "manche" and time.monotonic() - getattr(self, "reprise_depuis", -99) < 12 \
+                and any(p.startswith("h:") for p in self.joueurs):
+            return                                   # reprise : on laisse aux téléphones le temps de revenir
         self.attente = None
         try:
             res = fut.result()
@@ -343,10 +359,10 @@ class Partie:
             self.entrees = {k: entrees_pool(p, k) for k, p in self.pools.items()}
             self.noms = {k: [e[0] for e in ent] for k, ent in self.entrees.items()}
             sagas.prechauffer(self.api, [f for k, p in self.pools.items() if k != "acteurs" for f in p])
-            self._preparer(0)
-            self._preparer(1)
+            for k in range(self.d_avance()):
+                self._preparer(self.index + k)
             self._prechauffer()
-            return self._ouvrir(0)
+            return self._ouvrir(self.index)
         self.futurs.pop(self.index, None)
         try:
             self._commencer(res)
@@ -354,6 +370,12 @@ class Partie:
             traceback.print_exc()
             self._vider_manche()
             self._sauter(f"Manche ignorée : {err}")
+
+    def d_avance(self):
+        """Préchargement : nombre de manches préparées à l'avance (images comprises)."""
+        if not self.cfg.get("prechargement", True):
+            return 2
+        return max(2, int(self.cfg.get("prechargement_n", 4)))
 
     def _sauter(self, msg):
         self.erreur = msg
@@ -391,8 +413,8 @@ class Partie:
             self.complice = Complicite(self, self.cfg, self.cfg["comp_mode"], meneur, m)
         self.phase, self.message = "manche", ""
         self._maj_etape()
-        self._preparer(self.index + 1)
-        self._preparer(self.index + 2)
+        for k in range(1, self.d_avance() + 1):
+            self._preparer(self.index + k)
 
     def _sagas_actives(self, m):
         return bool(m.get("saga_ok")) and self.cfg.get("sagas", True)
@@ -542,7 +564,8 @@ class Partie:
             self.recap.append({"jeu": m["jeu"], "solution": m.get("solution", ""), "type": m.get("reponse"),
                                "detail": m.get("detail", ""),
                                "gains": {pid: j.gain for pid, j in self.joueurs.items()},
-                               "trouves": [pid for pid, j in self.joueurs.items() if j.trouve]})
+                               "trouves": [pid for pid, j in self.joueurs.items() if j.trouve],
+                               "premier": self.ordre[0] if self.ordre else None})
             for pid, j in self.joueurs.items():
                 self.series_max[pid] = max(self.series_max.get(pid, 0), j.serie)
             for k in m.get("films", []):
@@ -582,7 +605,8 @@ class Partie:
                                    meilleure_manche=meilleure[0] if meilleure else 0,
                                    meilleure_manche_jeu=JEUX[meilleure[1]]["nom"] if meilleure else "",
                                    serie=self.series_max.get(pid, 0),
-                                   trouves=sum(1 for r in self.recap if pid in r["trouves"])))
+                                   trouves=sum(1 for r in self.recap if pid in r["trouves"]),
+                                   succes=getattr(self, "succes_fin", {}).get(j.id, [])))
         par_joueur.sort(key=lambda x: -x["score"])
         rates = [r["solution"] for r in self.recap if r["type"] == "titre" and not r["trouves"] and r["solution"]][:4]
         jeux = {}
@@ -596,11 +620,117 @@ class Partie:
     def _terminer(self):
         self._vider_manche()
         self._sauver_historique()
-        try:                                             # le palmarès à vie (profils, sinon pseudos)
-            palmares.enregistrer(self.recap_fin(), {j.id: j.profil or j.nom for j in self.joueurs.values()})
+        try:                                             # le palmarès à vie (profils, sinon pseudos) et les succès
+            pub = {pid: j.id for pid, j in self.joueurs.items()}
+            manches = [{"jeu": r["jeu"], "solution": r.get("solution", ""), "type": r.get("type"),
+                        "gains": {pub[p]: g for p, g in r["gains"].items() if p in pub},
+                        "trouves": [pub[p] for p in r["trouves"] if p in pub],
+                        "premier": pub.get(r.get("premier"))} for r in self.recap]
+            self.succes_fin = palmares.enregistrer(self.recap_fin(), {j.id: j.profil or j.nom for j in self.joueurs.values()},
+                                                   manches)
         except Exception:  # noqa: BLE001
             traceback.print_exc()
         self.phase, self.message = "fin", ""
+
+    # ============ sauvegarde et reprise ============
+    def en_cours(self):
+        return self.phase in ("chargement", "manche", "reponse") and bool(self.plan)
+
+    def instantane(self, code=""):
+        """Tout ce qu'il faut pour reprendre la partie ailleurs ou après un plantage (manche en cours recommencée).
+        Les pids (secrets des téléphones) n'y sont qu'en empreinte."""
+        with self.lock:
+            if not self.en_cours():
+                return None
+            hp = {pid: pid if pid.startswith("h:") else empreinte(pid) for pid in self.joueurs}
+            h = lambda pid: hp.get(pid, pid)                                     # noqa: E731
+            liste = lambda s: sorted((list(x) if isinstance(x, tuple) else x for x in s), key=str)  # noqa: E731
+            return {
+                "v": 1, "quand": time.time(), "code": code,
+                "cfg": self.cfg,
+                "plan": self.plan, "index": self.index, "tour": self.tour, "seq": self.seq,
+                "joueurs": [{"h": hp[pid], "id": j.id, "nom": j.nom, "couleur": j.couleur, "avatar": j.avatar,
+                             "profil": j.profil, "profil_choix": j.profil_choix, "score": j.score, "serie": j.serie,
+                             "ip": getattr(j, "ip_appli", "")}
+                            for pid, j in self.joueurs.items()],
+                "recap": [dict(r, gains={h(p): g for p, g in r["gains"].items()}, trouves=[h(p) for p in r["trouves"]],
+                               premier=h(r["premier"]) if r.get("premier") else None) for r in self.recap],
+                "series_max": {h(p): v for p, v in self.series_max.items()},
+                "deja": {k: liste(v) for k, v in self.deja.items()},
+                "signatures": liste(self.signatures), "joues": liste(self.joues),
+                "reussites": getattr(self, "reussites", []),
+            }
+
+    def restaurer(self, snap):
+        """Reprend une partie sauvegardée : joueurs et scores remis, listes rechargées, puis la manche en cours
+        recommence. Les téléphones retrouvent leur joueur tout seuls (reclamer)."""
+        with self.lock:
+            if self.en_cours():
+                return "Une partie est déjà en cours."
+            cfg = snap["cfg"]
+            self.cfg, self.profils_partie = cfg, cfg.get("_profils", [])
+            self.plan, self.index, self.tour = list(snap["plan"]), int(snap["index"]), int(snap.get("tour", 0))
+            self.seq = max(self.seq, int(snap.get("seq", 0))) + 1
+            presents = {pid: j for pid, j in self.joueurs.items()}       # déjà revenus avant la reprise
+            par_h = {empreinte(pid): pid for pid in presents}
+            self.joueurs = {}
+            for d in snap["joueurs"]:
+                pid = par_h.get(d["h"], d["h"])
+                j = presents.get(pid) or Joueur(pid, d["nom"], d["couleur"], d.get("avatar", ""))
+                j.id, j.nom, j.couleur, j.avatar = d["id"], d["nom"], d["couleur"], d.get("avatar", "")
+                j.profil, j.profil_choix = d.get("profil", ""), d.get("profil_choix")
+                j.score, j.serie = int(d.get("score", 0)), int(d.get("serie", 0))
+                j.ip_appli = getattr(j, "ip_appli", "") or d.get("ip", "")
+                j.reset()
+                self.joueurs[pid] = j
+            for pid, j in presents.items():                               # nouveaux venus : gardés, à zéro
+                self.joueurs.setdefault(pid, j)
+            r_h = lambda k: par_h.get(k, k)                                # noqa: E731
+            self.recap = [dict(r, gains={r_h(p): g for p, g in r["gains"].items()}, trouves=[r_h(p) for p in r["trouves"]],
+                               premier=r_h(r["premier"]) if r.get("premier") else None) for r in snap.get("recap", [])]
+            self.series_max = {r_h(p): v for p, v in snap.get("series_max", {}).items()}
+            self.deja = {k: {_tuples(x) for x in v} for k, v in snap.get("deja", {}).items()}
+            self.signatures = {_tuples(x) for x in snap.get("signatures", [])}
+            self.joues = {_tuples(x) for x in snap.get("joues", [])}
+            self.reussites = list(snap.get("reussites", []))
+            self.recap_sauve, self.succes_fin = False, {}
+            self.utilises, self._entrees_saga, self.futurs = {}, {}, {}
+            self.api = TMDB(cfg["api_key"], cfg.get("session_id", ""), cfg.get("account_id", 0))
+            self.pause, self.erreur, self.info = False, "", ""
+            self._vider_manche()
+            self.phase = "chargement"
+            self.message = f"Reprise de la partie : manche {self.index + 1} sur {len(self.plan)}…"
+            self.reprise_depuis = time.monotonic()
+            jeux = set(self.plan)
+            self.attente = ("pools", self.fabrique.submit(charger_pools, self.api, cfg, jeux, self.profils_partie))
+            self.version += 1
+            return ""
+
+    def reclamer(self, pid):
+        """Un téléphone revient après une reprise : son joueur sauvegardé (rangé sous l'empreinte de son pid)
+        redevient le sien."""
+        if not pid or pid in self.joueurs:
+            return
+        with self.lock:
+            h = empreinte(pid)
+            if h not in self.joueurs:
+                return
+            j = self.joueurs.pop(h)
+            j.pid = pid
+            self.joueurs[pid] = j
+            for r in self.recap:
+                if h in r["gains"]:
+                    r["gains"][pid] = r["gains"].pop(h)
+                r["trouves"] = [pid if p == h else p for p in r["trouves"]]
+                if r.get("premier") == h:
+                    r["premier"] = pid
+            if h in self.series_max:
+                self.series_max[pid] = self.series_max.pop(h)
+            for dico in (getattr(self, "scores_debut", {}), getattr(self, "series_debut", {})):
+                if h in dico:
+                    dico[pid] = dico.pop(h)
+            if self.moteur and hasattr(self.moteur, "renommer"):
+                self.moteur.renommer(h, pid)
 
     # ============ commandes de l'hôte ============
     def rejouer(self):
@@ -1002,6 +1132,7 @@ class Partie:
             if self.phase == "chargement" and PREPARATEUR.actif():
                 v["message"] = (v.get("message") or "") + "\nAffiches vidées : " + PREPARATEUR.etat()["message"]
             v["erreur"] = self.erreur
+            v["nb_images"] = len(self.manche.get("images") or []) if self.manche else 0
             v["audio"] = bool(self.manche and self.manche.get("audio") and self.phase in ("manche", "reponse"))
             if self.phase == "fin":
                 v["recap"] = self.recap_fin()

@@ -60,7 +60,7 @@ arrête le programme.
 | jacques     | Jacques Renault's Card Table                 | Le brelan                |
 | sarah       | Sarah Palmer's Visions                       | La vision                |
 | jean        | Jean Renault's Blackjack                     | Le blackjack             |
-| woodsman    | The Woodsman's Light                         | Le dessin de lumière     |
+| woodsman    | The Woodsman's Light                         | Got a light?             |
 | mitchum     | The Mitchum Brothers' Contract               | Le contrat               |
 | mrc         | Mr. C's Doppelganger                         | Le double                |
 | desmond     | Desmond's Code                               | Le code                  |
@@ -188,18 +188,15 @@ Deux fonctions globales du même nom dans les scripts d'une page sont interdites
 
 ## Version 15 (novembre 2026)
 
-Images des cartes du menu (web/persos/<perso>.jpg, 900 × 474) et avatars (web/persos/avatars/<perso>.jpg, 256 × 256)
-fournies par Etienne pour les jeux des versions 12 et 13 : Lana Budding, Bernard Renault, Mrs. Tremond, Bushnell
-Mullins (The Return), le Dr Hayward, Gersten Hayward, Naido, Tammy Preston. Recadrées sur le visage, sans filtre (le
-menu applique déjà le noir et blanc des cartes non choisies). Restent sans image : Desmond, Dick Tremayne, le maire
-Milford (emblème affiché à la place).
-
-## Version 16 (novembre 2026)
-
-Le Woodsman change de jeu (demande d'Etienne : « Got a light? » était raté) : « Le dessin de lumière », façon
-Pictionary. Chacun son tour dessine sur son téléphone un film connu (idées de choses à dessiner tirées du lexique de
-Major Briggs) ; sur l'écran, le trait s'allume à sa couleur puis s'éteint (réglage woodsman_vie, 2,5 s) ; les autres
-tapent le titre (essais illimités). Plus tôt = plus de points, bonus au premier, points au dessinateur par joueur qui
-trouve. Le titre « The Woodsman's Light » ne change pas. Ne pas revenir à la lampe-téléphone.
-Mr. C (le double) : différences plus visibles sans sauter aux yeux : zones plus grandes, retouches plus fortes, écart
-moyen avec l'original vérifié entre un minimum et un maximum (SEUIL, PLAFOND dans jeux/mrc.py).
+Validés par Etienne (QCM) : succès, stats de films, préchargement, reprise après plantage, et « si l'ordinateur hôte
+s'éteint, la partie continue ». Aucun nouveau jeu choisi ce tour-ci (proposés sans préférence : Richard Horne façon
+Skull, Eckhardt façon For Sale, Ronette façon Qui est-ce ?, Frank Truman façon Sushi Go, Ray Monroe le tapissage,
+Becky Burnett tri express, Bill Hastings façon Taboo, Ike façon Perudo). Refusés : manche double, menu au style du
+logo, tests avant publication, signaler un bug.
+Reprise : Partie.instantane() / restaurer() / reclamer(pid). Les pids n'y sont qu'en empreinte (h:…) ; un joueur
+revient en présentant son pid. La sauvegarde contient les réglages de la partie (clé TMDB comprise) : elle n'est
+servie (/api/reprise) qu'aux téléphones de l'application de la partie (reconnus à leur adresse et à leur
+User-Agent « TwinPicksApp »). Relais : http://<ip du téléphone>:config.PORT. Après une reprise, la première manche
+attend jusqu'à 12 s que les téléphones reviennent.
+Le CSS des écrans de jeu utilise beaucoup de préfixes courts (pa-, pl-…) : nouveaux préfixes = vérifier qu'ils sont
+libres (le palmarès utilise palv-).

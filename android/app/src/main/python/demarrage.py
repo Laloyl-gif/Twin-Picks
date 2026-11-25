@@ -121,11 +121,93 @@ def demarrer(base, depot, libs=""):
     return ouvrir_partie()
 
 
-def ouvrir_partie():
+# ---------- l'hôte s'éteint : la partie continue sur un téléphone ----------
+_VEILLE = {"url": "", "snap": None, "v": "", "echecs": 0, "bascule": "", "actif": False}
+
+
+def _mon_ip():
+    import socket
+    try:
+        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        s.connect(("10.255.255.255", 1))
+        ip = s.getsockname()[0]
+        s.close()
+        return ip
+    except OSError:
+        return ""
+
+
+def veiller(url):
+    """Pendant qu'on joue dans la partie d'un autre appareil : on garde sa dernière sauvegarde. S'il ne répond plus,
+    on cherche si un autre téléphone a déjà repris la partie (même code) ; sinon, chacun son tour (ordre d'arrivée
+    dans la partie), ce téléphone la reprend lui-même. bascule() dit alors à l'application où aller."""
+    import threading
+    import time
+    if _VEILLE["actif"] or not url or "127.0.0.1" in url:
+        return
+    _VEILLE.update(url=url.rstrip("/"), actif=True, snap=None, v="", echecs=0, bascule="")
+
+    def boucle():
+        while _VEILLE["actif"] and not _VEILLE["bascule"]:
+            time.sleep(4)
+            try:
+                d = json.loads(_lire(f"{_VEILLE['url']}/api/reprise?v={_VEILLE['v']}", 4))
+                _VEILLE["echecs"] = 0
+                if d.get("snap"):
+                    _VEILLE["snap"], _VEILLE["v"] = d["snap"], d.get("v", "")
+                elif d.get("aucune"):
+                    _VEILLE["snap"], _VEILLE["v"] = None, ""
+                continue
+            except Exception:  # noqa: BLE001  (l'hôte ne répond plus… ou un raté du Wi-Fi)
+                _VEILLE["echecs"] += 1
+            snap = _VEILLE["snap"]
+            if _VEILLE["echecs"] < 3 or not snap:
+                continue
+            try:
+                _relayer(snap)
+            except Exception:  # noqa: BLE001
+                pass
+    threading.Thread(target=boucle, daemon=True).start()
+
+
+def _relayer(snap):
+    import time
+    import reseau_local
+    moi = f"http://{_mon_ip()}:"
+    relais = [r for r in snap.get("relais", [])]
+    rang = next((i for i, r in enumerate(relais) if r.startswith(moi)), len(relais))
+    fin = time.time() + 6 * rang + 1
+    while True:                                   # quelqu'un a-t-il déjà repris la partie (même code) ?
+        for p in reseau_local.chercher(1.5):
+            if p.get("code") == snap.get("code"):
+                _VEILLE["bascule"] = f"http://{p['ip']}:{p['port']}/"
+                return
+        if time.time() >= fin:
+            break
+    try:                                          # l'ancien hôte est revenu ?
+        _lire(f"{_VEILLE['url']}/api/salle", 3)
+        _VEILLE["echecs"] = 0
+        return
+    except Exception:  # noqa: BLE001
+        pass
+    _VEILLE["bascule"] = ouvrir_partie(snap)
+
+
+def bascule():
+    """L'adresse où l'application doit aller (la partie a changé d'hôte), une seule fois ; sinon « »."""
+    b = _VEILLE["bascule"]
+    if b:
+        _VEILLE["bascule"], _VEILLE["actif"] = "", False
+    return b or ""
+
+
+def ouvrir_partie(reprise=None):
     global _SERVEUR
-    _dire("Ouverture d'une nouvelle partie…")
+    if _SERVEUR:
+        return _SERVEUR
+    _dire("Reprise de la partie…" if reprise else "Ouverture d'une nouvelle partie…")
     import main
-    res = main.demarrer_serveur("telephone")
+    res = main.demarrer_serveur("telephone", reprise)
     if res is None:
         raise RuntimeError("Impossible d'ouvrir la partie (port réseau occupé).")
     app, port, _ = res

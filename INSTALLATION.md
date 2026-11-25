@@ -78,6 +78,13 @@ ouvert la partie) peut changer les jeux et les réglages : il a un bouton rouge 
 - Quand l'application elle-même change (nouvelle icône…), GitHub la reconstruit ; au lancement suivant, elle propose
   « Télécharger » : ouvrez le fichier, elle s'installe par-dessus l'ancienne (réglages et profils gardés).
 
+## Si l'ordinateur s'éteint
+
+- La partie est sauvegardée en continu. Au relancement, le menu propose **Reprendre** (ou **Oublier**).
+- S'il y a au moins un téléphone avec l'**application** dans la partie, inutile d'attendre : quand l'hôte ne répond
+  plus, ce téléphone reprend la partie tout seul (quelques secondes) et en devient l'administrateur ; tous les
+  téléphones le suivent et gardent leurs points. La manche en cours recommence.
+
 ## Icônes
 
 - **Ordinateur** : rien à faire. Au lancement, si l'icône du jeu a changé, le raccourci du bureau est remis sur la
