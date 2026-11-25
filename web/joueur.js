@@ -325,7 +325,6 @@ $('#zone').onclick = ev => {
   if (msv && !msv.disabled) return action('/api/jouer', {pid, vote: Number(msv.dataset.msv)});
   const ctc = ev.target.closest('[data-ctc]');
   if (ctc && !ctc.disabled) return action('/api/jouer', {pid, choix: Number(ctc.dataset.ctc)});
-  if (ev.target.closest('#b-cest-lui')) return action('/api/jouer', {pid, cest_lui: 1});
   const ach = ev.target.closest('[data-acheter]');
   if (ach) return action('/api/jouer', {pid, acheter: ach.dataset.acheter});
   const mi = ev.target.closest('[data-mise]');
@@ -905,16 +904,16 @@ function vueZone() {
     return ['tm' + JSON.stringify([S.seq, (mo.mes || []).length, mo.trouve]), (mo.trouve ? message(cooper(true, 'grand') + '<span class="ok">Trouvé !</span>') :
       `<p class="fo-aide">Proposez un film : ${(mo.mes || []).length}/${mo.maxi} essais</p>`) + `<ul class="tm-fil tel">${mes}</ul>`];
   }
-  if (S.type === 'lumiere') {                       // Woodsman : la lumière au bout du doigt
+  if (S.type === 'dessin') {                        // Woodsman : le dessin de lumière
     const mo = S.moteur || {};
-    if (S.phase === 'reponse') return ['lu' + S.seq + JSON.stringify(S.classement), banniere(mo.trouve ? 'ok' : 'ko',
-      mo.trouve ? 'C\'était lui !' : 'Raté', `<b>${esc(S.solution)}</b>`) + gainTel()];
-    const notes = (mo.notes || []).map(n => `<li>${esc(n.texte)}</li>`).join('');
-    if (mo.fini) return ['lu-f' + S.seq + mo.trouve, message(mo.trouve ? cooper(true, 'grand') + '<span class="ok">Trouvé !</span>'
-      : '<span class="doux">Hors jeu pour cette manche</span>')];
-    return ['lu' + JSON.stringify([S.seq, mo.actif, notes]), padLumiereHTML(mo) +
-      `<button id="b-cest-lui" class="primaire large">C'est lui !</button>` +
-      (notes ? `<ul class="lu-notes">${notes}</ul>` : '<p class="centre doux">Cherchez les indices avec votre lumière</p>')];
+    if (S.phase === 'reponse') {
+      const r = (mo.resultats || []).find(x => x.id === m.id) || {};
+      const titre = r.dessine ? (r.gain ? `Dessin réussi ! +${r.gain}` : 'Personne n\'a trouvé') : r.trouve ? `Trouvé ! +${r.gain}` : 'Pas trouvé';
+      return ['de' + S.seq + JSON.stringify(S.classement), banniere(r.gain > 0 ? 'ok' : 'ko', titre, `<b>${esc(S.solution)}</b>`) + gainTel()];
+    }
+    if (mo.moi_dessine) return ['de-pad' + JSON.stringify([S.seq, mo.film, mo.n_trouves, mo.n_devineurs]), padDessinHTML(mo)];
+    if (mo.trouve) return ['de-ok' + S.seq, message(cooper(true, 'grand') + '<span class="ok">Trouvé !</span>')];
+    return ['saisie', null];
   }
   if (S.type === 'focus') {                         // Hank : les dominos (façon Focus)
     const mo = S.moteur || {}, src = i => `/img/${S.seq}/${i}`;
@@ -984,7 +983,7 @@ function rendre() {
   }
   document.body.dataset.jeu = enManche ? (S.jeu || '') : '';                      // décor du jeu (style.css)
   GRAINE_DECOR = S.seq || 0;
-  const vis = $('#visuel'), avecVisuel = enManche && !['complice', 'choix', 'bingo', 'ordre', 'double', 'duels', 'brelan', 'paires', 'focus', 'lumiere', 'contrat', 'differences', 'code', 'blackjack', 'pendule', 'enveloppes', 'pluie', 'mensonges', 'tableau', 'poker', 'diapason', 'entremots', 'enquete'].includes(S.type);
+  const vis = $('#visuel'), avecVisuel = enManche && !['complice', 'choix', 'bingo', 'ordre', 'double', 'duels', 'brelan', 'paires', 'focus', 'dessin', 'contrat', 'differences', 'code', 'blackjack', 'pendule', 'enveloppes', 'pluie', 'mensonges', 'tableau', 'poker', 'diapason', 'entremots', 'enquete'].includes(S.type);
   vis.hidden = !avecVisuel;
   if (avecVisuel) {
     maj(vis, `${S.phase}|${S.seq}|${S.revelation}|${JSON.stringify(S.etat)}|${S.vue === 'cassette' ? S.pause || !!S.main : ''}|${(S.moteur || {}).contrainte || ''}|${S.type === 'duree' || S.type === 'plusieurs' || S.type === 'rancon' ? JSON.stringify(S.moteur) : ''}`,
@@ -1044,22 +1043,69 @@ async function boucle() {
 }
 boucle();
 
-/* Woodsman : le pavé. La position part au serveur au plus toutes les 120 ms (sans attendre la réponse). */
-let luEnvoi = 0, luAttente = null;
-document.addEventListener('pointerdown', ev => { if (ev.target.closest('#lu-pad')) { ev.target.closest('#lu-pad').setPointerCapture(ev.pointerId); luBouge(ev); } });
-document.addEventListener('pointermove', ev => { if (ev.buttons && ev.target.closest && ev.target.closest('#lu-pad')) luBouge(ev); });
-function luBouge(ev) {
-  const pad = $('#lu-pad');
+/* Woodsman : le pavé de dessin. Le trait part au serveur par petits morceaux (au plus toutes les 100 ms, sans attendre
+   la réponse) ; sur le téléphone aussi, il s'éteint au bout de quelques secondes, comme sur l'écran. */
+const DESSIN = {tampon: [], dernier: null, nouveau: false, cur: null, local: [], anim: false};
+function deEnvoyer() {
+  if (!DESSIN.tampon.length) return;
+  const pts = (!DESSIN.nouveau && DESSIN.dernier ? [DESSIN.dernier] : []).concat(DESSIN.tampon);
+  const nouveau = DESSIN.nouveau;
+  DESSIN.dernier = DESSIN.tampon[DESSIN.tampon.length - 1];
+  DESSIN.tampon = []; DESSIN.nouveau = false;
+  post('/api/jouer', {pid, trait: pts, nouveau}).catch(() => {});
+}
+setInterval(deEnvoyer, 100);
+function deTrace(ev, pad) {
+  const b = pad.getBoundingClientRect();
+  const p = [Math.min(1, Math.max(0, (ev.clientX - b.left) / b.width)), Math.min(1, Math.max(0, (ev.clientY - b.top) / b.height))];
+  const c = DESSIN.cur;
+  if (c && Math.hypot(p[0] - c[0], (p[1] - c[1]) * 9 / 16) < 0.004) return;     // trop proche : inutile
+  DESSIN.local.push({a: c || p, b: p, t: performance.now()});
+  DESSIN.cur = p;
+  DESSIN.tampon.push([+p[0].toFixed(4), +p[1].toFixed(4)]);
+  if (DESSIN.tampon.length >= 50) deEnvoyer();
+  deAnimer();
+}
+function deAnimer() {
+  if (DESSIN.anim) return;
+  DESSIN.anim = true;
+  const tour = () => {
+    const pad = $('#de-pad'), cv = pad && pad.querySelector('canvas');
+    if (!cv) { DESSIN.anim = false; DESSIN.local = []; return; }
+    const r = window.devicePixelRatio || 1, w = pad.clientWidth, h = pad.clientHeight;
+    if (cv.width !== Math.round(w * r) || cv.height !== Math.round(h * r)) { cv.width = Math.round(w * r); cv.height = Math.round(h * r); }
+    const g = cv.getContext('2d'), vie = ((S && S.moteur && S.moteur.vie) || 2.5) * 1000, now = performance.now();
+    DESSIN.local = DESSIN.local.filter(s => now - s.t < vie);
+    g.setTransform(r, 0, 0, r, 0, 0);
+    g.clearRect(0, 0, w, h);
+    g.lineCap = g.lineJoin = 'round';
+    g.strokeStyle = (S && S.moi && S.moi.couleur) || maCouleur || '#ffd24a';
+    g.shadowColor = g.strokeStyle; g.shadowBlur = 8;
+    g.lineWidth = Math.max(3, w * 0.012);
+    for (const s of DESSIN.local) {
+      g.globalAlpha = Math.max(0, 1 - (now - s.t) / vie);
+      g.beginPath(); g.moveTo(s.a[0] * w, s.a[1] * h); g.lineTo(s.b[0] * w + (s.a === s.b ? 0.1 : 0), s.b[1] * h); g.stroke();
+    }
+    if (DESSIN.local.length) requestAnimationFrame(tour); else { DESSIN.anim = false; g.clearRect(0, 0, w, h); }
+  };
+  requestAnimationFrame(tour);
+}
+document.addEventListener('pointerdown', ev => {
+  const pad = ev.target.closest && ev.target.closest('#de-pad');
   if (!pad) return;
   ev.preventDefault();
-  const b = pad.getBoundingClientRect();
-  const x = Math.min(1, Math.max(0, (ev.clientX - b.left) / b.width)), y = Math.min(1, Math.max(0, (ev.clientY - b.top) / b.height));
-  const moi = pad.querySelector('.lu-moi');
-  if (moi) { moi.style.left = x * 100 + '%'; moi.style.top = y * 100 + '%'; }
-  const envoyer = () => { luEnvoi = Date.now(); luAttente = null; post('/api/jouer', {pid, pos: [x, y]}).catch(() => {}); };
-  clearTimeout(luAttente);
-  if (Date.now() - luEnvoi > 120) envoyer(); else luAttente = setTimeout(envoyer, 120);
-}
+  pad.setPointerCapture(ev.pointerId);
+  deEnvoyer();                                   // la fin du trait précédent part d'abord
+  DESSIN.nouveau = true; DESSIN.dernier = null; DESSIN.cur = null;
+  deTrace(ev, pad);
+});
+document.addEventListener('pointermove', ev => {
+  const pad = ev.buttons && ev.target.closest && ev.target.closest('#de-pad');
+  if (!pad) return;
+  ev.preventDefault();
+  for (const e of (ev.getCoalescedEvents ? ev.getCoalescedEvents() : [ev])) deTrace(e, pad);
+});
+document.addEventListener('pointerup', () => { DESSIN.cur = null; });
 
 /* Bushnell : toucher une affiche qui tombe (au contact du doigt, sans attendre le relâcher) */
 document.addEventListener('pointerdown', ev => {

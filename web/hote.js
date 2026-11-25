@@ -696,7 +696,7 @@ function bandeau(e) {
   }
   if (e.phase === 'reponse' && ['note', 'chrono', 'bingo'].includes(e.type)) return '';
   if (e.phase === 'reponse' && e.type === 'ordre') return `<div class="detail">${esc(e.detail || '')}</div>`;
-  if (e.phase === 'reponse' && ['plusieurs', 'paire', 'brelan', 'paires', 'focus', 'rancon', 'lumiere', 'contrat', 'differences', 'code', 'duels', 'double', 'duree', 'blackjack', 'pendule', 'enveloppes', 'pluie', 'mensonges', 'tableau', 'poker', 'diapason', 'entremots', 'enquete'].includes(e.type)) {
+  if (e.phase === 'reponse' && ['plusieurs', 'paire', 'brelan', 'paires', 'focus', 'rancon', 'dessin', 'contrat', 'differences', 'code', 'duels', 'double', 'duree', 'blackjack', 'pendule', 'enveloppes', 'pluie', 'mensonges', 'tableau', 'poker', 'diapason', 'entremots', 'enquete'].includes(e.type)) {
     // les résultats de chacun sont déjà sous le jeu : ici, la solution seule
     return `<div class="solution">${esc(e.solution)}</div>` + (e.detail ? `<div class="detail">${esc(e.detail)}</div>` : '');
   }
@@ -853,10 +853,11 @@ function moteurHote(e) {
     return d + `<div class="frise-res">${(mo.resultats || []).map(r => puce(r, ` ${r.n}/${mo.n}` + (r.gain ? ` <em>${r.gain > 0 ? '+' : ''}${r.gain}</em>` : ''),
       r.n === mo.n ? 'juste' : r.n ? '' : 'faux')).join('')}</div>`;
   }
-  if (e.type === 'lumiere') {                            // Woodsman : got a light?
-    const d = lumiereHTML(e, src);
-    if (!rev) return d;
-    return d + `<div class="frise-res">${(mo.trouves || []).map(r => puce(r, '', 'juste')).join('') || '<span class="doux">Personne</span>'}</div>`;
+  if (e.type === 'dessin') {                             // Woodsman : le dessin de lumière
+    const d = dessinHTML(e, src);
+    if (!rev) return d + `<div class="frise-res">${(mo.trouves || []).map(r => puce(r, '', 'juste')).join('')}</div>`;
+    return d + `<div class="frise-res">${(mo.resultats || []).map(r => puce(r, (r.dessine ? ' (dessin)' : '') +
+      (r.gain ? ` <em>+${r.gain}</em>` : ''), r.gain > 0 ? 'juste' : 'faux')).join('')}</div>`;
   }
   if (e.type === 'focus') {                              // Hank : les dominos (façon Focus)
     const d = focusHTML(e, src);
@@ -991,7 +992,7 @@ async function boucle() {
     gererSon(e);
     if (CFG && typeof majMusique === 'function') majMusique(e);
   } catch (err) { console.error(err); }
-  setTimeout(boucle, 400);
+  setTimeout(boucle, E && E.type === 'dessin' && E.phase === 'manche' ? 150 : 400);   // le dessin : plus fluide
 }
 if (!K) interdit(); else { chargerConfig(); boucle(); }
 

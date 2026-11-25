@@ -239,7 +239,7 @@ function visuelHTML(v, opt = {}) {
   if (v.vue === 'brelan') return brelanHTML(v, src, opt);
   if (v.vue === 'paires') return pairesHTML(v, src, opt);
   if (v.vue === 'focus') return focusHTML(v, src, opt);
-  if (v.vue === 'lumiere') return lumiereHTML(v, src);
+  if (v.vue === 'dessin') return dessinHTML(v, src);
   if (v.vue === 'contrat') return contratHTML(v, opt);
   if (v.vue === 'double') return jumeauxHTML(v, src, opt);
   if (v.vue === 'code') return codeHTML(v, src, opt);

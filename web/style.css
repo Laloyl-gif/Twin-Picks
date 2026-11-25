@@ -2409,27 +2409,28 @@ body.joueur .rc-titre b{font-size:1.4em}
   box-shadow:inset 0 0 0 2px #ffd24a77}
 .mk-prix{color:var(--doux);font-weight:700}
 
-/* Woodsman : got a light? L'écran dans le noir, les lumières des joueurs */
-.lumiere{display:flex;flex-direction:column;align-items:center;gap:8px;width:100%}
-.lu-plateau{position:relative;width:min(100%,calc(66vh * 16 / 9));aspect-ratio:16/9;background:#040405;border-radius:10px;overflow:hidden;
-  container-type:inline-size;box-shadow:inset 0 0 80px #000,0 0 0 1px #ffffff10}
-.lu-scene{position:absolute;inset:0}
-.lu-aff{position:absolute;object-fit:cover;rotate:var(--r);border-radius:3px;box-shadow:0 .4cqw 1cqw #000c}
-.lu-aff.bon{outline:.5cqw solid var(--ok);z-index:3;scale:1.25}
-.lu-aff.faux{outline:.4cqw solid var(--err)}
-.lu-note{position:absolute;translate:-50% -50%;rotate:var(--r);max-width:15cqw;padding:.8cqw 1.1cqw;background:#efe6cf;color:#1d1b1a;
-  font:700 1.55cqw/1.2 "Segoe Print","Bradley Hand","Comic Sans MS",cursive;text-align:center;box-shadow:0 .5cqw 1.2cqw #000c;z-index:2}
-.lu-note.fixe{z-index:4;box-shadow:0 0 0 .25cqw #ffd24a,0 0 2cqw #ffd24a66}
-.lu-halo{position:absolute;width:var(--d);height:var(--d);translate:-50% -50%;border-radius:50%;pointer-events:none;
-  box-shadow:0 0 0 .25cqw var(--c),0 0 3cqw var(--c);opacity:.7;transition:left .35s linear,top .35s linear;z-index:5}
-.lu-halo b{position:absolute;left:50%;top:-1.6cqw;translate:-50% 0;font:700 1.1cqw var(--sans);color:var(--c);white-space:nowrap}
-.lu-pad{position:relative;width:100%;aspect-ratio:16/9;border-radius:14px;background:radial-gradient(circle at 50% 50%,#1a1820,#060608);
-  box-shadow:inset 0 0 0 1px #ffffff1a;touch-action:none;overflow:hidden;display:grid;place-items:end center}
-.lu-pad span{padding:8px;font-size:.8em;color:#ffffff55;pointer-events:none}
-.lu-moi{position:absolute;width:44px;height:44px;translate:-50% -50%;border-radius:50%;pointer-events:none;
-  background:radial-gradient(circle,#fff9 0,var(--moi) 40%,transparent 72%)}
-#b-cest-lui{margin:10px 0}
-.lu-notes{margin:6px 0 0;padding-left:18px;color:#f1e3c4;font:600 .95em/1.4 var(--sans)}
+/* Woodsman : le dessin de lumière. Pas de tableau dessiné : le trait s'allume dans le noir de l'écran, puis s'éteint */
+.dessin{display:flex;flex-direction:column;align-items:center;gap:8px;width:100%}
+.de-tableau{position:relative;width:min(100%,calc(66vh * 16 / 9));aspect-ratio:16/9;container-type:inline-size}
+.de-tableau svg{position:absolute;inset:0;width:100%;height:100%;overflow:visible;fill:none;stroke:var(--c);stroke-width:.9;
+  stroke-linecap:round;stroke-linejoin:round;filter:drop-shadow(0 0 .35cqw var(--c)) drop-shadow(0 0 1.4cqw var(--c))}
+.de-tableau svg circle{fill:var(--c);stroke:none}
+.de-tableau polyline,.de-tableau circle{animation-name:de-fondu;animation-timing-function:ease-in;animation-fill-mode:forwards}
+@keyframes de-fondu{from{opacity:1}to{opacity:0}}
+.de-affiche{position:absolute;left:50%;top:50%;translate:-50% -50%;height:96%;border-radius:6px;box-shadow:0 0 4cqw #000}
+.de-qui{position:absolute;left:0;top:0;margin:0;font:600 1.6cqw var(--sans);color:var(--doux)}
+.de-radio{position:absolute;left:50%;bottom:0;translate:-50% 0;margin:0;width:max-content;max-width:80%;text-align:center;
+  font:italic 1.5cqw var(--serif);color:#f1e3c4aa;letter-spacing:.04em}
+.de-carte{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 6px;margin:0 0 8px}
+.de-carte small{width:100%;color:var(--doux);text-transform:uppercase;letter-spacing:.1em;font-size:.72em}
+.de-carte b{font:700 1.25em var(--serif);color:#f1e3c4}
+.de-idees{width:100%;display:flex;flex-wrap:wrap;gap:6px;margin:6px 0 0;padding:0;list-style:none}
+.de-idees li{padding:3px 9px;border-radius:99px;background:#ffd24a1f;color:#ffd24a;font:600 .85em var(--sans)}
+.de-resume{width:100%;margin:6px 0 0;font-size:.85em;color:var(--doux)}
+.de-pad{position:relative;width:100%;aspect-ratio:16/9;border-radius:14px;background:#060608;box-shadow:inset 0 0 0 1px #ffffff1a;
+  touch-action:none;overflow:hidden;display:grid;place-items:end center;user-select:none;-webkit-user-select:none}
+.de-pad canvas{position:absolute;inset:0;width:100%;height:100%}
+.de-pad span{position:relative;padding:8px;font-size:.78em;color:#ffffff40;pointer-events:none}
 
 /* Mitchum : le contrat qui fait le tour de la table */
 .contrat{display:flex;align-items:center;justify-content:center;gap:24px;width:min(1200px,100%)}

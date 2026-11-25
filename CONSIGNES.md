@@ -60,7 +60,7 @@ arrête le programme.
 | jacques     | Jacques Renault's Card Table                 | Le brelan                |
 | sarah       | Sarah Palmer's Visions                       | La vision                |
 | jean        | Jean Renault's Blackjack                     | Le blackjack             |
-| woodsman    | The Woodsman's Light                         | Got a light?             |
+| woodsman    | The Woodsman's Light                         | Le dessin de lumière     |
 | mitchum     | The Mitchum Brothers' Contract               | Le contrat               |
 | mrc         | Mr. C's Doppelganger                         | Le double                |
 | desmond     | Desmond's Code                               | Le code                  |
@@ -193,3 +193,13 @@ fournies par Etienne pour les jeux des versions 12 et 13 : Lana Budding, Bernard
 Mullins (The Return), le Dr Hayward, Gersten Hayward, Naido, Tammy Preston. Recadrées sur le visage, sans filtre (le
 menu applique déjà le noir et blanc des cartes non choisies). Restent sans image : Desmond, Dick Tremayne, le maire
 Milford (emblème affiché à la place).
+
+## Version 16 (novembre 2026)
+
+Le Woodsman change de jeu (demande d'Etienne : « Got a light? » était raté) : « Le dessin de lumière », façon
+Pictionary. Chacun son tour dessine sur son téléphone un film connu (idées de choses à dessiner tirées du lexique de
+Major Briggs) ; sur l'écran, le trait s'allume à sa couleur puis s'éteint (réglage woodsman_vie, 2,5 s) ; les autres
+tapent le titre (essais illimités). Plus tôt = plus de points, bonus au premier, points au dessinateur par joueur qui
+trouve. Le titre « The Woodsman's Light » ne change pas. Ne pas revenir à la lampe-téléphone.
+Mr. C (le double) : différences plus visibles sans sauter aux yeux : zones plus grandes, retouches plus fortes, écart
+moyen avec l'original vérifié entre un minimum et un maximum (SEUIL, PLAFOND dans jeux/mrc.py).

@@ -1,188 +1,161 @@
-"""The Woodsman's Light (Got a light?) : l'écran de la partie est plongé dans le noir. Une quarantaine d'affiches y
-sont éparpillées, et quatre indices écrits (en gros, sur des bouts de papier) sont cachés parmi elles. Chacun promène
-une lumière avec son téléphone (le doigt glisse sur un pavé) : son rond de lumière, à sa couleur, éclaire l'écran, et
-tout le monde profite de la lumière des autres. Un indice éclairé reste allumé pour tous. Les ronds grandissent peu à
-peu. Quand votre lumière est sur le film décrit par les indices : « C'est lui ! ». Un seul essai : un mauvais film,
-et vous êtes hors jeu pour la manche. Plus tôt = plus de points ; le premier a un bonus.
+"""The Woodsman's Light (Le dessin de lumière), façon Pictionary : à chaque manche, un joueur est le Woodsman (chacun
+son tour). Son téléphone lui montre un film connu et quelques idées de choses à dessiner (objets, lieux, animaux tirés
+des mots-clés et du résumé, comme chez Major Briggs). Il dessine du bout du doigt : sur l'écran de la partie, dans le
+noir, son trait s'allume comme une lumière… et s'éteint au bout de quelques secondes (réglable). Il faut donc
+redessiner sans cesse : pas de lettres, pas de chiffres, juste la lumière.
+
+Les autres tapent le titre sur leur téléphone (autant d'essais qu'ils veulent). Plus tôt = plus de points, bonus pour
+le premier ; le Woodsman marque pour chaque joueur qui trouve. La manche s'arrête quand tout le monde a trouvé.
 """
-import math
 import random
+import time
 
-from PIL import ImageOps
-
-import sagas
-from tmdb import cle_film, details_film, fiche
+from tmdb import cle_film, details_film
 from visuels import en_jpeg
-from .commun import affiche, tirer
+from texte import correspond, proche
+from .commun import affiche, manche_titre
 
-COLS, ROWS = 9, 5
-LARGEUR = 0.064                 # largeur d'une affiche (part de la largeur de l'écran, format 16/9)
-RATIO = 16 / 9
+MAX_POINTS = 60                 # points par envoi (le téléphone envoie quelques fois par seconde)
+CATS_DESSIN = ("objet", "animal", "lieu", "nature", "reel", "personnage")
 
 
-def indices(api, film, d, fi):
-    """Quatre indices sur le film, du plus vague au plus précis."""
-    out = []
-    an = d.get("annee") or ""
-    if d.get("genres") and an:
-        dec = f"des années {an[2]}0" if an[:2] == "19" else f"des années {an[:3]}0"
-        out.append(f"Un film {dec}, genre : {d['genres'][0].lower()}")
-    elif d.get("genres"):
-        out.append(f"Genre : {', '.join(g.lower() for g in d['genres'][:2])}")
-    if fi.get("pays"):
-        out.append(f"Produit en partie par : {fi['pays'][0]}")
-    elif fi.get("duree"):
-        out.append(f"Il dure {fi['duree'] // 60} h {fi['duree'] % 60:02d}")
-    acteurs = fi.get("acteurs", [])
-    if acteurs:
-        out.append(f"Avec {acteurs[min(1, len(acteurs) - 1)]['nom']}")
-    if fi.get("realisateurs"):
-        out.append(f"Réalisé par {fi['realisateurs'][0]['nom']}")
-    elif acteurs:
-        out.append(f"Avec {acteurs[0]['nom']}")
-    return out[:4]
+def idees(api, film, d, n=4):
+    """Quelques choses concrètes à dessiner (lexique de Major Briggs) ; [] si rien de sûr."""
+    try:
+        from . import briggs
+        elts = briggs.elements(api, film, d)
+    except Exception:  # noqa: BLE001
+        return []
+    concrets = [lib for _, lib, cat in elts if cat in CATS_DESSIN]
+    autres = [lib for _, lib, cat in elts if cat == "evenement"]
+    return (concrets + autres)[:n]
 
 
 def construire(api, cfg, pool, deja):
-    films = [f for f in pool if f.get("poster_path")]
-    for _ in range(12):
-        cible = tirer(films, deja)
-        d = details_film(api, cible)
-        try:
-            fi = fiche(api, cible)
-        except Exception:  # noqa: BLE001
-            continue
-        ind = indices(api, cible, d, fi)
-        if len(ind) >= 3:
-            break
-    else:
-        raise RuntimeError("Got a light? : pas assez d'informations sur les films des listes choisies.")
-    if cfg.get("indices_recompenses", True):              # une note de plus : ses récompenses (Wikidata)
-        try:
-            import recompenses
-            r = recompenses.indice(api, cible)
-        except Exception:  # noqa: BLE001
-            r = ""
-        if r:
-            ind = ind[:3] + [r] + ind[3:]
-    autres = [f for f in films if f["id"] != cible["id"] and not sagas.meme_univers(f, cible)]
-    random.shuffle(autres)
-    n_aff = COLS * ROWS - len(ind)
-    choisis = [cible] + autres[:n_aff - 1]
-    random.shuffle(choisis)
-    cases = random.sample(range(COLS * ROWS), COLS * ROWS)
-    w, h = LARGEUR, LARGEUR * 1.5 * RATIO
-    aff = []
-    for k, f in enumerate(choisis):
-        c = cases[k]
-        cx = (c % COLS + 0.5) / COLS + random.uniform(-0.25, 0.25) / COLS
-        cy = (c // COLS + 0.5) / ROWS + random.uniform(-0.12, 0.12) / ROWS
-        aff.append({"img": k, "x": round(cx, 4), "y": round(cy, 4), "r": random.randint(-12, 12)})
-    notes = []
-    for k, t in enumerate(ind):
-        c = cases[len(choisis) + k]
-        notes.append({"texte": t, "x": round((c % COLS + 0.5) / COLS, 4), "y": round((c // COLS + 0.5) / ROWS, 4),
-                      "r": random.randint(-8, 8)})
-    images = [en_jpeg(ImageOps.fit(affiche(api, f, "w185"), (160, 240)), 240) for f in choisis]
-    bonne = next(i for i, f in enumerate(choisis) if f["id"] == cible["id"])
-    etat = {"affiches": aff, "cachees": list(range(len(images))), "w": w, "h": h}
-    return dict(jeu="woodsman", vue="lumiere", duree=float(cfg["dur_woodsman"]), reponse="lumiere", etapes=[(0.0, etat)],
-                images=images, revelation=None, cles=[], bonne="", bonne_i=bonne, notes=notes,
-                solution=f"Le film : {cible['title']}", detail=" · ".join(ind), films=[cle_film(f) for f in choisis[:1]])
+    films = [f for f in pool if not f.get("tv") and f.get("poster_path")]
+    if not films:
+        raise RuntimeError("Le dessin de lumière : pas de film avec affiche dans les listes choisies.")
+    films.sort(key=lambda f: -(f.get("votes") or 0))          # des films connus : il faut pouvoir les dessiner
+    connus = films[:max(15, len(films) // 3)]
+    random.shuffle(connus)
+    connus.sort(key=lambda f: cle_film(f) in deja)
+    film = connus[0]
+    deja.add(cle_film(film))
+    d = details_film(api, film)
+    aff = en_jpeg(affiche(api, film, "w342"))
+    # pas d'image pendant la manche (les téléphones des devineurs ne doivent rien pouvoir charger) : l'affiche
+    # n'apparaît qu'à la réponse
+    m = manche_titre("woodsman", "dessin", float(cfg["dur_woodsman"]), film, d, [(0.0, {})], [], aff, cfg)
+    m.update(reponse="dessin", suggestions=True, idees=idees(api, film, d),
+             annee=d.get("annee") or "", resume=(d.get("resume") or "")[:260])
+    return m
 
 
 class Moteur:
-    suggestions = False
+    suggestions = True
 
     def __init__(self, partie, cfg, m):
         self.p, self.cfg, self.m = partie, cfg, m
-        self.pos, self.trouves, self.elimines = {}, {}, {}
-        self.vus = set()                         # indices déjà éclairés (pour tous)
+        ids = list(partie.joueurs)
+        self.dessinateur = ids[partie.index % len(ids)] if ids else None
+        self.traits = []                         # [{k: n° du trait, i: n° du morceau, pts: [[x, y]…], t: instant}]
+        self.trouves, self.essais, self.gains = {}, {}, {}
         self.premier = None
+        self.n_traits = 0
+        self.n_morceaux = 0                      # numéro unique de chaque morceau envoyé (clé pour l'écran)
+
+    def vie(self):
+        return float(self.cfg.get("woodsman_vie", 2.5))
 
     def ok(self):
+        if len(self.p.joueurs) < 2:
+            return "Le dessin de lumière se joue à 2 joueurs minimum (un qui dessine, les autres devinent)."
         return ""
 
-    def rayon(self):
-        k = min(1.0, self.p.ecoule / max(1.0, self.p.duree))
-        return 0.055 + 0.075 * k                 # part de la largeur de l'écran
+    def devineurs(self):
+        return [p for p in self.p.joueurs if p != self.dessinateur]
 
-    def _dist(self, a, b):
-        return math.hypot(a[0] - b[0], (a[1] - b[1]) / RATIO)
+    def _nettoyer(self):
+        limite = time.monotonic() - self.vie() - 0.5
+        self.traits = [t for t in self.traits if t["t"] >= limite]
 
     def action(self, pid, d, frac, info=None):
-        if pid in self.trouves or pid in self.elimines:
-            return {"ok": False, "msg": "Manche finie pour vous"}
-        if "pos" in d:
+        if pid == self.dessinateur:
+            if "trait" not in d:
+                return {"ok": False, "msg": "Vous dessinez : les autres devinent"}
             try:
-                x, y = (min(1.0, max(0.0, float(v))) for v in d["pos"][:2])
+                pts = [[round(min(1.0, max(0.0, float(x))), 4), round(min(1.0, max(0.0, float(y))), 4)]
+                       for x, y in d["trait"][:MAX_POINTS]]
             except (TypeError, ValueError):
                 return {"ok": False, "msg": ""}
-            self.pos[pid] = (x, y)
-            r = self.rayon()
-            for k, n in enumerate(self.m["notes"]):
-                if k not in self.vus and self._dist((x, y), (n["x"], n["y"])) < r:
-                    self.vus.add(k)
+            if not pts:
+                return {"ok": True, "msg": ""}
+            if d.get("nouveau"):
+                self.n_traits += 1
+            self._nettoyer()
+            self.n_morceaux += 1
+            self.traits.append({"k": self.n_traits, "i": self.n_morceaux, "pts": pts, "t": time.monotonic()})
             return {"ok": True, "msg": ""}
-        if d.get("cest_lui"):
-            p = self.pos.get(pid)
-            if not p:
-                return {"ok": False, "msg": "Allumez d'abord votre lumière"}
-            r = self.rayon()
-            aff = self.m["etapes"][0][1]["affiches"]
-            proche = min(aff, key=lambda a: self._dist(p, (a["x"], a["y"])))
-            if self._dist(p, (proche["x"], proche["y"])) > max(r, 0.05):
-                return {"ok": False, "msg": "Pas d'affiche sous votre lumière"}
-            self.p.joueurs[pid].essais = 1
-            if proche["img"] == self.m["bonne_i"]:
-                self.trouves[pid] = frac
-                if self.premier is None:
-                    self.premier = pid
-                return {"ok": True, "correct": True, "msg": "C'est lui !"}
-            self.elimines[pid] = proche["img"]
-            return {"ok": True, "correct": False, "msg": "Ce n'est pas lui… hors jeu pour cette manche"}
-        return {"ok": False, "msg": ""}
+        texte = str(d.get("texte") or "").strip()
+        if not texte:
+            return {"ok": False, "msg": "Tapez le titre du film"}
+        if pid in self.trouves:
+            return {"ok": False, "msg": "Déjà trouvé !"}
+        self.essais[pid] = self.essais.get(pid, 0) + 1
+        if any(correspond(texte, c) for c in self.m["cles"]):
+            self.trouves[pid] = frac
+            if self.premier is None:
+                self.premier = pid
+            return {"ok": True, "correct": True, "msg": "C'est lui !"}
+        presque = any(proche(texte, c) for c in self.m["cles"])
+        return {"ok": True, "correct": False, "msg": "Presque ! Vérifiez l'orthographe" if presque else "Non…"}
 
     def fini(self):
-        J = self.p.joueurs
-        return bool(J) and all(p in self.trouves or p in self.elimines for p in J)
+        dev = self.devineurs()
+        return bool(dev) and all(p in self.trouves for p in dev)
 
     def clore(self):
+        c = self.cfg
         for pid, j in self.p.joueurs.items():
             gain = 0
-            if pid in self.trouves:
-                gain = int(self.cfg["woodsman_pts"]) + int(self.cfg["bonus_vitesse"] * self.trouves[pid])
+            if pid == self.dessinateur:
+                gain = int(c.get("woodsman_dessin", 300)) * len(self.trouves)
+            elif pid in self.trouves:
+                gain = int(c["woodsman_pts"] * (0.5 + 0.5 * self.trouves[pid]))
                 if pid == self.premier:
-                    gain += int(self.cfg["woodsman_premier"])
+                    gain += int(c["woodsman_premier"])
             j.gain += gain
             j.score += gain
-            j.trouve = pid in self.trouves
+            j.trouve = pid in self.trouves or (pid == self.dessinateur and bool(self.trouves))
             j.serie = j.serie + 1 if j.trouve else 0
+            self.gains[pid] = gain
 
     def statut(self, pid):
+        if pid == self.dessinateur:
+            return {"t": "dessine", "c": "go"}
         if pid in self.trouves:
             return {"t": "trouvé", "c": "ok"}
-        if pid in self.elimines:
-            return {"t": "hors jeu", "c": "bad"}
         return {"t": "", "c": ""}
 
     def avancement(self):
-        J = self.p.joueurs
-        return f"{sum(1 for p in J if p in self.trouves)} / {len(J)} ont trouvé"
+        return f"{len(self.trouves)} / {len(self.devineurs())} ont trouvé"
 
     def vue(self, pid, revele):
         J = self.p.joueurs
-        v = {"rayon": round(self.rayon(), 4),
-             "lumieres": [dict(J[p].public(), x=xy[0], y=xy[1]) for p, xy in self.pos.items()
-                          if p in J and p not in self.trouves and p not in self.elimines],
-             "notes": [n for k, n in enumerate(self.m["notes"]) if k in self.vus or revele],
+        self._nettoyer()
+        now = time.monotonic()
+        d = J.get(self.dessinateur)
+        v = {"dessinateur": d.public() if d else None, "vie": self.vie(),
+             "traits": [] if revele else [dict(k=t["k"], i=t["i"], pts=t["pts"], age=round(now - t["t"], 2)) for t in self.traits],
              "trouves": [J[p].public() for p in self.trouves if p in J]}
         if revele:
-            v.update(bonne=self.m["bonne_i"], elimines={p: i for p, i in self.elimines.items()})
-        if not pid:                                   # l'écran de la partie : tous les indices (éclairés ou non)
-            v["toutes_notes"] = [dict(n, vu=k in self.vus or revele) for k, n in enumerate(self.m["notes"])]
+            v["resultats"] = sorted([dict(J[p].public(), gain=self.gains.get(p, 0), dessine=p == self.dessinateur,
+                                          trouve=p in self.trouves) for p in J], key=lambda x: -x["gain"])
         if pid:
-            v.update(ma_pos=self.pos.get(pid), fini=pid in self.trouves or pid in self.elimines,
-                     trouve=pid in self.trouves, actif=not revele and not self.p.pause and pid not in self.trouves
-                     and pid not in self.elimines)
+            moi = pid == self.dessinateur
+            v.update(moi_dessine=moi, trouve=pid in self.trouves, essais=self.essais.get(pid, 0),
+                     actif=not revele and not self.p.pause)
+            if moi and not revele:
+                v.update(film=self.m["bonne"], annee=self.m.get("annee", ""), idees=self.m.get("idees", []),
+                         resume=self.m.get("resume", ""), n_trouves=len(self.trouves), n_devineurs=len(self.devineurs()))
         return v

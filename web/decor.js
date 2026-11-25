@@ -61,6 +61,8 @@ const REPLIQUES = {
          ['Through the darkness of future past, the magician longs to see.', 'Mike, the one-armed man'],
          ['Fire walk with me.', 'Mike, the one-armed man']],
   annie: [['The good Dale is in the Lodge, and he can\'t leave.', 'Annie Blackburn']],
+  woodsman: [['Got a light?', 'The Woodsman'], ['This is the water, and this is the well. Drink full, and descend.', 'The Woodsman'],
+             ['The horse is the white of the eyes, and dark within.', 'The Woodsman']],
 };
 let GRAINE_DECOR = 0;                                   // le numéro de manche : le même tirage sur tous les écrans
 const hasard = (n, sel = 0) => n ? ((GRAINE_DECOR * 2654435761 + sel * 40503) >>> 0) % n : 0;
@@ -619,33 +621,37 @@ function ranconHTML(v, src) {
     `<div class="rc-mises">${joueurs}</div></div>`;
 }
 
-/* The Woodsman's Light (Got a light?) : l'écran dans le noir ; seules les lumières des joueurs éclairent les affiches
-   et les indices cachés. Les indices trouvés restent allumés. */
-function lumiereHTML(v, src) {
-  const e = v.etat || {}, mo = v.moteur || {}, rev = v.phase === 'reponse';
-  const r = (mo.rayon || 0.06) * 100, w = (e.w || 0.064) * 100, h = (e.h || 0.17) * 100;
-  const affiches = (e.affiches || []).map(a => {
-    const bon = rev && a.img === mo.bonne, faux = rev && Object.values(mo.elimines || {}).includes(a.img);
-    return `<img class="lu-aff${bon ? ' bon' : ''}${faux ? ' faux' : ''}" src="${src(a.img)}" alt="" ` +
-      `style="left:${a.x * 100 - w / 2}%;top:${a.y * 100 - h / 2}%;width:${w}%;height:${h}%;--r:${a.r}deg">`;
+/* The Woodsman's Light (Le dessin de lumière) : dans le noir, le trait du dessinateur s'allume à sa couleur puis
+   s'éteint (chaque bout de trait a son âge : il finit de s'éteindre tout seul entre deux mises à jour). */
+function dessinHTML(v, src) {
+  const mo = v.moteur || {}, rev = v.phase === 'reponse', d = mo.dessinateur || {}, vie = mo.vie || 2.5;
+  const coul = d.couleur || '#ffd24a';
+  // chaque morceau garde sa clé (data-k) : il n'est jamais recréé, seul son retard (négatif) est recalé sur son âge,
+  // si bien qu'il continue de s'éteindre sans à-coup entre deux mises à jour
+  const traits = rev ? '' : (mo.traits || []).map(t => {
+    const st = `animation-duration:${vie}s;animation-delay:-${Math.min(vie, t.age).toFixed(2)}s`;
+    if (t.pts.length === 1) return `<circle data-k="m${t.i}" cx="${(t.pts[0][0] * 160).toFixed(2)}" cy="${(t.pts[0][1] * 90).toFixed(2)}" r=".7" style="${st}"/>`;
+    const pts = t.pts.map(p => `${(p[0] * 160).toFixed(2)},${(p[1] * 90).toFixed(2)}`).join(' ');
+    return `<polyline data-k="m${t.i}" points="${pts}" style="${st}"/>`;
   }).join('');
-  const notes = (mo.toutes_notes || mo.notes || []).map(n => `<span class="lu-note${n.vu || rev ? ' vue' : ''}" ` +
-    `style="left:${n.x * 100}%;top:${n.y * 100}%;--r:${n.r}deg">${esc(n.texte)}</span>`).join('');
-  const lumieres = mo.lumieres || [];
-  const masque = rev ? 'none' : lumieres.length ? lumieres.map(l => `radial-gradient(circle ${r}cqw at ${l.x * 100}% ${l.y * 100}%, #000 0 ${r * .62}cqw, transparent ${r}cqw)`).join(',')
-    : 'linear-gradient(transparent,transparent)';
-  const vues = (mo.toutes_notes || []).filter(n => n.vu).map(n => `<span class="lu-note vue fixe" ` +
-    `style="left:${n.x * 100}%;top:${n.y * 100}%;--r:${n.r}deg">${esc(n.texte)}</span>`).join('');
-  const halos = rev ? '' : lumieres.map(l => `<i class="lu-halo" style="left:${l.x * 100}%;top:${l.y * 100}%;--c:${l.couleur};--d:${2 * r}cqw"><b>${esc(l.nom)}</b></i>`).join('');
-  return `<div class="lumiere" data-k="lumiere"><div class="lu-plateau"><div class="lu-scene" style="-webkit-mask-image:${masque};mask-image:${masque}">` +
-    `${affiches}${notes}</div>${vues}${halos}</div><p class="frise-aide">“Got a light?” — trouvez le film des indices</p></div>`;
+  const c = citation('woodsman');
+  const qui = d.nom ? `<b style="color:${esc(coul)}">${esc(d.nom)}</b> dessine` : '';
+  const fond = rev && v.revelation ? `<img class="de-affiche" src="${src('r')}" alt="">` : '';
+  return `<div class="dessin" data-k="dessin"><div class="de-tableau" style="--c:${esc(coul)}">${fond}` +
+    `<svg viewBox="0 0 160 90" preserveAspectRatio="none" aria-hidden="true">${traits}</svg>` +
+    (rev ? '' : `<p class="de-qui">${qui}</p>`) +
+    (c && !rev ? `<p class="de-radio">“${esc(c[0])}”</p>` : '') + '</div>' +
+    `<p class="frise-aide">${rev ? '' : 'Devinez le film sur vos téléphones : le trait s\'éteint vite…'}</p></div>`;
 }
 
-/* Le pavé du téléphone : le doigt promène la lumière (position envoyée au serveur, quelques fois par seconde). */
-function padLumiereHTML(mo) {
-  const p = mo.ma_pos || [0.5, 0.5];
-  return `<div class="lu-pad" id="lu-pad"><i class="lu-moi" style="left:${p[0] * 100}%;top:${p[1] * 100}%"></i>` +
-    '<span>Glissez le doigt pour éclairer l\'écran</span></div>';
+/* Le pavé du dessinateur : dessin du bout du doigt (le trait part au serveur par petits morceaux). */
+function padDessinHTML(mo) {
+  const idees = (mo.idees || []).map(i => `<li>${esc(i)}</li>`).join('');
+  return `<div class="de-carte"><small>Faites deviner</small><b>${esc(mo.film || '')}</b>` +
+    `${mo.annee ? `<span class="doux"> (${esc(mo.annee)})</span>` : ''}` +
+    (idees ? `<ul class="de-idees">${idees}</ul>` : mo.resume ? `<p class="de-resume">${esc(mo.resume)}</p>` : '') + '</div>' +
+    '<div class="de-pad" id="de-pad"><canvas></canvas><span>Dessinez ici : pas de lettres, pas de chiffres</span></div>' +
+    `<p class="centre doux">${mo.n_trouves || 0} / ${mo.n_devineurs || 0} ont trouvé</p>`;
 }
 
 /* The Mitchum Brothers' Contract : les joueurs autour de la table du Silver Mustang ; les contrats (enveloppes) passent
